@@ -41,7 +41,7 @@ func _draw() -> void:
 	var total := world.tasks.size()
 	var done := world.tasks_done.size()
 	_draw_timers()
-	var box := Rect2(Vector2(900, 84), Vector2(350, 76))
+	var box := Rect2(Vector2(900, 112), Vector2(350, 76))
 	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
 	draw_rect(box, Color("fff9e6"))
 	draw_rect(box, INK, false, 4.0)
@@ -61,7 +61,7 @@ func _draw() -> void:
 		return
 	var n := world.tasks.size()
 	var lh := 21.0
-	var lbox := Rect2(Vector2(900, 172), Vector2(350, 30 + n * lh))
+	var lbox := Rect2(Vector2(900, 200), Vector2(350, 30 + n * lh))
 	draw_rect(Rect2(lbox.position + Vector2(4, 4), lbox.size), Color(0, 0, 0, 0.3))
 	draw_rect(lbox, Color(1, 0.98, 0.9, 0.9))
 	draw_rect(lbox, INK, false, 3.0)
@@ -140,12 +140,13 @@ func _fmt(t: float) -> String:
 
 
 func _draw_timers() -> void:
-	var box := Rect2(Vector2(900, 20), Vector2(350, 56))
+	var box := Rect2(Vector2(900, 20), Vector2(350, 84))
 	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
 	draw_rect(box, Color("18151d"))
 	draw_rect(box, Color("ffd23f"), false, 3.0)
 	draw_string(FONT_SHOUT, box.position + Vector2(12, 24), "LEVEL %d/%d" % [world.level_index + 1, world.level_count], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("ffd23f"))
 	var over := world.level_par > 0 and world.level_time > world.level_par
-	draw_string(FONT_SHOUT, box.position + Vector2(12, 48), "THIS LEVEL  %s / PAR %s" % [_fmt(world.level_time), _fmt(world.level_par)], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("ff8b8b") if over else Color("fff3d1"))
-	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 12 - 120, 48), "TOTAL %s" % _fmt(world.total_time), HORIZONTAL_ALIGNMENT_RIGHT, 120, 20, Color("fff3d1"))
+	draw_string(FONT_SHOUT, box.position + Vector2(12, 45), "THIS LEVEL  %s / PAR %s" % [_fmt(world.level_time), _fmt(world.level_par)], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("ff8b8b") if over else Color("fff3d1"))
+	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 12 - 120, 45), "TOTAL %s" % _fmt(world.total_time), HORIZONTAL_ALIGNMENT_RIGHT, 120, 20, Color("fff3d1"))
 	draw_string(FONT_BODY, box.position + Vector2(box.size.x - 12 - 190, 22), world.level_title, HORIZONTAL_ALIGNMENT_RIGHT, 190, 15, Color("ffffff"))
+	draw_string(FONT_SHOUT, box.position + Vector2(12, 76), "SCORE  %d" % world.score_total, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("ffd23f"))

@@ -36,7 +36,9 @@ The page is the puzzle piece: panels move, so the emitter, walls and targets mov
   - Kill villain: he dies at once and sabotage stops, no reward. Kill friend: he dies, and the ending and boss fight get harder.
 - **Hidden sabotage:** which tasks trigger sabotage is not shown. Level 1: 1 sabotage; level 2: 2; levels 3 and 4: 2 big sabotages (2 hearts, harder fix, shorter timer); level 4 also has a hidden task that undoes one of your finished tasks.
 - **Par times:** about 2, 3, 4 and 5 minutes for levels 1 to 4 (4, 6, 8 and 10 tasks), shown on the HUD.
-- After level 4: the final boss fight against the **Narrator** (three phases, torch and mirrors, surviving allies help, three endings).
+- **Adaptive difficulty:** finishing a level over par makes the next one a little easier (1 or 2 steps: fewer tasks, easier mini-games, longer sabotage timers), so total playtime stays steady. Finishing on time changes nothing.
+- **Score (independent of time):** per level, tasks x100 (x1, 1.25, 1.5, 2 by level), +150 per sabotage stopped in time (+250 big), -100 per sabotage that hit you (-200 big), -50 per tampered task, +100 per heart left, +300 for no deaths (-250 per death), and up to +300 for finishing under par (never a penalty for being slow). Ranks S/A/B/C from the share of the level maximum; the vampire choices will add points. Shown on the HUD and on the level-complete card.
+- After level 4: the final boss fight against the **Narrator**, lasting **at least 3 minutes** (three phases of about a minute; a phase ends only when its timer and its damage target are both met), with torch and mirrors, surviving allies helping and three endings.
 
 ## Content
 | Page | District | Teaches | Rule |

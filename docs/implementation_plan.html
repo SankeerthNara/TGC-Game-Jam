@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <title>Mirror Page - Implementation Plan</title>
 <style>
-  @page { size: A4; margin: 8mm 11mm; }
+  @page { size: A4; margin: 7mm 10mm; }
   * { box-sizing: border-box; }
-  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b1b24; font-size: 8.4pt; line-height: 1.25; margin: 0; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b1b24; font-size: 8.2pt; line-height: 1.22; margin: 0; }
   .banner { background: #1b1b24; color: #ffd23f; padding: 12px 16px; border-left: 8px solid #e63946; border-radius: 3px; margin-bottom: 8px; }
   .banner h1 { margin: 0; font-size: 24pt; letter-spacing: 1px; }
   .banner .sub { color: #f6ecd2; font-size: 10.5pt; margin-top: 2px; }
   h2 { font-size: 10pt; margin: 5px 0 2px; padding-bottom: 2px; border-bottom: 2.5px solid #ffd23f; text-transform: uppercase; letter-spacing: .5px; }
-  table { border-collapse: collapse; width: 100%; margin: 2px 0; font-size: 7.9pt; }
+  table { border-collapse: collapse; width: 100%; margin: 2px 0; font-size: 7.7pt; }
   th, td { border: 1px solid #1b1b24; padding: 2px 5px; text-align: left; vertical-align: top; }
   th { background: #f6ecd2; }
   ul { margin: 3px 0 3px 16px; padding: 0; }
@@ -34,11 +34,11 @@
 <table class="meta">
   <tr><td><b>Developer</b></td><td>Sankeerth Nara (solo)</td><td><b>Repository</b></td><td>github.com/SankeerthNara/TGC-Game-Jam (public, MIT)</td></tr>
   <tr><td><b>Themes</b></td><td>Comic, Twist, Light (all three)</td><td><b>Engine</b></td><td>Godot 4.7, GDScript, Compatibility renderer, Web export</td></tr>
-  <tr><td><b>Final playtime</b></td><td>12 to 15 minutes (20 max)</td><td><b>Plan status</b></td><td>Concept locked at Hour 12. Features below are committed or marked stretch.</td></tr>
+  <tr><td><b>Final playtime</b></td><td>About 17 to 19 minutes (20 max)</td><td><b>Plan status</b></td><td>Concept locked at Hour 12. Features below are committed or marked stretch.</td></tr>
 </table>
 
 <h2>1. The game in one paragraph</h2>
-<p>A fixed <b>Narrator</b> frames four comic stories. Each level is built for one comic hero (superhero pulp, noir detective, manga ninja, pop-art space hero), whom you play, and the map is themed that way. Each level is a pitch-dark floor of 8 rooms in a random layout; only the area around your torch is lit. You finish interactive tasks to fill a progress bar, against a par time: about <b>2, 3, 4 and 5 minutes</b> for levels 1 to 4. Which tasks trigger a sabotage is hidden. Two <b>vampires</b> hide in the dark and look and behave exactly the same: one is your <b>friend</b>, the other is the comic's <b>villain</b>. Which is which is pure chance, so catching one in your torchlight and choosing <b>REVEAL</b> or <b>KILL</b> is a gamble. After four levels you fight the <b>Narrator</b> in the final boss fight.</p>
+<p>A fixed <b>Narrator</b> frames four comic stories. Each level is built for one comic hero (superhero pulp, noir detective, manga ninja, pop-art space hero), whom you play, and the map is themed that way. Each level is a pitch-dark floor of 8 rooms in a random layout; only the area around your torch is lit. You finish interactive tasks to fill a progress bar, against a par time: about <b>2, 3, 4 and 5 minutes</b> for levels 1 to 4. Which tasks trigger a sabotage is hidden. Going over par makes the <b>next level a little easier</b> (fewer tasks, easier mini-games, longer timers), so the run stays about the same length. A <b>score</b> that counts tasks, sabotage stopped or suffered, hearts, deaths and the villain choices (time is only a small bonus) gives each level a rank. Two <b>vampires</b> hide in the dark and look and behave exactly the same: one is your <b>friend</b>, the other is the comic's <b>villain</b>. Which is which is pure chance, so catching one in your torchlight and choosing <b>REVEAL</b> or <b>KILL</b> is a gamble. After four levels you fight the <b>Narrator</b> in the final boss fight.</p>
 <table>
   <tr><th style="width:22%">If the vampire is...</th><th>REVEAL</th><th>KILL</th></tr>
   <tr><td><b>The friend</b></td><td>He becomes your ally. He no longer fears light and helps with tasks, hints and later the boss fight.</td><td>The friend dies. You lose him for the run, the Narrator reacts, and your ending and boss fight get harder.</td></tr>
@@ -60,10 +60,10 @@
   <tr><td>2</td><td><b>Vampires and the Reveal / Kill choice</b></td><td>Two identical vampires per level wander the dark and flee from torchlight. Hold the beam on one to freeze it, then choose REVEAL or KILL. Friend or villain is random, so every choice is a gamble with four different outcomes. A short comic-panel suspense scene sells the moment (Light + Twist).</td><td>16</td></tr>
   <tr><td>3</td><td><b>The friend ally</b></td><td>A revealed friend follows you and is not scared by light. His help grows each level (task arrow, finishes small tasks, extends sabotage timers, fixes a sabotage and shields you). Killed friends change the ending.</td><td>7</td></tr>
   <tr><td>4</td><td><b>Villain fight</b> (small fight, every level)</td><td>One reusable arena fight with four villains, each with a different attack pattern. The torch beam is the weapon; hits on you cost hearts. Kept under a minute.</td><td>10</td></tr>
-  <tr><td>5</td><td><b>Final boss: the Narrator</b></td><td>After level 4, three phases: the Narrator snuffs your torch, floods the floor with ink and attacks the interface; rotating arena mirrors bounce your beam onto his shield. Surviving allies help. Three ending variants depend on your choices (Twist).</td><td>11</td></tr>
+  <tr><td>5</td><td><b>Final boss: the Narrator</b></td><td>After level 4, a fight that lasts <b>at least 3 minutes</b>: three phases of about a minute each. The Narrator snuffs your torch, floods the floor with ink and attacks the interface; rotating arena mirrors bounce your beam onto his shield. Each phase ends only after its timer and its damage target are both met, so it cannot be rushed. Surviving allies help. Three endings depend on your choices (Twist).</td><td>11</td></tr>
   <tr><td>6</td><td><b>Fourth-wall twists</b></td><td>The Narrator tampers with captions, the progress bar, the map and the controls for short moments.</td><td>3</td></tr>
   <tr><td>7</td><td><b>Comic look and juice</b></td><td>Ink and halftone screen shader, panel-split level transitions, onomatopoeia on actions and hits.</td><td>4</td></tr>
-  <tr><td>8</td><td><b>Medals</b></td><td>S/A/B per level from time and hearts lost; best splits saved locally.</td><td>2</td></tr>
+  <tr><td>8</td><td><b>Score and ranks</b></td><td>Score per level and for the run, independent of completion time: points for tasks (x1, 1.25, 1.5, 2 by level), sabotage stopped in time, hearts left and no deaths, minus sabotage that hit you, tampered tasks and deaths, plus a small under-par bonus and (when built) vampire outcomes. S/A/B/C ranks per level and overall. Best scores saved locally.</td><td>3</td></tr>
   <tr><td>9</td><td><b>First-minute polish</b></td><td>30 second tutorial, controls hints, itch.io page with GIFs, README, CREDITS, AI usage log.</td><td>5</td></tr>
   <tr><td>10</td><td><b>Balance and testing</b></td><td>Tuning of task difficulty and counts to hit the par times, sabotage timers and fights; outside playtests; bug fixing; web performance.</td><td>10</td></tr>
 </table>
@@ -75,8 +75,8 @@
   <tr><th style="width:12%">Hours</th><th>Work</th><th style="width:31%">Exit criteria (a playable build every 12 hours)</th></tr>
   <tr><td>12 - 30</td><td>Plan locked. Clean-up of unused code. Narrator system (portrait, bubbles, event lines). Hero and theme for level 1. Vampire movement (patrol, flee from light, freeze in the beam). Tutorial skeleton.</td><td>Level 1 plays start to finish in the browser with the Narrator and a vampire to catch.</td></tr>
   <tr><td>30 - 55</td><td>Reveal / Kill choice and all four outcomes (pure chance), friend ally with help that grows per level, villain fight (reusable arena). Heroes and themes for levels 2 and 3. First playtest of the choice at Hour 30.</td><td>Levels 1 to 3 playable with both vampires, the choice and the villain fight.</td></tr>
-  <tr><td>55 - 75</td><td>Level 4 hero and theme, the Narrator boss fight (three phases, mirrors, allies), endings, level transitions, fourth-wall twists, shader, medals, audio mix.</td><td>Full 12 to 15 minute run from menu through the boss to an ending.</td></tr>
-  <tr><td>75 - 85</td><td>Balance pass, outside playtests, bug fixing, performance, accessibility. <b>Feature freeze at Hour 85.</b></td><td>No known blocking bugs; clues and fights confirmed fair by testers.</td></tr>
+  <tr><td>55 - 75</td><td>Level 4 hero and theme, the Narrator boss fight (three phases, mirrors, allies), endings, level transitions, fourth-wall twists, shader, medals, audio mix.</td><td>Full 17 to 19 minute run from menu through the 3 minute boss to an ending.</td></tr>
+  <tr><td>75 - 85</td><td>Balance pass, outside playtests, bug fixing, performance, accessibility. <b>Feature freeze at Hour 85.</b></td><td>No known blocking bugs; the choice, par times and fights confirmed fair by testers.</td></tr>
   <tr><td>85 - 96</td><td>Only fixes. Final web export, itch.io page and GIFs, README, CREDITS and AI usage audit, commit history check.</td><td>Public itch.io build submitted by Hour 96.</td></tr>
   <tr><td>96 - 100</td><td>Safety margin. Re-verify the live itch.io build and the repository.</td><td>Strict code freeze at Hour 100.</td></tr>
 </table>
@@ -98,7 +98,7 @@
   <tr><td>AI disclosure</td><td>Claude Code, Antigravity and ChatGPT/Codex are used for code, art, audio and documents. Every use is logged in <code>docs/AI_USAGE.md</code>. Core design and story direction are the developer's.</td></tr>
   <tr><td>Code origin</td><td>All game code is written inside the 100 hours. Only a generic empty Godot project and an editor plugin used for tooling (not part of the game) were present at the start; the plugin is credited.</td></tr>
   <tr><td>Risk: a pure-chance choice feels unfair</td><td>The gamble is by design, so all four outcomes must be fun, not punishing: a suspense scene before the result, a rewarding villain fight, a meaningful friend. Playtests check testers enjoy the moment, not just the result. Fallback: level 1 always has the friend first (tutorial).</td></tr>
-  <tr><td>Risk: par times are missed</td><td>Task counts and mini-game difficulty are tuned from timed playtests so the four levels take about 2, 3, 4 and 5 minutes (about 14 in total).</td></tr>
+  <tr><td>Risk: par times are missed</td><td>Task counts and mini-game difficulty are tuned from timed playtests so the four levels take about 2, 3, 4 and 5 minutes. Players who run over par get an easier next level (already built), so the whole run stays near 17 to 19 minutes with the 3 minute boss.</td></tr>
   <tr><td>Risk: vampire AI is hard to tune</td><td>Keep it simple (patrol, flee from light, freeze in the beam). Fallback: the villain sabotages on a fixed schedule.</td></tr>
   <tr><td>Risk: scope (largest plan item)</td><td>The vampire, choice and ally system is built first (Hours 12 to 55) and everything else is cut around it, never the other way round.</td></tr>
   <tr><td>Risk: combat is not fun</td><td>Both fights reuse existing mechanics (torch light, mirrors, hearts). Attacks are slow and readable. Playtests at Hour 45 (villain fight) and Hour 70 (boss). Fallbacks: the villain fight becomes a freeze-and-catch moment, the boss drops to two phases without mirrors.</td></tr>
@@ -109,7 +109,7 @@
 
 <h2>6. Definition of done</h2>
 <ul>
-  <li>A public itch.io page with a playable browser build of the full 12 to 15 minute game.</li>
+  <li>A public itch.io page with a playable browser build of the full 17 to 19 minute game.</li>
   <li>The README shows the itch.io link, setup, controls and team details. CREDITS and the AI usage log are complete.</li>
   <li>The final game matches this plan: all committed features present, nothing from the cut list promised.</li>
 </ul>

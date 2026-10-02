@@ -77,16 +77,17 @@ static func level_title(level: int) -> String:
 
 
 ## Always returns a valid, fully reachable level (retries with a new sub-seed if needed).
-static func generate(level: int, run_seed: int) -> Dictionary:
+## ease (0 to 2): the player ran over par on the last level, so this one has fewer tasks and kinder timers.
+static func generate(level: int, run_seed: int, ease := 0) -> Dictionary:
 	for attempt in 12:
-		var data := _try_generate(level, run_seed * 7919 + attempt * 104729)
+		var data := _try_generate(level, run_seed * 7919 + attempt * 104729, ease)
 		if not data.is_empty():
 			return data
 	push_error("LevelGenerator failed to build a level")
 	return {}
 
 
-static func _try_generate(level: int, seed_value: int) -> Dictionary:
+static func _try_generate(level: int, seed_value: int, ease := 0) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value + level * 31
 	var def: Dictionary = LEVELS[clampi(level, 0, LEVELS.size() - 1)]
@@ -158,7 +159,7 @@ static func _try_generate(level: int, seed_value: int) -> Dictionary:
 			if g[y][x] == "." and _room_at(rooms, x, y) < 0:
 				is_corridor[Vector2i(x, y)] = true
 	# --- task and fix consoles against the top wall of rooms ---
-	var plan := _plan_tasks(def, level, rng)
+	var plan := _plan_tasks(def, level, rng, ease)
 	var tasks: Array = []
 	var fixes: Array = []
 	var used: Array[Vector2i] = []
@@ -246,7 +247,8 @@ static func _try_generate(level: int, seed_value: int) -> Dictionary:
 		if dist < 0:
 			return _fail("path")
 		var secs := maxi(30, int(round(float(dist) / WALK_TILES_PER_SEC * (2.7 - 0.3 * level) + 15.0)))
-		sab["seconds"] = maxi(28, int(secs * 0.85)) if sab["big"] else secs
+		var base_secs := maxi(28, int(secs * 0.85)) if sab["big"] else secs
+		sab["seconds"] = int(base_secs * (1.0 + 0.15 * ease))
 	# --- output in the same shape as a station data file ---
 	var rows: Array = []
 	for y in height:
@@ -260,14 +262,18 @@ static func _try_generate(level: int, seed_value: int) -> Dictionary:
 		t.erase("room_index")
 	return {
 		"mode": "station", "rows": rows, "rooms": out_rooms, "tasks": tasks, "fixes": fixes,
-		"sabotages": sabotages, "max_health": 3, "intro": "NARRATOR: " + String(def["intro"]), "par": def["par"],
+		"sabotages": sabotages, "max_health": 3, "intro": "NARRATOR: " + String(def["intro"]), "par": def["par"], "ease": ease,
 		"level": level, "title": def["title"],
 	}
 
 
-static func _plan_tasks(def: Dictionary, level: int, rng: RandomNumberGenerator) -> Dictionary:
+static func _plan_tasks(def: Dictionary, level: int, rng: RandomNumberGenerator, ease := 0) -> Dictionary:
 	var out: Array = []
-	for spec: String in def["tasks"]:
+	var specs: Array = def["tasks"].duplicate()
+	for i in ease:
+		if specs.size() > 3:
+			specs.remove_at(specs.size() - 1) # drop the last (hardest) task
+	for spec: String in specs:
 		var parts := spec.split(":")
 		var type := parts[0]
 		var names: Array = TASK_NAMES[type]

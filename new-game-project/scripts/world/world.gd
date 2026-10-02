@@ -65,6 +65,8 @@ var level_title := ""
 var level_time := 0.0
 var total_time := 0.0
 var level_par := 0
+var level_ease := 0
+var score_total := 0
 var _disrupt_armed := false
 
 var hero := HeroActor.new()
@@ -164,6 +166,7 @@ func load_data(data: Dictionary) -> void:
 		sabotage_defs[sd["id"]] = sd
 	intro = data.get("intro", "")
 	level_par = int(data.get("par", 0))
+	level_ease = int(data.get("ease", 0))
 	_disrupt_armed = false
 	rows.clear()
 	for r: String in data["rows"]:

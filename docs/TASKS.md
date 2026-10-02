@@ -33,3 +33,4 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | A9 | Antigravity | Four hero and villain looks, level themes (palette, props, fonts), boss and vampire art, fight music and SFX | todo | C12 | original characters only |
 | G6 | ChatGPT | Headless tests for the choice outcomes, ally behaviour, fight states and respawn | todo | C10 | |
 | C13 | Claude | Par times (2/3/4/5 min), 4/6/8/10 tasks, hidden risky tasks, sabotage counts 1/2/2/2 with big sabotages, task-undo disruption in level 4 | done | C8 | tune from timed playtests |
+| C14 | Claude | Adaptive difficulty (easier next level after going over par) and the score system with ranks and breakdown | done | C13 | `score_keeper.gd`, `level_overlay.gd` |

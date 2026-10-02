@@ -22,6 +22,8 @@ var total_time := 0.0
 var level_splits: Array = []
 var _overlay: Node
 var _retrying := false
+var score := ScoreKeeper.new()
+var level_ease: Array[int] = [0, 0, 0, 0]
 var _task_layer: CanvasLayer
 
 var _caption: Label
@@ -36,12 +38,15 @@ func _ready() -> void:
 	world.task_requested.connect(_on_task_requested)
 	world.sabotage_started.connect(_on_sabotage_started)
 	world.sabotage_resolved.connect(func(def: Dictionary) -> void:
+		score.on_fixed(def.get("big", false))
 		EventBus.caption_changed.emit("NARRATOR: Crisis averted! %s is under control. Phew." % String(def["name"]).capitalize()))
 	world.sabotage_failed.connect(func(def: Dictionary, left: int) -> void:
+		score.on_failed(def.get("big", false))
 		view.shake(14.0)
 		EventBus.caption_changed.emit("NARRATOR: OUCH! %s hit you. %d heart%s left." % [String(def["name"]).capitalize(), left, "" if left == 1 else "s"]))
 	world.player_died.connect(_on_player_died)
 	world.task_disrupted.connect(func(task_name: String) -> void:
+		score.on_disrupted()
 		view.shake(10.0)
 		EventBus.caption_changed.emit("NARRATOR: Something tampered with \"%s\"! That task is undone. Do it again." % task_name))
 	_task_layer = CanvasLayer.new()
@@ -99,6 +104,9 @@ func _start_game() -> void:
 	run_seed = randi()
 	level_splits.clear()
 	total_time = 0.0
+	score.new_run()
+	for i in level_ease.size():
+		level_ease[i] = 0
 	_clear_overlay()
 	_load_level(0)
 
@@ -108,8 +116,9 @@ func _load_level(i: int) -> void:
 	level_idx = i
 	if not _retrying:
 		level_time = 0.0
+	score.start_level(_retrying)
 	_retrying = false
-	var data := LevelGenerator.generate(i, run_seed)
+	var data := LevelGenerator.generate(i, run_seed, level_ease[clampi(i, 0, level_ease.size() - 1)])
 	world.level_index = i
 	world.level_count = LevelGenerator.level_count()
 	world.level_title = LevelGenerator.level_title(i)
@@ -125,6 +134,7 @@ func _process(delta: float) -> void:
 		total_time += delta
 	world.level_time = level_time
 	world.total_time = total_time
+	world.score_total = score.live(level_idx, world.tasks_done.size())
 
 
 func _clear_overlay() -> void:
@@ -187,7 +197,7 @@ func _on_task_requested(task_id: String, type: String, param: int) -> void:
 	if game == null:
 		active_task = ""
 		return
-	game.difficulty = clampi(level_idx + world.fix_bonus(task_id), 0, 3)
+	game.difficulty = clampi(level_idx - world.level_ease + world.fix_bonus(task_id), 0, 3)
 	_set_state("task")
 	_task_layer.add_child(game)
 	game.finished.connect(func(success: bool) -> void: _on_task_finished(game, success))
@@ -220,6 +230,7 @@ func _on_sabotage_started(def: Dictionary) -> void:
 
 
 func _on_player_died() -> void:
+	score.on_death()
 	for c in _task_layer.get_children():
 		c.queue_free()
 	active_task = ""
@@ -238,6 +249,14 @@ func _level_complete() -> void:
 	level_splits.append(level_time)
 	EventBus.level_completed.emit(level_idx, level_time)
 	var last := level_idx >= LevelGenerator.level_count() - 1
+	var big_flags: Array = []
+	for sab in world.sabotage_defs.values():
+		big_flags.append(sab.get("big", false))
+	var result := score.finish_level(level_idx, world.tasks.size(), level_time, world.level_par, world.hp, world.max_health, big_flags)
+	# the next level is kinder if this one took longer than par (the run should stay about the same length)
+	if not last:
+		var over := level_time / float(maxi(world.level_par, 1))
+		level_ease[level_idx + 1] = 2 if over > 1.5 else (1 if over > 1.0 else 0)
 	_set_state("levelend")
 	var ov := LevelOverlay.new()
 	ov.title = "Level %d: %s" % [level_idx + 1, LevelGenerator.level_title(level_idx)]
@@ -246,8 +265,16 @@ func _level_complete() -> void:
 	ov.splits = level_splits.duplicate()
 	ov.par = world.level_par
 	ov.final = last
+	ov.lines = result["lines"]
+	ov.score = result["score"]
+	ov.rank = result["rank"]
+	ov.total_score = score.total
+	ov.level_scores = score.level_totals.duplicate()
+	ov.level_ranks = score.level_ranks.duplicate()
+	ov.overall_rank = score.overall_rank()
 	if not last:
 		ov.next_title = "Level %d" % (level_idx + 2)
+		ov.easier_next = level_ease[level_idx + 1] > 0
 	_overlay = ov
 	_task_layer.add_child(ov)
 	ov.continue_pressed.connect(func() -> void:
@@ -257,7 +284,7 @@ func _level_complete() -> void:
 			EventBus.request_quit_to_menu.emit()
 		else:
 			_load_level(level_idx + 1))
-	EventBus.caption_changed.emit("NARRATOR: Level complete! Checkpoint saved.")
+	EventBus.caption_changed.emit("NARRATOR: Level complete! Checkpoint saved. Rank %s." % result["rank"])
 
 
 func _wait_playing() -> void:
