@@ -1,0 +1,17 @@
+{
+  "name": "Liar, Liar",
+  "panel_size": [3, 3],
+  "layout": [2, 2],
+  "rule": "lying",
+  "twist": "none",
+  "caption_intro": "NARRATOR: Don't trust what you see! The mirrors are LYING! Slashes reflect backwards!",
+  "caption_solved": "NARRATOR: You saw right through the deception. Turn the page!",
+  "cells": [
+    "....^#",
+    "T\\.\\..",
+    "......",
+    "...#..",
+    "#.....",
+    "......"
+  ]
+}
