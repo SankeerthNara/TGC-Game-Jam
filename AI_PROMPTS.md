@@ -52,23 +52,26 @@ Read AI_WORKFLOW.md. Fix the repo hygiene items in section 7, switch the rendere
 
 ---
 
-## Phase 1 prompts (use after the concept is locked at Hour 12)
+## Phase 1 prompts (concept locked: "Mirror Page")
 
 ### Antigravity
 
 ```
 WORKING FOLDER: open and edit ONLY D:\Infinium\wt-anti (branch anti/work). Never edit D:\Infinium\TGC-Game-Jam directly. First run: git merge main.
-Read AI_WORKFLOW.md, docs/SCOPE.md and docs/ARCHITECTURE.md. Concept: "Mirror Page", a comic-page light-routing puzzle where players drag panels and flip mirrors, and a narrator twists the rules (see docs/SCOPE.md).
-Build, in your owned folders only: (1) a main menu, pause menu and HUD in ui/ that listen to the signals in docs/ARCHITECTURE.md, (2) the first art pass and placeholder audio in assets/, (3) the first level data file in data/levels/ using the agreed format.
-Log every generated asset in docs/AI_USAGE.md and every third-party asset in CREDITS.md.
-After each task, export for Web, run it in the browser with Playwright, report console errors and the build size, then update docs/TASKS.md. Commit to your branch with "ui:" or "assets:" prefixes.
+Read AI_WORKFLOW.md, docs/SCOPE.md, docs/ARCHITECTURE.md, docs/ART_DIRECTIONS.md and docs/TASKS.md.
+Game: "Mirror Page", a comic-page light puzzle. Players drag comic panels to swap them and click mirrors to steer a beam onto star targets; a narrator twists the rules. It is a 2D puzzle, NOT a platformer, so ignore platformer/lantern ideas from the Phase 0 research.
+Art direction: Direction 1 "Vintage Pulp & Ink" (newsprint paper, printer's black, lantern yellow beam, crimson for bad targets, violet for the twist inversion).
+Your tasks in order (Owner = Antigravity in docs/TASKS.md): A2 comic UI in ui/ (main menu, HUD, caption box, pause, end screen) that only listens to EventBus signals and replaces the debug labels in scripts/core/main.gd (ask via TASKS.md if main.gd needs a hook, do not edit it); A3 art pass (textures in assets/, wired through PageView only if Claude agrees via TASKS.md); A4 audio (music loop, swap, mirror click, beam lit, twist sting); A5 levels 4-6 JSON in data/levels/ using the format in docs/ARCHITECTURE.md, rules "lying" (level 4), "bend" (level 5), "bend" + twist "flip" + locked_panels (level 6). Every level must pass: godot --headless --path new-game-project --script res://scripts/tools/level_check.gd (run --import once first). Use level_gen.gd to propose layouts, and write funny comic-narrator captions.
+Rules: only free/CC0/CC BY/AI-generated assets; log third-party assets in CREDITS.md and AI-generated ones in docs/AI_USAGE.md. Keep the web build under the budget in docs/ASSET_BUDGET.md.
+After each task: export Web (new-game-project/export_presets.cfg has a "Web" preset, output build/web), serve it and test in the browser with Playwright, report console errors, update docs/TASKS.md, commit with "ui:", "assets:" or "levels:" prefixes. Stop and report after each task.
 ```
 
 ### ChatGPT / Codex
 
 ```
 WORKING FOLDER: open and edit ONLY D:\Infinium\wt-gpt (branch gpt/work). Never edit D:\Infinium\TGC-Game-Jam directly. First run: git merge main.
-Read AI_WORKFLOW.md, docs/SCOPE.md and docs/ARCHITECTURE.md. Concept: "Mirror Page", a comic-page light-routing puzzle where players drag panels and flip mirrors, and a narrator twists the rules (see docs/SCOPE.md).
-Take ONE task at a time from docs/TASKS.md where Owner = ChatGPT. Implement it in scripts/entities/, scripts/tools/, tests/ or data/balance/ against the interfaces in docs/ARCHITECTURE.md. Do not change the interfaces. If one is missing something, add a task for Claude instead.
-Finish, run the project to confirm nothing is broken, mark the task done, commit with an "entities:", "tools:" or "tests:" prefix, then stop and report.
+Read AI_WORKFLOW.md, docs/SCOPE.md, docs/ARCHITECTURE.md and docs/TASKS.md.
+Game: "Mirror Page", a Godot 4.7 GDScript comic-page light puzzle (see docs/SCOPE.md). Logic lives in new-game-project/scripts/systems/page_model.gd and beam_solver.gd. Do NOT change these files or the interfaces; if you find a bug, add a task for Claude in docs/TASKS.md.
+Your tasks, one at a time (Owner = ChatGPT in docs/TASKS.md): G2 headless unit tests in new-game-project/tests/ (runnable like scripts/tools/level_check.gd via: godot --headless --path new-game-project --script res://tests/run_tests.gd) covering reflection tables, the "lying" rule, the "bend" rule across panels, swap_panels incl. locked panels, toggle_mirror, status() with the twist flip, and solver edge cases (loops, out of bounds, wall, emitter blocking). G3 write data/balance/optimal_moves.json with the minimum move count per level from LevelSolver (twist levels: both stages), plus a tool script that regenerates it. Then update README.md controls (drag panel to swap, click mirror to flip, Z undo, R reset) and keep CREDITS.md and docs/AI_USAGE.md accurate.
+Run the tests, commit with "tests:", "tools:" or "docs:" prefixes, mark tasks done, then stop and report. Keep each task small; your usage quota is limited.
 ```
