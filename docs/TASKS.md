@@ -34,4 +34,5 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C14 | Claude | Adaptive difficulty (easier next level after going over par) and the score system with ranks and breakdown | done | C13 | `score_keeper.gd`, `level_overlay.gd` |
 | C10 | Claude | Vampires (patrol, flee from light, freeze), Reveal/Kill choice, four outcomes, villain starts sabotage himself, friend ally with growing help | done | C9 | `vampires.gd`, `vampire_choice.gd` |
 | C11 | Claude | Parkour chase minigame; 13 new task types so no task repeats in a run | done | C10 | `parkour_game.gd`, `scripts/tasks/` |
-| C15 | Claude | Narrator boss fight (3+ minutes) and endings from choices | todo | C11 | |
+| C12b | Claude | Cutscene system for detect/reveal/kill; level 1 warm-up (no vampires or sabotage) | done | C11 | `cutscene.gd` |
+| C15 | Claude | Final boss: three relay duels (hero 2, 3, 4) vs the Narrator, level 1 capture, sunlight and lava ending cutscenes | todo | C12b | at least 3 minutes in all |

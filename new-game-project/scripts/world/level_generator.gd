@@ -19,17 +19,17 @@ const ROOM_POOL := [
 ## par = the target time in seconds (about 2, 3, 4 and 5 minutes). risky = how many hidden sabotage
 ## triggers. disrupt = a hidden task that undoes one of your finished tasks. big = long, harsh sabotage.
 const LEVELS := [
-	{"title": "THE STUDIO", "par": 120, "risky": 1, "disrupt": 0, "big": false,
-	 "intro": "Level 1: THE STUDIO. Somebody cut the lights! Finish every task to fill the progress bar. Arrow keys move (hold two for diagonals), Z interacts, M opens the map.",
+	{"title": "THE STUDIO", "par": 120, "risky": 0, "disrupt": 0, "big": false, "vampires": false,
+	 "intro": "Level 1: THE STUDIO. Somebody cut the lights! A calm warm-up: finish every task to fill the progress bar. Arrow keys move (hold two for diagonals), Z interacts, M opens the map.",
 	 "tasks": ["mirror:0", "wires", "bubbles", "dial"]},
-	{"title": "THE ARCHIVE WING", "par": 180, "risky": 2, "disrupt": 0, "big": false,
-	 "intro": "Level 2: THE ARCHIVE WING. More rooms, more tasks, and more things going wrong. You cannot tell which tasks are safe.",
+	{"title": "THE ARCHIVE WING", "par": 180, "risky": 1, "disrupt": 0, "big": false, "vampires": true,
+	 "intro": "Level 2: THE ARCHIVE WING. You are not alone: two vampires lurk in the dark, a friend and the villain who cut the lights. Hold your torch on one to catch him!",
 	 "tasks": ["mirror:1", "sort", "switches", "blots", "swipe", "panels"]},
-	{"title": "THE MACHINE FLOOR", "par": 240, "risky": 2, "disrupt": 0, "big": true,
-	 "intro": "Level 3: THE MACHINE FLOOR. The sabotage is bigger now and the timers are shorter. Plan your route!",
+	{"title": "THE MACHINE FLOOR", "par": 240, "risky": 2, "disrupt": 0, "big": true, "vampires": true,
+	 "intro": "Level 3: THE MACHINE FLOOR. The sabotage is bigger now and the timers are shorter. Catch a vampire in your light!",
 	 "tasks": ["mirror:3", "logic", "simon", "sfx", "charge", "debug", "wires", "dial"]},
-	{"title": "THE FINAL PAGE", "par": 300, "risky": 2, "disrupt": 1, "big": true,
-	 "intro": "Level 4: THE FINAL PAGE. Everything at once. Big sabotage, and something may undo your finished work. Whoever cut the lights is close...",
+	{"title": "THE FINAL PAGE", "par": 300, "risky": 2, "disrupt": 1, "big": true, "vampires": true,
+	 "intro": "Level 4: THE FINAL PAGE. Everything at once. Big sabotage, and something may undo your finished work. The end is near...",
 	 "tasks": ["mirror:4", "mirror:6", "mirror:7", "debug", "logic", "panels", "sort", "charge", "simon", "sfx"]},
 ]
 
@@ -293,7 +293,7 @@ static func _try_generate(level: int, seed_value: int, ease := 0, specs: Array =
 	var roles: Array = ["friend", "villain"]
 	_shuffle(roles, rng)
 	var vamps: Array = []
-	for i in 2:
+	for i in (2 if def["vampires"] else 0):
 		var vt := _free_tile_near(g, _center(rooms[vroom[i]]["rect"]))
 		vamps.append({"x": vt.x, "y": vt.y, "role": roles[i]})
 	# --- sabotage timers from real walking distance (start point to fix console) ---

@@ -227,8 +227,7 @@ func _update_ally(v: Dictionary, delta: float) -> void:
 
 ## What the friend does for you. It grows with every level.
 func _ally_help(delta: float) -> void:
-	var tier := world.level_index + 1
-	if tier >= 2:
+	if world.level_index >= 2:
 		ally_task_t += delta
 		if ally_task_t >= 45.0:
 			ally_task_t = 0.0

@@ -38,8 +38,10 @@ func _choose(reveal: bool) -> void:
 	if _stage != 0 or _t < 0.5:
 		return
 	_reveal = reveal
-	_stage = 1
-	_t = 0.0
+	_stage = 3
+	if not _sent:
+		_sent = true
+		finished.emit(reveal)
 
 
 func _btn(i: int) -> Rect2:

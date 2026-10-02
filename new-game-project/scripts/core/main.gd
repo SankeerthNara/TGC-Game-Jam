@@ -232,32 +232,50 @@ func _back_from_task(success: bool) -> void:
 		EventBus.caption_changed.emit("NARRATOR: Gave up on that one? It will still be here.")
 
 
-## The hero held a vampire in the torchlight: reveal or kill? (The other vampire is known by then, so no choice is left.)
+## Plays one of the Among Us style cutscenes, then calls `then`.
+func _play_cutscene(kind: String, then: Callable) -> void:
+	var cs := CutScene.new()
+	cs.kind = kind
+	_overlay = cs
+	_task_layer.add_child(cs)
+	cs.finished.connect(func() -> void:
+		_clear_overlay()
+		then.call())
+
+
+## The hero held a vampire in the torchlight: a cutscene, then reveal or kill?
+## (If the other vampire is already known there is no real choice left.)
 func _on_vampire_caught(i: int) -> void:
 	if state != "world":
 		return
-	if world.vampires.other_resolved(i):
-		_apply_vampire_choice(i, true)
-		return
 	_set_state("choice")
-	var ov := VampireChoice.new()
-	ov.role = world.vampires.role_of(i)
-	_overlay = ov
-	_task_layer.add_child(ov)
-	ov.finished.connect(func(reveal: bool) -> void:
-		_clear_overlay()
-		_apply_vampire_choice(i, reveal))
-	EventBus.caption_changed.emit("NARRATOR: A vampire! Is he a friend or the villain? Reveal or kill...")
+	EventBus.caption_changed.emit("NARRATOR: A vampire! Hold him in the light...")
+	_play_cutscene("detected", func() -> void:
+		if world.vampires.other_resolved(i):
+			_apply_vampire_choice(i, true)
+			return
+		var ov := VampireChoice.new()
+		ov.role = world.vampires.role_of(i)
+		_overlay = ov
+		_task_layer.add_child(ov)
+		ov.finished.connect(func(reveal: bool) -> void:
+			_clear_overlay()
+			_apply_vampire_choice(i, reveal)))
 
 
 func _apply_vampire_choice(i: int, reveal: bool) -> void:
 	var role := world.vampires.role_of(i)
+	var kind := ("friend_revealed" if role == "friend" else "villain_revealed") if reveal else ("friend_killed" if role == "friend" else "villain_killed")
+	_play_cutscene(kind, func() -> void: _after_vampire_choice(i, reveal, role))
+
+
+func _after_vampire_choice(i: int, reveal: bool, role: String) -> void:
 	if reveal and role == "friend":
 		world.vampires.reveal_friend(i)
 		world.on_ally_revealed()
 		score.on_friend_revealed()
 		_enter_world()
-		var helps := ["points you to the nearest task", "also finishes small tasks for you", "also buys you time during sabotage", "also fixes a sabotage and shields you once"]
+		var helps := ["points you to tasks", "points you to the nearest task", "also finishes small tasks and buys you time", "also fixes a sabotage and shields you once"]
 		EventBus.caption_changed.emit("NARRATOR: A friend! He is not afraid of light now, and he %s." % helps[clampi(level_idx, 0, 3)])
 	elif reveal:
 		world.vampires.reveal_villain(i)

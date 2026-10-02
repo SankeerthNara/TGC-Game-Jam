@@ -18,7 +18,7 @@ const RUN := 340.0
 const JUMP := -760.0
 const HERO_W := 34.0
 const HERO_H := 58.0
-const LIMIT := 80.0
+const LIMIT := 62.0
 
 var difficulty := 0
 

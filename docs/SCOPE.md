@@ -39,7 +39,9 @@ The page is the puzzle piece: panels move, so the emitter, walls and targets mov
 - **Par times:** about 2, 3, 4 and 5 minutes for levels 1 to 4 (4, 6, 8 and 10 tasks), shown on the HUD.
 - **Adaptive difficulty:** finishing a level over par makes the next one a little easier (1 or 2 steps: fewer tasks, easier mini-games, longer sabotage timers), so total playtime stays steady. Finishing on time changes nothing.
 - **Score (independent of time):** per level, tasks x100 (x1, 1.25, 1.5, 2 by level), +150 per sabotage stopped in time (+250 big), -100 per sabotage that hit you (-200 big), -50 per tampered task, +100 per heart left, +300 for no deaths (-250 per death), and up to +300 for finishing under par (never a penalty for being slow). Ranks S/A/B/C from the share of the level maximum; the vampire choices will add points. Shown on the HUD and on the level-complete card.
-- After level 4: the final boss fight against the **Narrator**, lasting **at least 3 minutes** (three phases of about a minute; a phase ends only when its timer and its damage target are both met), with torch and mirrors, surviving allies helping and three endings.
+- **Level 1 is a warm-up:** no vampires, no sabotage. At its end the Narrator captures the level 1 hero. Vampires and sabotage start in level 2 (1 sabotage), then 2 big in level 3, and 2 big plus a task undone in level 4.
+- **Among Us style cutscenes** for detecting a vampire, for revealing a friend, for revealing the villain (ending in a teleport to the parkour) and for killing a friend or the villain (ejection into space).
+- After level 4: the heroes of levels 2, 3 and 4 fight the **Narrator** one on one in turn to free the captured hero (win: sunlight evaporates him; lose: he throws the level 1 hero into lava). The old description follows: the final boss fight against the **Narrator**, lasting **at least 3 minutes** (three phases of about a minute; a phase ends only when its timer and its damage target are both met), with torch and mirrors, surviving allies helping and three endings.
 
 ## Content
 | Page | District | Teaches | Rule |
