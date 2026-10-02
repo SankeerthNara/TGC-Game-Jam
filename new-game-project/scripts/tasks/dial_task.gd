@@ -2,7 +2,7 @@ class_name DialTask
 extends TaskBase
 ## Telescope alignment: steer the beam with Left/Right (or the mouse) and keep it on the drifting star.
 
-const NEED := 3.2
+var NEED := 3.0
 
 var _angle := -40.0
 var _lock := 0.0
@@ -11,11 +11,13 @@ var _lock := 0.0
 func _begin() -> void:
 	title = "ALIGN THE TELESCOPE"
 	hint = "LEFT / RIGHT (or move the mouse) to aim. Keep the beam on the star!"
+	NEED = 2.5 + 0.5 * difficulty
 	_angle = [-50.0, 45.0][randi() % 2]
 
 
 func _star_angle() -> float:
-	return sin(_t * 0.8) * 45.0 + sin(_t * 1.9 + 1.0) * 14.0
+	var sp := 1.0 + 0.25 * difficulty
+	return sin(_t * 0.8 * sp) * 45.0 + sin(_t * 1.9 * sp + 1.0) * 14.0
 
 
 func _update(delta: float) -> void:
@@ -25,7 +27,7 @@ func _update(delta: float) -> void:
 	if Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D):
 		dir += 1.0
 	_angle = clampf(_angle + dir * 70.0 * delta, -75.0, 75.0)
-	if absf(_angle - _star_angle()) < 5.5:
+	if absf(_angle - _star_angle()) < (5.5 - 0.5 * difficulty):
 		_lock += delta
 		if _lock >= NEED:
 			succeed()
@@ -50,7 +52,7 @@ func _draw_task() -> void:
 		draw_circle(p, 1.5 + (k % 3), Color(1, 1, 1, 0.5 + 0.4 * sin(_t * 2.0 + k)))
 	var sa := deg_to_rad(_star_angle())
 	var star := base + Vector2(sin(sa), -cos(sa)) * length
-	var aligned := absf(_angle - _star_angle()) < 5.5
+	var aligned := absf(_angle - _star_angle()) < (5.5 - 0.5 * difficulty)
 	_glow(star, 70.0 if aligned else 45.0, Color(1, 0.9, 0.5, 0.9 if aligned else 0.5))
 	var pts := PackedVector2Array()
 	for k in 10:

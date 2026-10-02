@@ -10,7 +10,7 @@ const CIRCUITS := [
 	{"inputs": ["A", "B", "C"], "text": "OUT = NOT (A AND B) AND C", "id": 3},
 	{"inputs": ["A", "B", "C", "D"], "text": "OUT = (A XOR B) AND (C OR D)", "id": 4},
 ]
-const ROUNDS := 2
+var ROUNDS := 1
 
 var _round := 0
 var _deck: Array = []
@@ -19,6 +19,7 @@ var _state: Array[bool] = []
 
 
 func _begin() -> void:
+	ROUNDS = 1 + (difficulty + 1) / 2
 	title = "WIRE THE LOGIC GATES"
 	hint = "Click the switches. Make the OUT lamp light up!"
 	_deck = CIRCUITS.duplicate()
@@ -34,8 +35,6 @@ func _load_round() -> void:
 	while _eval():
 		for i in _state.size():
 			_state[i] = randf() < 0.5
-	if not _eval() == false:
-		pass
 
 
 func _eval() -> bool:

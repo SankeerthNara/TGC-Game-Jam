@@ -2,8 +2,8 @@ class_name ChargeTask
 extends TaskBase
 ## Hold Space (or the mouse button) to charge. Keep the level inside the moving green zone.
 
-const NEED := 4.0
-const LIMIT := 24.0
+var NEED := 3.5
+var LIMIT := 24.0
 
 var _level := 0.0
 var _good := 0.0
@@ -12,13 +12,18 @@ var _holding := false
 
 
 func _begin() -> void:
+	NEED = 3.0 + 0.7 * difficulty
+	LIMIT = 24.0 - 2.0 * difficulty
+	_left = LIMIT
 	title = "CHARGE THE TORCH"
 	hint = "Hold SPACE or the mouse button to charge. Keep the level inside the green zone!"
 
 
 func _zone() -> Vector2:
-	var center := 0.5 + sin(_t * 0.9) * 0.28 + sin(_t * 2.3) * 0.06
-	return Vector2(center - 0.11, center + 0.11)
+	var sp := 1.0 + 0.2 * difficulty
+	var center := 0.5 + sin(_t * 0.9 * sp) * 0.28 + sin(_t * 2.3 * sp) * 0.06
+	var half := 0.11 - 0.015 * difficulty
+	return Vector2(center - half, center + half)
 
 
 func _gui_input(event: InputEvent) -> void:

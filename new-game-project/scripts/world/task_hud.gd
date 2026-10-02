@@ -40,7 +40,8 @@ func _draw() -> void:
 	_draw_health_and_sabotage()
 	var total := world.tasks.size()
 	var done := world.tasks_done.size()
-	var box := Rect2(Vector2(900, 20), Vector2(350, 76))
+	_draw_timers()
+	var box := Rect2(Vector2(900, 84), Vector2(350, 76))
 	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
 	draw_rect(box, Color("fff9e6"))
 	draw_rect(box, INK, false, 4.0)
@@ -60,7 +61,7 @@ func _draw() -> void:
 		return
 	var n := world.tasks.size()
 	var lh := 21.0
-	var lbox := Rect2(Vector2(900, 108), Vector2(350, 30 + n * lh))
+	var lbox := Rect2(Vector2(900, 172), Vector2(350, 30 + n * lh))
 	draw_rect(Rect2(lbox.position + Vector2(4, 4), lbox.size), Color(0, 0, 0, 0.3))
 	draw_rect(lbox, Color(1, 0.98, 0.9, 0.9))
 	draw_rect(lbox, INK, false, 3.0)
@@ -134,3 +135,19 @@ func _draw_health_and_sabotage() -> void:
 	var side := dir.orthogonal()
 	draw_colored_polygon(PackedVector2Array([c + dir * 26, c - dir * 14 + side * 18, c - dir * 14 - side * 18]), Color("ff4d4d"))
 	draw_polyline(PackedVector2Array([c + dir * 26, c - dir * 14 + side * 18, c - dir * 14 - side * 18, c + dir * 26]), INK, 3.0)
+
+
+func _fmt(t: float) -> String:
+	var secs := int(t)
+	return "%02d:%02d" % [secs / 60, secs % 60]
+
+
+func _draw_timers() -> void:
+	var box := Rect2(Vector2(900, 20), Vector2(350, 56))
+	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
+	draw_rect(box, Color("18151d"))
+	draw_rect(box, Color("ffd23f"), false, 3.0)
+	draw_string(FONT_SHOUT, box.position + Vector2(12, 24), "LEVEL %d/%d" % [world.level_index + 1, world.level_count], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("ffd23f"))
+	draw_string(FONT_SHOUT, box.position + Vector2(12, 48), "THIS LEVEL  %s" % _fmt(world.level_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("fff3d1"))
+	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 12 - 150, 48), "TOTAL  %s" % _fmt(world.total_time), HORIZONTAL_ALIGNMENT_RIGHT, 150, 22, Color("fff3d1"))
+	draw_string(FONT_BODY, box.position + Vector2(box.size.x - 12 - 190, 22), world.level_title, HORIZONTAL_ALIGNMENT_RIGHT, 190, 15, Color("ffffff"))

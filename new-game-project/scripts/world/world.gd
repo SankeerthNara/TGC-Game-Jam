@@ -58,6 +58,11 @@ var max_health := 3
 var hp := 3
 var sabotage: Dictionary = {} ## active sabotage: {def, left}
 var clock_running := true
+var level_index := 0
+var level_count := 1
+var level_title := ""
+var level_time := 0.0
+var total_time := 0.0
 
 var hero := HeroActor.new()
 var tile := Vector2i.ZERO
@@ -137,12 +142,15 @@ func _ready() -> void:
 	shop_layer.layer = 15
 	add_child(shop_layer)
 	shop_layer.add_child(_shop)
-	load_map("res://data/world/station.json")
 	set_active(false)
 
 
 func load_map(path: String) -> void:
-	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	load_data(JSON.parse_string(FileAccess.get_file_as_string(path)))
+
+
+## Builds the world from a data dictionary (a JSON file, or a generated level).
+func load_data(data: Dictionary) -> void:
 	station_mode = data.get("mode", "") == "station"
 	tasks = data.get("tasks", [])
 	rooms = data.get("rooms", [])

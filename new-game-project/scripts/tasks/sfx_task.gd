@@ -3,8 +3,8 @@ extends TaskBase
 ## Comic lettering: type each sound effect before it fades. Six words.
 
 const WORDS := ["POW", "ZAP", "BAM", "WHAM", "BZZT", "SPLAT", "KABOOM", "WHOOSH", "THUD", "SNAP", "KRAK", "ZOOM"]
-const NEED := 6
-const TIME_PER := 6.0
+var NEED := 5
+var TIME_PER := 6.0
 
 var _queue: Array[String] = []
 var _word := ""
@@ -14,11 +14,14 @@ var _count := 0
 
 
 func _begin() -> void:
+	NEED = 5 + difficulty
+	TIME_PER = 6.0 - 0.7 * difficulty
+	_left = TIME_PER
 	title = "LETTER THE SOUND EFFECTS"
 	hint = "Type the word you see. A wrong letter restarts the word. Be quick!"
 	var w := WORDS.duplicate()
 	w.shuffle()
-	for i in NEED + 3:
+	for i in mini(NEED + 3, w.size()):
 		_queue.append(w[i])
 	_next()
 

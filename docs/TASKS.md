@@ -25,3 +25,4 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | A8 | Antigravity | Task art/sound: sounds for task start, success, fail (hook `task_started`, `task_completed`), station ambience, wall/floor/prop art polish via `World` draw helpers (ask on this board) | todo | C6 | |
 | G5 | ChatGPT | Headless tests: every task console reachable, tasks list matches map, TaskRegistry covers every type in station.json | todo | C6 | |
 | C7 | Claude | Sabotage timers and hearts, death and restart, free 8-direction movement, 6 comic/college mini-games, 18 tasks and 6 emergency fixes | done | C6 | |
+| C8 | Claude | Levels: 4 generated levels of 8 random rooms, rising difficulty, checkpoints and respawn, level and total timers, split summary | done | C7 | `level_generator.gd`, `level_overlay.gd` |

@@ -2,14 +2,14 @@ class_name SwitchesTask
 extends TaskBase
 ## Fuse box: every switch also flips its neighbours. Light all the bulbs.
 
-const COUNT := 6
-
+var COUNT := 5
 var _on: Array[bool] = []
 
 
 func _begin() -> void:
 	title = "FIX THE FUSE BOX"
-	hint = "Click a switch (or press 1-6). It flips its neighbours too. Light every bulb!"
+	hint = "Click a switch (or press 1-7). It flips its neighbours too. Light every bulb!"
+	COUNT = 5 + clampi(difficulty - 1, 0, 2)
 	_on.clear()
 	for i in COUNT:
 		_on.append(true)
@@ -26,8 +26,8 @@ func _press(i: int) -> void:
 
 
 func _rect(i: int) -> Rect2:
-	var w := 96.0
-	var gap := 20.0
+	var w := minf(96.0, (panel.size.x - 100.0 - (COUNT - 1) * 14.0) / COUNT)
+	var gap := 14.0
 	var total := COUNT * w + (COUNT - 1) * gap
 	return Rect2(Vector2(panel.get_center().x - total * 0.5 + i * (w + gap), panel.position.y + 220), Vector2(w, 190))
 

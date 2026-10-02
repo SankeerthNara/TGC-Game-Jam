@@ -15,6 +15,7 @@ const GOLD := Color("ffd23f")
 const RED := Color("e63946")
 const GREEN := Color("2d6a4f")
 
+var difficulty := 0 ## 0..3: set by the game before the task opens; higher is harder
 var panel := Rect2(Vector2(240, 105), Vector2(800, 520))
 var title := "TASK"
 var hint := ""

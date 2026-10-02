@@ -12,7 +12,10 @@ Godot 4.7, GDScript, Compatibility renderer. Godot project root is `new-game-pro
 | Data | `data/levels/*.json`, `data/levels/index.json` | Level files. Add a file name to `index.json` to add a level. |
 | Tools | `scripts/tools/level_solver.gd`, `level_check.gd`, `level_gen.gd` | Headless validators and generator. |
 
-## The station (default map) and tasks
+## Levels (generated at run time)
+`scripts/world/level_generator.gd` builds each level: 8 rooms at random positions, joined by a spanning tree plus loops of corridors, consoles against room walls, risky tasks with far-away fix consoles, sabotage timers from real walking distance, and furniture. `LEVELS` there defines each level's tasks and risky count. `main.gd` runs the flow: `_load_level(i)`, level timers, level-complete overlay (checkpoint), death -> respawn at the level start. `TaskBase.difficulty` (0-3) scales each mini-game.
+
+## The station (data format) and tasks
 `data/world/station.json` (built by a generator script) is the default map: `rows`, `rooms` (name, rect, floor colour), `tasks` (id, tile, type, name, room, param), `intro`. Map characters: `#` wall, `.` floor, `K` task console, `c` crate, `t` table, `p` plant, `b` bookshelf, `@` start.
 **Sabotage and health:** tasks marked `triggers` (shown with a red warning triangle and "RISKY" in the checklist) start a countdown from `sabotages` in the JSON when completed. A `fixes` console (marked `F`) becomes active for that sabotage; finishing its mini-game in time resolves it, otherwise the hero loses `damage` hearts (3 max). At 0 hearts the death screen appears and the run restarts. Events: `sabotage_started`, `sabotage_resolved`, `sabotage_failed`, `player_died`.
 **Movement:** station mode uses free movement: any mix of arrow keys or WASD works, opposing keys cancel, two perpendicular keys go diagonal at the same speed.

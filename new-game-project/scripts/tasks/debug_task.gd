@@ -11,7 +11,7 @@ const SNIPPETS := [
 	{"lines": ["# say hello three times", "word = 'hello'", "print(word * 2)"], "bug": 2},
 	{"lines": ["# is the number even?", "n = 14", "if n % 2 == 1:", "    print('even')"], "bug": 2},
 ]
-const ROUNDS := 3
+var ROUNDS := 2
 
 var _round := 0
 var _deck: Array = []
@@ -21,6 +21,7 @@ var _wrong_t := 0.0
 
 
 func _begin() -> void:
+	ROUNDS = 2 + int(difficulty * 0.7 + 0.5)
 	title = "DEBUG THE ASSIGNMENT"
 	hint = "One line in each program is wrong. Click the bug!"
 	_deck = SNIPPETS.duplicate()

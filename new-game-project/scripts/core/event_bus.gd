@@ -39,3 +39,7 @@ signal sabotage_started(sabotage_name: String, seconds: float)
 signal sabotage_resolved(sabotage_name: String)
 signal sabotage_failed(sabotage_name: String, health_left: int)
 signal player_died
+
+## --- levels ---
+signal level_started(index: int, title: String)
+signal level_completed(index: int, seconds: float)

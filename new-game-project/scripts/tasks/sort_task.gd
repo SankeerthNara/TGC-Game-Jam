@@ -2,7 +2,7 @@ class_name SortTask
 extends TaskBase
 ## College task (library): shelve the books in ascending call-number order. Click two books to swap them.
 
-const COUNT := 7
+var COUNT := 5
 
 var _nums: Array[int] = []
 var _sel := -1
@@ -10,6 +10,7 @@ var _swaps := 0
 
 
 func _begin() -> void:
+	COUNT = 5 + difficulty
 	title = "SHELVE THE BOOKS"
 	hint = "Click two books to swap them. Smallest call number on the left!"
 	var pool := range(1, 99)

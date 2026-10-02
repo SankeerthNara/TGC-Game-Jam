@@ -15,6 +15,13 @@ var run_id := 0 ## bumps on every level start so stale timers do nothing
 var decoy_revealed := false
 var state := "menu" ## menu | world | task (a mini-game) | playing (a page puzzle) | paused | ended | dead
 var active_task := ""
+var run_seed := 0
+var level_idx := 0
+var level_time := 0.0
+var total_time := 0.0
+var level_splits: Array = []
+var _overlay: Node
+var _retrying := false
 var _task_layer: CanvasLayer
 
 var _caption: Label
@@ -46,6 +53,7 @@ func _ready() -> void:
 	view.toggle_requested.connect(_on_toggle)
 	view.locked_panel_clicked.connect(_on_locked)
 	EventBus.request_start_game.connect(_start_game)
+	set_process(true)
 	EventBus.request_restart_level.connect(func() -> void: if state == "playing": start_level(GameState.level_index); EventBus.level_restarted.emit())
 	EventBus.request_undo.connect(_undo)
 	EventBus.request_pause.connect(_set_paused)
@@ -65,8 +73,8 @@ func _set_state(s: String) -> void:
 	var in_puzzle := s == "playing" or s == "paused"
 	view.visible = in_puzzle
 	view.input_enabled = s == "playing" and not busy
-	world.set_active(s == "world" or s == "task" or s == "dead")
-	world.input_blocked = s == "task" or s == "dead"
+	world.set_active(s == "world" or s == "task" or s == "dead" or s == "levelend")
+	world.input_blocked = s == "task" or s == "dead" or s == "levelend"
 	world.clock_running = s == "world" or s == "task" or s == "playing"
 	EventBus.game_state_changed.emit(s)
 
@@ -85,9 +93,41 @@ func _to_menu() -> void:
 
 func _start_game() -> void:
 	GameState.restart_game()
-	world.reset()
+	run_seed = randi()
+	level_splits.clear()
+	total_time = 0.0
+	_clear_overlay()
+	_load_level(0)
+
+
+## Builds level `i` (same layout every time for this run, so a respawn is the same map) and starts it.
+func _load_level(i: int) -> void:
+	level_idx = i
+	if not _retrying:
+		level_time = 0.0
+	_retrying = false
+	var data := LevelGenerator.generate(i, run_seed)
+	world.level_index = i
+	world.level_count = LevelGenerator.level_count()
+	world.level_title = LevelGenerator.level_title(i)
+	world.load_data(data)
+	EventBus.level_started.emit(i, world.level_title)
 	_enter_world()
-	EventBus.caption_changed.emit(world.intro if world.intro != "" else "NARRATOR: Gutter Town has gone dark! Walk with the ARROW KEYS, press Z or SPACE to talk.")
+	EventBus.caption_changed.emit(world.intro)
+
+
+func _process(delta: float) -> void:
+	if world.clock_running and (state == "world" or state == "task" or state == "playing"):
+		level_time += delta
+		total_time += delta
+	world.level_time = level_time
+	world.total_time = total_time
+
+
+func _clear_overlay() -> void:
+	if _overlay != null and is_instance_valid(_overlay):
+		_overlay.queue_free()
+	_overlay = null
 
 
 func _enter_world() -> void:
@@ -144,6 +184,7 @@ func _on_task_requested(task_id: String, type: String, param: int) -> void:
 	if game == null:
 		active_task = ""
 		return
+	game.difficulty = level_idx
 	_set_state("task")
 	_task_layer.add_child(game)
 	game.finished.connect(func(success: bool) -> void: _on_task_finished(game, success))
@@ -160,9 +201,7 @@ func _on_task_finished(game: Node, success: bool) -> void:
 
 func _back_from_task(success: bool) -> void:
 	if world.all_tasks_done():
-		_set_state("ended")
-		EventBus.game_finished.emit()
-		EventBus.caption_changed.emit("NARRATOR: Every task done and the progress bar is full! ...but who cut the lights in the first place?")
+		_level_complete()
 		return
 	_enter_world()
 	if success:
@@ -182,11 +221,38 @@ func _on_player_died() -> void:
 	active_task = ""
 	_set_state("dead")
 	var overlay := DeathOverlay.new()
+	overlay.message = "Back to the checkpoint: the start of Level %d." % (level_idx + 1)
 	overlay.restart.connect(func() -> void:
 		overlay.queue_free()
-		_start_game())
+		_retrying = true
+		_load_level(level_idx))
 	_task_layer.add_child(overlay)
-	EventBus.caption_changed.emit("NARRATOR: Out of hearts! The station claims another hero. Press Z to try again.")
+	EventBus.caption_changed.emit("NARRATOR: Out of hearts! Respawning at your checkpoint. Level %d starts again." % (level_idx + 1))
+
+
+func _level_complete() -> void:
+	level_splits.append(level_time)
+	EventBus.level_completed.emit(level_idx, level_time)
+	var last := level_idx >= LevelGenerator.level_count() - 1
+	_set_state("levelend")
+	var ov := LevelOverlay.new()
+	ov.title = "Level %d: %s" % [level_idx + 1, LevelGenerator.level_title(level_idx)]
+	ov.level_time = level_time
+	ov.total_time = total_time
+	ov.splits = level_splits.duplicate()
+	ov.final = last
+	if not last:
+		ov.next_title = "Level %d" % (level_idx + 2)
+	_overlay = ov
+	_task_layer.add_child(ov)
+	ov.continue_pressed.connect(func() -> void:
+		_clear_overlay()
+		if last:
+			EventBus.game_finished.emit()
+			EventBus.request_quit_to_menu.emit()
+		else:
+			_load_level(level_idx + 1))
+	EventBus.caption_changed.emit("NARRATOR: Level complete! Checkpoint saved.")
 
 
 func _wait_playing() -> void:

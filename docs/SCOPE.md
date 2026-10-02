@@ -1,6 +1,8 @@
 # Scope - "Mirror Page" (DRAFT for the Hour 12 submission)
 
-> **Current build (station mode):** a huge dark comic-studio station (20 rooms, 108x72 tiles). Only the area around the hero's torch is lit. 15 interactive tasks fill a progress bar (wires, fuse box, lantern code, torch charge, telescope dial, ink spills, card swipe, and 4 light-puzzle pages). Story hook: someone sabotaged the lights; the saboteur twist comes later. The town, items, shop and keys described below still exist in the code (`data/world/town.json`) but are not the default map.
+> **Current build (levels):** 4 levels, each a generated dark comic-studio floor of 8 rooms in a random layout (not a grid). Difficulty rises per level (more tasks, harder mini-games, more sabotage, shorter timers). Finishing a level saves a checkpoint: running out of hearts respawns you at the start of the current level. A top-right timer shows this-level and total time, with a summary at the end.
+>
+> Previous note: a dark comic-studio station. Only the area around the hero's torch is lit. 15 interactive tasks fill a progress bar (wires, fuse box, lantern code, torch charge, telescope dial, ink spills, card swipe, and 4 light-puzzle pages). Story hook: someone sabotaged the lights; the saboteur twist comes later. The town, items, shop and keys described below still exist in the code (`data/world/town.json`) but are not the default map.
 
 
 **One line:** a comic-book adventure where you walk a dark town with a torch, hunt hidden items, trade them for keys, and open "page doors" that lead to light-routing puzzles, while an unreliable narrator breaks the rules and lets you walk through the wrong door.

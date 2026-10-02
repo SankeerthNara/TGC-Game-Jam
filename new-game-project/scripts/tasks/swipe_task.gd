@@ -2,8 +2,8 @@ class_name SwipeTask
 extends TaskBase
 ## Swipe the card through the reader: not too fast, not too slow.
 
-const MIN_TIME := 0.18
-const MAX_TIME := 1.5
+var MIN_TIME := 0.18
+var MAX_TIME := 1.5
 
 var _card_x := 0.0
 var _dragging := false
@@ -13,6 +13,8 @@ var _passed_left := false
 
 
 func _begin() -> void:
+	MIN_TIME = 0.18 + 0.05 * difficulty
+	MAX_TIME = 1.5 - 0.2 * difficulty
 	title = "SWIPE THE PANTRY CARD"
 	hint = "Press on the card and drag it right through the reader at a steady speed."
 	_card_x = _rail().position.x + 20.0

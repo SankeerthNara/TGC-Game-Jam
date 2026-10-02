@@ -2,10 +2,11 @@ class_name WiresTask
 extends TaskBase
 ## Drag each wire to the socket of the same colour.
 
-const WIRE_COLORS := [Color("e63946"), Color("3a86ff"), Color("ffd23f"), Color("ff7bd5")]
+const WIRE_COLORS := [Color("e63946"), Color("3a86ff"), Color("ffd23f"), Color("ff7bd5"), Color("2dc653")]
 
-var _right: Array[int] = [0, 1, 2, 3] ## colour index at each right socket
-var _link: Array[int] = [-1, -1, -1, -1] ## right socket reached by each left wire
+var _n := 4
+var _right: Array[int] = [] ## colour index at each right socket
+var _link: Array[int] = [] ## right socket reached by each left wire
 var _drag := -1
 var _mouse := Vector2.ZERO
 
@@ -13,16 +14,21 @@ var _mouse := Vector2.ZERO
 func _begin() -> void:
 	title = "REWIRE THE PANEL"
 	hint = "Drag each wire to the matching colour on the right."
-	while _right == [0, 1, 2, 3]:
+	_n = 4 if difficulty < 2 else 5
+	for i in _n:
+		_right.append(i)
+		_link.append(-1)
+	var ordered := _right.duplicate()
+	while _right == ordered:
 		_right.shuffle()
 
 
 func _left_pos(i: int) -> Vector2:
-	return Vector2(panel.position.x + 120, panel.position.y + 165 + i * 88)
+	return Vector2(panel.position.x + 120, panel.position.y + 150 + i * (360.0 / _n + 6.0))
 
 
 func _right_pos(j: int) -> Vector2:
-	return Vector2(panel.end.x - 120, panel.position.y + 165 + j * 88)
+	return Vector2(panel.end.x - 120, panel.position.y + 150 + j * (360.0 / _n + 6.0))
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -33,12 +39,12 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		_mouse = event.position
 		if event.pressed:
-			for i in 4:
+			for i in _n:
 				if _link[i] < 0 and _mouse.distance_to(_left_pos(i)) < 34.0:
 					_drag = i
 		elif _drag >= 0:
 			var hit := -1
-			for j in 4:
+			for j in _n:
 				if _mouse.distance_to(_right_pos(j)) < 38.0:
 					hit = j
 			if hit >= 0 and _right[hit] == _drag and not _link.has(hit):
@@ -51,7 +57,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _draw_task() -> void:
-	for i in 4:
+	for i in _n:
 		var lp := _left_pos(i)
 		var col: Color = WIRE_COLORS[i]
 		if _link[i] >= 0:
@@ -61,7 +67,7 @@ func _draw_task() -> void:
 		draw_rect(Rect2(lp + Vector2(-46, -22), Vector2(40, 44)), INK)
 		draw_circle(lp, 20.0, INK)
 		draw_circle(lp, 15.0, col)
-	for j in 4:
+	for j in _n:
 		var rp := _right_pos(j)
 		var col2: Color = WIRE_COLORS[_right[j]]
 		draw_rect(Rect2(rp + Vector2(6, -22), Vector2(40, 44)), INK)

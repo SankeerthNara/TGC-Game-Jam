@@ -3,7 +3,7 @@ extends TaskBase
 ## Watch the lanterns flash, then repeat the pattern. Five rounds.
 
 const LAMP_COLORS := [Color("e63946"), Color("3a86ff"), Color("2dc653"), Color("ffd23f")]
-const ROUNDS := 5
+var ROUNDS := 4
 
 var _seq: Array[int] = []
 var _round := 1
@@ -18,6 +18,7 @@ var _lit_t := 0.0
 func _begin() -> void:
 	title = "REPEAT THE LANTERN CODE"
 	hint = "Click the lanterns (or use the arrow keys) in the order they flashed."
+	ROUNDS = 4 + difficulty
 	for i in ROUNDS:
 		_seq.append(randi() % 4)
 	_start_show()
@@ -47,7 +48,7 @@ func _update(delta: float) -> void:
 				_lit = -1
 			else:
 				_lit = _seq[_show_i]
-				_lit_t = 0.45
+				_lit_t = maxf(0.22, 0.45 - 0.07 * difficulty)
 				_show_i += 1
 				_show_t = -0.3
 

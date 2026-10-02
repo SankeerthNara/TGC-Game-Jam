@@ -2,8 +2,8 @@ class_name BlotsTask
 extends TaskBase
 ## Ink spills pop up: click them before they spread. Wipe ten, miss four and you start over.
 
-const NEED := 10
-const MAX_MISS := 4
+var NEED := 8
+var MAX_MISS := 5
 
 var _blots: Array[Dictionary] = []
 var _wiped := 0
@@ -12,8 +12,10 @@ var _spawn := 0.4
 
 
 func _begin() -> void:
+	NEED = 8 + 2 * difficulty
+	MAX_MISS = maxi(2, 5 - difficulty)
 	title = "WIPE THE INK SPILLS"
-	hint = "Click the ink blots before they spread! Wipe 10. Miss 4 and it starts over."
+	hint = "Click the ink blots before they spread! Too many misses and it starts over."
 
 
 func _area() -> Rect2:
@@ -25,14 +27,14 @@ func _update(delta: float) -> void:
 	if _spawn <= 0.0 and _wiped + _blots.size() < NEED + 2:
 		var a := _area()
 		_blots.append({"p": Vector2(randf_range(a.position.x + 50, a.end.x - 50), randf_range(a.position.y + 50, a.end.y - 50)), "age": 0.0, "pop": -1.0, "seed": randf() * 6.0})
-		_spawn = 0.75
+		_spawn = maxf(0.4, 0.85 - 0.1 * difficulty)
 	for b in _blots:
 		if b["pop"] < 0.0:
 			b["age"] += delta
 		else:
 			b["pop"] += delta
 	for b in _blots.duplicate():
-		if b["pop"] < 0.0 and b["age"] > 2.3:
+		if b["pop"] < 0.0 and b["age"] > (2.6 - 0.25 * difficulty):
 			_blots.erase(b)
 			_missed += 1
 			flash("SPLAT! MISSED", 6.0)
