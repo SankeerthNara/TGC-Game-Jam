@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mirror Page - Implementation Plan</title>
+<style>
+  @page { size: A4; margin: 11mm 13mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b1b24; font-size: 9.1pt; line-height: 1.32; margin: 0; }
+  .banner { background: #1b1b24; color: #ffd23f; padding: 12px 16px; border-left: 8px solid #e63946; border-radius: 3px; margin-bottom: 8px; }
+  .banner h1 { margin: 0; font-size: 24pt; letter-spacing: 1px; }
+  .banner .sub { color: #f6ecd2; font-size: 10.5pt; margin-top: 2px; }
+  h2 { font-size: 11pt; margin: 9px 0 3px; padding-bottom: 2px; border-bottom: 2.5px solid #ffd23f; text-transform: uppercase; letter-spacing: .5px; }
+  table { border-collapse: collapse; width: 100%; margin: 3px 0; font-size: 8.6pt; }
+  th, td { border: 1px solid #1b1b24; padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: #f6ecd2; }
+  ul { margin: 3px 0 3px 16px; padding: 0; }
+  li { margin: 1px 0; }
+  .meta td { border: none; padding: 1px 8px 1px 0; }
+  .box { background: #f6ecd2; border-left: 5px solid #ffb703; padding: 5px 9px; margin: 6px 0; }
+  .tag { display: inline-block; background: #e63946; color: #fff; padding: 0 6px; border-radius: 9px; font-size: 8pt; font-weight: bold; }
+  .tag.s { background: #6c757d; }
+  .pb { page-break-before: always; }
+  code { background: #eee; padding: 0 3px; font-size: 8.6pt; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <h1>MIRROR PAGE</h1>
+  <div class="sub">Implementation plan for Hours 12 to 100. In a comic, the light is your weapon and the narrator is cheating.</div>
+</div>
+
+<table class="meta">
+  <tr><td><b>Developer</b></td><td>Sankeerth Nara (solo)</td><td><b>Repository</b></td><td>github.com/SankeerthNara/TGC-Game-Jam (public, MIT)</td></tr>
+  <tr><td><b>Themes</b></td><td>Comic, Twist, Light (all three)</td><td><b>Engine</b></td><td>Godot 4.7, GDScript, Compatibility renderer, Web export</td></tr>
+  <tr><td><b>Final playtime</b></td><td>12 to 15 minutes (20 max)</td><td><b>Plan status</b></td><td>Concept locked at Hour 12. Features below are committed or marked stretch.</td></tr>
+</table>
+
+<h2>1. Where we are at Hour 12 (already built and verified)</h2>
+<ul>
+  <li><b>Core loop:</b> a dark comic-studio level where only the area around the hero's torch is lit. The hero walks smoothly in 8 directions. Each level has 5 to 8 interactive tasks that fill a progress bar.</li>
+  <li><b>4 generated levels</b> of 8 rooms in a random (non-grid) layout, with rising difficulty, a map screen, checkpoints at each level start, respawn on death, and level and total timers with a split summary.</li>
+  <li><b>13 task types:</b> wires, fuse box, lantern code, torch charge, telescope, ink spills, card swipe (classic style) plus comic tasks (order panels, fill speech bubbles, letter sound effects), college tasks (debug code, logic gates, shelve books) and the original light puzzle pages (drag panels, flip mirrors, steer a beam) with the goal-flip, lying-mirror and gutter-bend rule twists.</li>
+  <li><b>Sabotage and health:</b> risky tasks start a countdown; a fix console must be completed in time or the hero loses a heart. Zero hearts means respawn at the checkpoint.</li>
+  <li><b>Tooling:</b> level and puzzle validators, headless unit tests, a browser (WebGL) build verified, comic UI, menus, CC0 audio, open fonts.</li>
+</ul>
+
+<h2>2. Committed features for the remaining 88 hours</h2>
+<table>
+  <tr><th style="width:3%">#</th><th style="width:25%">Feature</th><th>What it adds</th><th style="width:9%">Hours</th></tr>
+  <tr><td>1</td><td><b>The Saboteur</b> (visible imposter)</td><td>An ink creature roams each level. It runs from torchlight, freezes in the beam, and sets off sabotage when it reaches a console. Catching it in the light stops the timer. Makes the darkness the core tension (Light + Twist).</td><td>22</td></tr>
+  <tr><td>2</td><td><b>A comic genre per level</b></td><td>Level 1 superhero pulp, 2 noir black and white, 3 manga, 4 pop-art: palette, fonts, caption style, onomatopoeia and music change per level (Comic).</td><td>14</td></tr>
+  <tr><td>3</td><td><b>Fourth-wall twists</b></td><td>The narrator attacks the interface: lying captions, a fake progress bar, a wrong map, swapped controls for one level, HUD glitches. Final reveal: the narrator cut the lights because the comic is being cancelled, and the player rewrites the last page (Twist).</td><td>14</td></tr>
+  <tr><td>4</td><td><b>Comic look and juice</b></td><td>Ink outline and halftone screen shader, page-turn and panel-split level transitions, onomatopoeia on actions, narrator speech bubbles with text blips.</td><td>12</td></tr>
+  <tr><td>5</td><td><b>Ranks and replay</b></td><td>S/A/B medals per level from time and hearts lost, best splits saved locally, run seed on the end screen.</td><td>5</td></tr>
+  <tr><td>6</td><td><b>First-minute polish</b></td><td>A 30 second in-level tutorial, controls hints, itch.io page with GIFs, README, CREDITS, AI usage log.</td><td>8</td></tr>
+  <tr><td>7</td><td><b>Balance and testing</b></td><td>Difficulty tuning of all tasks and sabotage timers, 5 outside playtests, bug fixing, web performance checks.</td><td>13</td></tr>
+</table>
+<p><span class="tag s">STRETCH</span> (only after all of the above are playable, in this order): light puzzle rooms in the world (rotate real mirrors to open a door), a torch battery with recharge lamps, reactive music (faster while a timer runs). <b>Cut first</b> if time is short: stretch items, then medals, then the manga and pop-art levels (fallback: palette swaps only).</p>
+<div class="box"><b>Fixed limits:</b> 4 levels (no more), no multiplayer, no save slots, no level editor, no new engine features. Quality over quantity.</div>
+
+<h2>3. Roadmap and milestones</h2>
+<table>
+  <tr><th style="width:12%">Hours</th><th>Work</th><th style="width:31%">Exit criteria (a playable build every 12 hours)</th></tr>
+  <tr><td>12 - 30</td><td>Plan locked. Controls and camera polish, tutorial in level 1, level 1 genre art pass (pulp), reactive caption and narrator bubbles, first version of the comic shader, web build and audio check.</td><td>Level 1 is fun and good-looking, plays start to finish in the browser.</td></tr>
+  <tr><td>30 - 55</td><td>The Saboteur: patrol AI, light reaction (flee and freeze), sabotage triggers, catch rules, tuning. Fourth-wall twist scripting for levels 1 to 3. Genre art for levels 2 and 3 (noir, manga).</td><td>Levels 1 to 3 playable with the Saboteur and at least two interface twists.</td></tr>
+  <tr><td>55 - 75</td><td>Level 4 (pop-art), the final reveal and last-page puzzle, transitions between levels, onomatopoeia and screen juice, medals and ranks, audio mix.</td><td>Full 12 to 15 minute run from menu to ending.</td></tr>
+  <tr><td>75 - 85</td><td>Balance pass, outside playtests, bug fixing, performance, accessibility (colour contrast, key hints). <b>Feature freeze at Hour 85.</b></td><td>No known blocking bugs; difficulty curve confirmed by testers.</td></tr>
+  <tr><td>85 - 96</td><td>Only fixes. Final web export, itch.io page and trailer GIFs, README, CREDITS and AI usage audit, commit history check.</td><td>Public itch.io build submitted by Hour 96.</td></tr>
+  <tr><td>96 - 100</td><td>Safety margin. Re-verify the live itch.io build and the repository.</td><td>Strict code freeze at Hour 100.</td></tr>
+</table>
+
+<h2>4. How the work is split</h2>
+<ul>
+  <li><b>Claude Code:</b> architecture, Saboteur AI, level generator, twist scripting, bug fixing, code review and merges.</li>
+  <li><b>Antigravity:</b> art direction per genre, UI, shaders and transitions, audio, browser (Playwright) playtests, the itch.io page.</li>
+  <li><b>ChatGPT / Codex:</b> tests, balance data, documentation, README and CREDITS, small isolated features.</li>
+  <li><b>Developer (Sankeerth):</b> all design decisions, narrator script and story direction, the playtests, every merge to <code>main</code>. Design choices are logged in <code>docs/DESIGN_LOG.md</code>.</li>
+  <li><b>Method:</b> each tool works in its own git worktree and owns separate folders, a shared task board (<code>docs/TASKS.md</code>) tracks everything, commits are small and frequent so the history is auditable.</li>
+</ul>
+
+<h2>5. Quality, compliance and risks</h2>
+<table>
+  <tr><th style="width:26%">Area</th><th>Plan</th></tr>
+  <tr><td>Stability</td><td>Headless unit tests for the puzzle model, level validator for every puzzle, a generator test that builds 100+ levels and checks reachability, a Playwright browser run on every milestone build.</td></tr>
+  <tr><td>Assets</td><td>Only free, CC0, CC BY, open-source or AI-generated assets. Everything listed in <code>CREDITS.md</code> and on the itch.io page. No paid assets.</td></tr>
+  <tr><td>AI disclosure</td><td>Claude Code, Antigravity and ChatGPT/Codex are used for code, art, audio and documents. Every use is logged in <code>docs/AI_USAGE.md</code>. Core design and story direction are the developer's.</td></tr>
+  <tr><td>Code origin</td><td>All game code is written inside the 100 hours. Only a generic empty Godot project and an editor plugin used for tooling (not part of the game) were present at the start; the plugin is credited.</td></tr>
+  <tr><td>Risk: Saboteur AI is too hard to tune</td><td>Keep the AI simple (patrol, flee from light, freeze in the beam). Fallback: it only triggers sabotage on a fixed schedule and the player can still stop it with the fix console.</td></tr>
+  <tr><td>Risk: art style workload</td><td>Genres are palette, font and caption swaps over one shared set of procedural shapes. Fallback: two genres instead of four.</td></tr>
+  <tr><td>Risk: web performance</td><td>2D lights are limited to the hero's torch; test every milestone in a browser; keep the export under 40 MB.</td></tr>
+  <tr><td>Risk: AI quota limits</td><td>Work is split across three tools with a handoff note on the task board; the developer reassigns tasks to whichever tool has quota left.</td></tr>
+</table>
+
+<h2>6. Definition of done</h2>
+<ul>
+  <li>A public itch.io page with a playable browser build of the full 12 to 15 minute game.</li>
+  <li>The README shows the itch.io link, setup, controls and team details. CREDITS and the AI usage log are complete.</li>
+  <li>The final game matches this plan: all committed features present, nothing from the cut list promised.</li>
+</ul>
+
+</body>
+</html>
