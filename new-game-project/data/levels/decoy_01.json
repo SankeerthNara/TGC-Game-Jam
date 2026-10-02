@@ -1,0 +1,26 @@
+{
+  "name": "Cupid's Crossword",
+  "type": "decoy",
+  "skin": "romance",
+  "reveal_after_moves": 2,
+  "panel_size": [
+    3,
+    3
+  ],
+  "layout": [
+    2,
+    2
+  ],
+  "rule": "normal",
+  "twist": "none",
+  "caption_intro": "NARRATOR: Next page! Light the star. Just a normal puzzle. Nothing suspicious about all these hearts and roses...",
+  "caption_twist": "NARRATOR: ...wait. Love letters? Roses? This isn't our comic! This is 'Heartthrob Monthly' #212. You turned the wrong page! Back we go!",
+  "cells": [
+    "..^...",
+    "###...",
+    "...../",
+    "......",
+    "...T..",
+    ".../.."
+  ]
+}

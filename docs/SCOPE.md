@@ -12,6 +12,10 @@
 ## Unique hook (what makes it ours)
 The *page itself* is the puzzle piece: panels move, so the emitter, walls and targets move with them. Light crosses gutters between panels, and rule twists change what happens at the gutter.
 
+## Characters and surprises
+- **The hero:** a small caped comic hero walks the page toward wherever the light ends, looks at it, and reacts: thinking when the beam hits nothing, scared when it hits a hazard, cheering when a star is lit. After the narrator's twist he turns into the villain.
+- **Decoy pages:** twice, the player is dropped into a page from some other comic (a romance comic, a cooking comic). It looks like a normal puzzle until the narrator admits "this is the wrong page" and sends the player back. These are the second kind of twist.
+
 ## Core loop (15 minutes)
 Read the caption -> drag panels / flip mirrors -> beam lights all stars -> narrator reacts -> next page.
 

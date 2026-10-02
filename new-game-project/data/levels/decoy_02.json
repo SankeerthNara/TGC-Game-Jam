@@ -1,0 +1,26 @@
+{
+  "name": "Pastry Panic",
+  "type": "decoy",
+  "skin": "cooking",
+  "reveal_after_moves": 3,
+  "panel_size": [
+    3,
+    3
+  ],
+  "layout": [
+    2,
+    2
+  ],
+  "rule": "normal",
+  "twist": "none",
+  "caption_intro": "NARRATOR: Another page, another beam! Though the star looks oddly... croissant-shaped. Light it up!",
+  "caption_twist": "NARRATOR: OH NO. 'Pastry Panic Weekly'! That beam is a heat lamp and you just toasted the souffl\u00e9! WRONG PAGE again. I am so sorry. Moving on!",
+  "cells": [
+    "...#..",
+    ".#....",
+    "..<..\\",
+    ".....T",
+    "...../",
+    ".#...."
+  ]
+}

@@ -12,6 +12,13 @@ const TEX_HALFTONE := preload("res://assets/art/halftone_dot.png")
 const TEX_GLOW := preload("res://assets/art/radial_glow.png")
 const FONT_SHOUT := preload("res://assets/fonts/Bangers-Regular.ttf")
 
+## Page skins: the narrator sometimes drops you into some other comic entirely.
+const SKINS := {
+	"": {"paper": Color("fff3d1"), "ink": Color("18151d"), "bg": Color("2a2740")},
+	"romance": {"paper": Color("ffd9e4"), "ink": Color("4a0d2b"), "bg": Color("3d1730")},
+	"cooking": {"paper": Color("ffe9c9"), "ink": Color("4a2308"), "bg": Color("3a2412")},
+}
+
 const GUTTER := 18.0
 const TOP_MARGIN := 138.0
 const BOTTOM_MARGIN := 92.0
@@ -49,6 +56,9 @@ var _slide := {} ## panel index -> pixel offset easing back to zero after a swap
 var _pops: Array[Dictionary] = [] ## floating comic words
 var _last_lit := 0
 var _was_flipped := false
+var _hero := HeroActor.new()
+var _status := {}
+var _confused := false
 
 
 func _ready() -> void:
@@ -58,7 +68,12 @@ func _ready() -> void:
 	EventBus.panel_swapped.connect(_on_swapped)
 	EventBus.mirror_toggled.connect(_on_mirror)
 	EventBus.panel_rejected.connect(_on_rejected)
-	EventBus.twist_triggered.connect(func(_k: String) -> void: _pop("PLOT TWIST!", Vector2(640, 110), BAD, 64))
+	EventBus.twist_triggered.connect(func(kind: String) -> void:
+		if kind == "wrong_page":
+			_confused = true
+			_pop("WRONG PAGE!", Vector2(640, 118), BAD, 64)
+		else:
+			_pop("PLOT TWIST!", Vector2(640, 110), BAD, 64))
 
 
 func set_model(m: PageModel) -> void:
@@ -67,7 +82,9 @@ func set_model(m: PageModel) -> void:
 	_pops.clear()
 	_last_lit = 0
 	_was_flipped = false
-	RenderingServer.set_default_clear_color(BG_NORMAL)
+	_confused = false
+	_hero.reset()
+	RenderingServer.set_default_clear_color(SKINS.get(m.skin, SKINS[""])["bg"])
 	_layout()
 	queue_redraw()
 
@@ -78,6 +95,9 @@ func set_trace(t: Dictionary) -> void:
 		_pop("ZAP!", _lit_pos(t), GOOD, 46)
 	_last_lit = lit_now
 	trace = t
+	if model != null:
+		_status = model.status(t)
+		_aim_hero(t)
 	queue_redraw()
 
 
@@ -131,6 +151,29 @@ func _lit_pos(t: Dictionary) -> Vector2:
 	return Vector2(640, 300)
 
 
+# --- hero --------------------------------------------------------------------
+
+## Sends the hero to stand just before wherever the beam ends, looking at it.
+func _aim_hero(t: Dictionary) -> void:
+	var paths: Array = t["paths"]
+	if paths.is_empty():
+		_hero.set_target(Vector2(640, 360), Vector2(640, 360))
+		return
+	var path: PackedVector2Array = paths[0]
+	var end := to_px(path[path.size() - 1])
+	var prev := to_px(path[maxi(path.size() - 2, 0)])
+	var dir := (end - prev).normalized() if end.distance_to(prev) > 1.0 else Vector2.RIGHT
+	_hero.set_target(end - dir * cell_size * 0.65, end)
+	if _confused:
+		_hero.mood = HeroActor.Mood.CONFUSED
+	elif _status.get("good_lit", 0) > 0:
+		_hero.mood = HeroActor.Mood.HAPPY
+	elif _status.get("bad_lit", 0) > 0:
+		_hero.mood = HeroActor.Mood.SCARED
+	else:
+		_hero.mood = HeroActor.Mood.THINK
+
+
 # --- juice -------------------------------------------------------------------
 
 func _pop(text: String, pos: Vector2, color: Color, size := 40) -> void:
@@ -167,6 +210,11 @@ func _process(delta: float) -> void:
 		_slide[k] = (_slide[k] as Vector2).lerp(Vector2.ZERO, 1.0 - exp(-delta * 12.0))
 		if (_slide[k] as Vector2).length() < 0.6:
 			_slide.erase(k)
+	if model != null:
+		_hero.villain = model.flipped
+		if _confused:
+			_hero.mood = HeroActor.Mood.CONFUSED
+		_hero.update(delta, cell_size)
 	for p in _pops:
 		p["t"] += delta
 	_pops = _pops.filter(func(p: Dictionary) -> bool: return p["t"] < 1.0)
@@ -226,8 +274,9 @@ func _finish_drag(pos: Vector2) -> void:
 func _draw() -> void:
 	if model == null:
 		return
-	_paper = PAPER_TWIST if model.flipped else PAPER_NORMAL
-	_ink = INK_TWIST if model.flipped else INK_NORMAL
+	var skin: Dictionary = SKINS.get(model.skin, SKINS[""])
+	_paper = PAPER_TWIST if model.flipped else skin["paper"]
+	_ink = INK_TWIST if model.flipped else skin["ink"]
 	var vp := get_viewport_rect().size
 	draw_texture_rect(TEX_HALFTONE, Rect2(Vector2.ZERO, vp), true, Color(1, 1, 1, 0.07))
 	var off := Vector2(randf_range(-_shake, _shake), randf_range(-_shake, _shake)) if _shake > 0.0 else Vector2.ZERO
@@ -236,6 +285,7 @@ func _draw() -> void:
 		if i != _drag_panel or not _dragging:
 			_draw_panel(i, _slide.get(i, Vector2.ZERO))
 	_draw_beams()
+	_hero.draw(self, cell_size * 1.3, _ink, _paper, FONT_SHOUT, off)
 	if _dragging:
 		_draw_panel(_drag_panel, _drag_pos - _drag_start, true)
 	draw_set_transform(Vector2.ZERO)

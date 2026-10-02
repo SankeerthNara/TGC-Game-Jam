@@ -9,6 +9,10 @@
 			"optimal_moves": 4
 		},
 		{
+			"file": "decoy_01.json",
+			"optimal_moves": 3
+		},
+		{
 			"file": "level_03.json",
 			"optimal_moves": 2,
 			"twist_optimal_moves": 2
@@ -16,6 +20,10 @@
 		{
 			"file": "level_04.json",
 			"optimal_moves": 6
+		},
+		{
+			"file": "decoy_02.json",
+			"optimal_moves": 3
 		},
 		{
 			"file": "level_05.json",

@@ -22,7 +22,7 @@ Godot 4.7, GDScript, Compatibility renderer. Godot project root is `new-game-pro
 | `move_count_changed(moves)` | After any action, undo or reset. |
 | `beam_updated(good_lit, good_total, bad_lit)` | Beam retraced. |
 | `caption_changed(text)` | New narrator caption to show in a comic caption box. |
-| `twist_triggered(kind)` | Narrator twist happens (`"flip"`). Play the big dramatic effect. |
+| `twist_triggered(kind)` | Narrator twist happens: `"flip"` (goal swap) or `"wrong_page"` (decoy reveal). Play the big dramatic effect. |
 | `level_solved(index)` | Level finished. |
 | `game_finished` | Last level done. |
 
@@ -59,6 +59,8 @@ UI/VFX/audio use only these signals and never read the model directly.
 - `panel_size`: cells per panel (w, h). `layout`: panels across, panels down.
 - `rule`: `normal`, `lying` or `bend`. `twist`: `none` or `flip`.
 - `locked_panels`: optional panel indexes (row-major) that cannot move.
+- `type`: `puzzle` (default) or `decoy`. A decoy page reveals "wrong page" after `reveal_after_moves` moves (default 2) or when solved, emits `twist_triggered("wrong_page")` and moves on.
+- `skin`: optional page look: `romance`, `cooking` (see `PageView.SKINS`).
 - `cells`: `layout[1]*panel_size[1]` rows, each `layout[0]*panel_size[0]` characters.
 
 Cell characters: `.` empty, `#` wall, `/` and `\` mirror the player can flip, `a` and `b` fixed mirrors (`/` and `\`), `>` `v` `<` `^` emitter, `T` good target, `X` bad target (must not be lit in a normal level).

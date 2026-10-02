@@ -10,6 +10,8 @@ var view: PageView
 var level_data: Dictionary
 var undo_stack: Array[Dictionary] = []
 var busy := false
+var run_id := 0 ## bumps on every level start so stale timers do nothing
+var decoy_revealed := false
 var state := "menu" ## menu | playing | paused | ended
 
 var _caption: Label
@@ -101,6 +103,8 @@ func start_level(index: int) -> void:
 	level_data = GameState.current_level()
 	model = PageModel.from_data(level_data)
 	undo_stack.clear()
+	run_id += 1
+	decoy_revealed = false
 	busy = false
 	view.input_enabled = state == "playing"
 	view.set_model(model)
@@ -162,15 +166,40 @@ func _refresh() -> void:
 	view.set_trace(tr)
 	EventBus.move_count_changed.emit(model.moves)
 	EventBus.beam_updated.emit(st["good_lit"], st["good_total"], st["bad_lit"])
+	if level_data.get("type", "puzzle") == "decoy":
+		if not decoy_revealed and (st["solved"] or model.moves >= int(level_data.get("reveal_after_moves", 2))):
+			_reveal_decoy()
+		return
 	if st["solved"]:
 		_on_solved()
 
 
+## A decoy page looks like a normal puzzle but belongs to some other comic.
+## Once the player has played with it a little, the narrator admits the mistake.
+func _reveal_decoy() -> void:
+	decoy_revealed = true
+	busy = true
+	view.input_enabled = false
+	var id := run_id
+	await get_tree().create_timer(0.7).timeout
+	if id != run_id or state != "playing":
+		return
+	view.shake(16.0)
+	EventBus.twist_triggered.emit("wrong_page")
+	EventBus.caption_changed.emit(level_data.get("caption_twist", "NARRATOR: Wrong page! Oops."))
+	await get_tree().create_timer(4.0).timeout
+	if id == run_id and state == "playing":
+		_advance()
+
+
 func _on_solved() -> void:
+	var id := run_id
 	busy = true
 	view.input_enabled = false
 	if level_data.get("twist", "none") == "flip" and not model.flipped:
 		await get_tree().create_timer(1.0).timeout
+		if id != run_id:
+			return
 		model.flipped = true
 		view.shake(18.0)
 		EventBus.twist_triggered.emit("flip")
@@ -182,7 +211,7 @@ func _on_solved() -> void:
 	EventBus.level_solved.emit(GameState.level_index)
 	EventBus.caption_changed.emit(level_data.get("caption_solved", "Page complete."))
 	await get_tree().create_timer(2.2).timeout
-	if state == "playing":
+	if id == run_id and state == "playing":
 		_advance()
 
 

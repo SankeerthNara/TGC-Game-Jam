@@ -27,6 +27,7 @@ var rule: Rule = Rule.NORMAL
 var flipped := false ## the narrator's twist: good and bad targets trade places
 var locked: Array[int] = []
 var moves := 0
+var skin := "" ## visual theme of the page (decoy pages use other comics' looks)
 
 
 static func from_data(data: Dictionary) -> PageModel:
@@ -52,6 +53,7 @@ static func from_data(data: Dictionary) -> PageModel:
 				m.dir[i] = EMITTER_CHARS[ch]
 			else:
 				m.kind[i] = CHAR_KIND.get(ch, Kind.EMPTY)
+	m.skin = data.get("skin", "")
 	var rule_name: String = data.get("rule", "normal")
 	m.rule = {"normal": Rule.NORMAL, "lying": Rule.LYING, "bend": Rule.BEND}.get(rule_name, Rule.NORMAL)
 	for p in data.get("locked_panels", []):
