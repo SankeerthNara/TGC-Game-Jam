@@ -26,8 +26,9 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | G5 | ChatGPT | Headless tests: every task console reachable, tasks list matches map, TaskRegistry covers every type in station.json | todo | C6 | |
 | C7 | Claude | Sabotage timers and hearts, death and restart, free 8-direction movement, 6 comic/college mini-games, 18 tasks and 6 emergency fixes | done | C6 | |
 | C8 | Claude | Levels: 4 generated levels of 8 random rooms, rising difficulty, checkpoints and respawn, level and total timers, split summary | done | C7 | `level_generator.gd`, `level_overlay.gd` |
-| C9 | Claude | Saboteur AI (patrol, flee from light, freeze in beam, trigger sabotage) | todo | C8 | docs/implementation_plan.html feature 1 |
-| C10 | Claude | Small fight: ink-blob arena at the end of levels 2 and 3 | todo | C9 | torch beam damages blobs |
-| C11 | Claude | Final boss fight: 3 phases, mirror bounce, interface attacks, reveal | todo | C10 | level 4 |
-| A9 | Antigravity | Boss and blob art, hit effects, fight music and SFX | todo | C10 | |
-| G6 | ChatGPT | Headless tests for fight states (damage, phases, death and respawn) | todo | C10 | |
+| C9 | Claude | Remove unused town code (shop, items, keys, decoy pages) | todo | C8 | one clean-up commit first |
+| C10 | Claude | Vampires: patrol, flee from light, freeze in beam; Reveal/Kill dialog and four outcomes; villain triggers sabotage; clues | todo | C9 | docs/implementation_plan.html feature 2 |
+| C11 | Claude | Friend ally (follows, ignores light, helps with tasks); villain fight arena (4 variants); Narrator boss fight and endings | todo | C10 | |
+| C12 | Claude | Narrator system: portrait, bubbles, event-driven lines | todo | C9 | lines written by the developer |
+| A9 | Antigravity | Four hero and villain looks, level themes (palette, props, fonts), boss and vampire art, fight music and SFX | todo | C12 | original characters only |
+| G6 | ChatGPT | Headless tests for the choice outcomes, ally behaviour, fight states and respawn | todo | C10 | |

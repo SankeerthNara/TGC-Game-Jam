@@ -153,7 +153,7 @@
     </table>
 
     <h2>1. Pitch & Core Concept</h2>
-    <p>Somebody has sabotaged the lights of an old comic studio. You are a small caped comic hero with a torch in a <b>pitch-dark station</b> split into <b>4 levels</b>, each a freshly generated maze of 8 rooms in a random layout: only the area around you is lit. Explore, find the task consoles, and finish each level's <b>5 to 8 interactive tasks</b> (rewire panels, order comic panels, fill speech bubbles, debug code, wire logic gates, align a telescope and more) to fill the <b>progress bar</b>. Careful: some tasks trigger a <b>sabotage countdown</b>. Fix it in time or lose hearts, and die at zero. Some tasks are light puzzles on comic pages where you drag panels and flip mirrors to steer a beam. Who cut the lights, and why? The narrator has a few twists planned.</p>
+    <p>A fixed <b>Narrator</b> tells four comic stories in a row. In each one you play that comic's hero (a superhero, a noir detective, a manga ninja, a pop-art space hero) in a <b>pitch-dark level of 8 rooms in a random layout</b> themed to that comic: only the area around your torch is lit. Finish the level's interactive tasks to fill the <b>progress bar</b>. But the lights were cut by the comic's <b>villain</b>, who hides among two <b>vampires</b> in the dark. One vampire is your <b>friend</b>, the other the villain, and he keeps sabotaging you with <b>timed sabotage</b>. When you find a vampire you must choose: <b>REVEAL</b> or <b>KILL</b>. Reveal a friend and he becomes an ally who no longer fears light; reveal the villain and you fight him. Kill the villain and he is gone; kill a friend and he dies. After four levels you face the <b>Narrator himself</b> in the final boss fight.</p>
 
     <h2>2. Integration of the Three Themes</h2>
     <table>
@@ -168,7 +168,7 @@
       </tr>
       <tr>
         <td><b>Twist</b></td>
-        <td>The light sabotage is the story twist: the saboteur is among the characters and is revealed late. In the puzzle pages the narrator also twists the rules: the hero you light turns out to be the villain, mirrors lie, and gutters bend light 90°. (More twists are planned.)</td>
+        <td>Who is the friend and who is the villain? You must deduce it from clues, and your choice decides what happens. The Narrator is the final twist: he is the real saboteur. In the puzzle pages the narrator also twists the rules (the hero you light turns out to be the villain, mirrors lie, gutters bend light).</td>
       </tr>
     </table>
 
@@ -178,7 +178,8 @@
       <li><b>26 interactive tasks over 4 levels, one progress bar per level:</b> comic tasks (order the panels, fill speech bubbles, letter sound effects), college tasks (debug code, logic gates, shelve books), plus wires, fuses, lantern code, torch charge, telescope, ink spills, card swipe, and light-puzzle pages.</li>
       <li><b>Sabotage and health:</b> six risky tasks start a timer when completed. A complementary fix console must be completed before it runs out, or the hero loses a heart. Zero hearts: respawn at the checkpoint (the start of the current level). Every level is harder than the last and a timer tracks your time per level and in total.</li>
       <li><b>Light puzzle pages:</b> drag panels to swap them (their contents move too), click mirrors to flip them, steer the beam onto every goal. Unlimited undo.</li>
-      <li><b>Two fights:</b> a short ink-blob fight at the end of levels 2 and 3, and a three-phase final boss duel with the villain at the end of level 4. The torch is the weapon and arena mirrors bounce the beam onto the boss.</li>
+      <li><b>Vampires, Reveal or Kill:</b> two vampires per level (friend and villain) flee from your torch. Catch one in the light and choose REVEAL (friend: ally; villain: a fight) or KILL (villain dies; friend dies). Clues: the friend quietly helps, the villain is seen near sabotaged consoles.</li>
+      <li><b>Two kinds of fights:</b> a villain fight per level (torch beam as weapon) and the final boss fight with the Narrator (three phases, mirrors, allies who survived help you).</li>
       <li><b>Beam Tracing:</b> an instant headless raycast lights targets and flags hazards after every move.</li>
       <li><b>Frictionless:</b> <code>[Z]</code> interact/undo, <code>[R]</code> reset, <code>[M]</code> map, <code>Esc</code> leave a task; no softlocks.</li>
     </ul>

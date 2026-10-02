@@ -29,9 +29,13 @@ The page is the puzzle piece: panels move, so the emitter, walls and targets mov
 - **The hero:** a small caped comic hero with a torch. He walks, thinks (?), cheers (!), looks scared, and turns into the villain after the twist.
 - **The narrator** ("Mr. Caption" in town, caption boxes everywhere) and **Mr. Barter**, the shopkeeper.
 
-## Fights (planned)
-- **Small fight (end of levels 2 and 3):** the Saboteur splits into three ink blobs in a short arena. Hold the torch beam on each blob to burn it away while they rush you in the dark.
-- **Final boss fight (end of level 4):** the villain duel in three phases. The torch is the weapon; rotating arena mirrors bounce the beam onto the villain's shield; the villain snuffs your torch, floods the floor with ink and attacks the interface. Hearts decide the fight.
+## Story, vampires and the choice (planned)
+- A fixed **Narrator** frames four comic stories. Each level is built for one original comic hero (superhero pulp, noir detective, manga ninja, pop-art space hero) whom you play; the map is themed to that comic.
+- Each level has two **vampires** that flee from torchlight: the hero's **friend** and the comic's **villain**. The villain triggers the sabotage timers. Catch one in the light to choose **REVEAL** or **KILL**.
+  - Reveal friend: he becomes an ally who no longer fears light and helps. Reveal villain: a short fight (torch beam as weapon); win and sabotage stops, plus a heart.
+  - Kill villain: he dies at once and sabotage stops, no reward. Kill friend: he dies, and the ending and boss fight get harder.
+- Clues make the choice a deduction: the friend quietly finishes a console and leaves notes; the villain is seen near consoles just before a sabotage and leaves ink drips.
+- After level 4: the final boss fight against the **Narrator** (three phases, torch and mirrors, surviving allies help, three endings).
 
 ## Content
 | Page | District | Teaches | Rule |

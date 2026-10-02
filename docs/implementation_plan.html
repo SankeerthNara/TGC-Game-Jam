@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <title>Mirror Page - Implementation Plan</title>
 <style>
-  @page { size: A4; margin: 11mm 13mm; }
+  @page { size: A4; margin: 9mm 12mm; }
   * { box-sizing: border-box; }
-  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b1b24; font-size: 9.1pt; line-height: 1.32; margin: 0; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b1b24; font-size: 8.7pt; line-height: 1.28; margin: 0; }
   .banner { background: #1b1b24; color: #ffd23f; padding: 12px 16px; border-left: 8px solid #e63946; border-radius: 3px; margin-bottom: 8px; }
   .banner h1 { margin: 0; font-size: 24pt; letter-spacing: 1px; }
   .banner .sub { color: #f6ecd2; font-size: 10.5pt; margin-top: 2px; }
-  h2 { font-size: 11pt; margin: 9px 0 3px; padding-bottom: 2px; border-bottom: 2.5px solid #ffd23f; text-transform: uppercase; letter-spacing: .5px; }
-  table { border-collapse: collapse; width: 100%; margin: 3px 0; font-size: 8.6pt; }
-  th, td { border: 1px solid #1b1b24; padding: 3px 6px; text-align: left; vertical-align: top; }
+  h2 { font-size: 10.5pt; margin: 7px 0 3px; padding-bottom: 2px; border-bottom: 2.5px solid #ffd23f; text-transform: uppercase; letter-spacing: .5px; }
+  table { border-collapse: collapse; width: 100%; margin: 3px 0; font-size: 8.2pt; }
+  th, td { border: 1px solid #1b1b24; padding: 2px 5px; text-align: left; vertical-align: top; }
   th { background: #f6ecd2; }
   ul { margin: 3px 0 3px 16px; padding: 0; }
   li { margin: 1px 0; }
@@ -28,7 +28,7 @@
 
 <div class="banner">
   <h1>MIRROR PAGE</h1>
-  <div class="sub">Implementation plan for Hours 12 to 100. In a comic, the light is your weapon and the narrator is cheating.</div>
+  <div class="sub">Implementation plan for Hours 12 to 100. Four comic heroes, one narrator, two vampires: friend or villain? Reveal or kill.</div>
 </div>
 
 <table class="meta">
@@ -37,47 +37,49 @@
   <tr><td><b>Final playtime</b></td><td>12 to 15 minutes (20 max)</td><td><b>Plan status</b></td><td>Concept locked at Hour 12. Features below are committed or marked stretch.</td></tr>
 </table>
 
-<h2>1. Where we are at Hour 12 (already built and verified)</h2>
-<ul>
-  <li><b>Core loop:</b> a dark comic-studio level where only the area around the hero's torch is lit. The hero walks smoothly in 8 directions. Each level has 5 to 8 interactive tasks that fill a progress bar.</li>
-  <li><b>4 generated levels</b> of 8 rooms in a random (non-grid) layout, with rising difficulty, a map screen, checkpoints at each level start, respawn on death, and level and total timers with a split summary.</li>
-  <li><b>13 task types:</b> wires, fuse box, lantern code, torch charge, telescope, ink spills, card swipe (classic style) plus comic tasks (order panels, fill speech bubbles, letter sound effects), college tasks (debug code, logic gates, shelve books) and the original light puzzle pages (drag panels, flip mirrors, steer a beam) with the goal-flip, lying-mirror and gutter-bend rule twists.</li>
-  <li><b>Sabotage and health:</b> risky tasks start a countdown; a fix console must be completed in time or the hero loses a heart. Zero hearts means respawn at the checkpoint.</li>
-  <li><b>Tooling:</b> level and puzzle validators, headless unit tests, a browser (WebGL) build verified, comic UI, menus, CC0 audio, open fonts.</li>
-</ul>
+<h2>1. The game in one paragraph</h2>
+<p>A fixed <b>Narrator</b> frames four comic stories. Each level is built for one comic hero (superhero pulp, noir detective, manga ninja, pop-art space hero), whom you play, and the map is themed that way. Each level is a pitch-dark floor of 8 rooms in a random layout; only the area around your torch is lit. You finish interactive tasks to fill a progress bar. The comic's <b>villain</b> is hiding as one of two <b>vampires</b> in the dark and keeps sabotaging you; the other vampire is your <b>friend</b>. Catch a vampire in your torchlight and choose <b>REVEAL</b> or <b>KILL</b>. After four levels you fight the <b>Narrator</b> in the final boss fight.</p>
+<table>
+  <tr><th style="width:22%">If the vampire is...</th><th>REVEAL</th><th>KILL</th></tr>
+  <tr><td><b>The friend</b></td><td>He becomes your ally. He no longer fears light and helps with tasks, hints and later the boss fight.</td><td>The friend dies. You lose him for the run, the Narrator reacts, and your ending and boss fight get harder.</td></tr>
+  <tr><td><b>The villain</b></td><td>He is unmasked and you fight him (short fight, torch beam as the weapon). Win and the sabotage stops, plus you gain a heart.</td><td>The villain dies at once and the sabotage stops, but there is no reward fight and no heart bonus.</td></tr>
+</table>
+<p><b>Already built and verified at Hour 12:</b> the dark level with torch lighting and smooth 8-direction movement, a generator for random 8-room levels (4 difficulty tiers), 13 interactive task types (classic, comic, college and the original light-puzzle pages with their rule twists), a progress bar, sabotage countdowns with fix consoles, hearts, checkpoints and respawn, level and total timers, a map screen, comic UI and menus, CC0 audio, validators, unit tests and a browser build. The existing sabotage system will be driven by the villain vampire instead of by task completion.</p>
 
 <h2>2. Committed features for the remaining 88 hours</h2>
 <table>
-  <tr><th style="width:3%">#</th><th style="width:25%">Feature</th><th>What it adds</th><th style="width:9%">Hours</th></tr>
-  <tr><td>1</td><td><b>The Saboteur</b> (visible imposter)</td><td>An ink creature roams each level. It runs from torchlight, freezes in the beam, and sets off sabotage when it reaches a console. Catching it in the light stops the timer. Makes the darkness the core tension (Light + Twist).</td><td>20</td></tr>
-  <tr><td>2</td><td><b>Two fights</b><br>(small + final boss)</td><td><b>Small fight</b> (end of levels 2 and 3): cornering the Saboteur splits it into three ink blobs in a short arena. Hold the torch beam on each blob to burn it away while they rush you in the dark. <b>Final boss fight</b> (end of level 4): the villain duel in three phases. The torch is the weapon and rotating arena mirrors bounce the beam onto the villain's shield; the villain snuffs your torch, floods the floor with ink and attacks the interface (swapped controls). Hearts decide it; losing means respawn at the level checkpoint.</td><td>20<br>(7 + 13)</td></tr>
-  <tr><td>3</td><td><b>A comic genre per level</b></td><td>Level 1 superhero pulp, 2 noir black and white, 3 manga, 4 pop-art: palette, fonts, caption style, onomatopoeia and music change per level (Comic).</td><td>9</td></tr>
-  <tr><td>4</td><td><b>Fourth-wall twists</b></td><td>The narrator attacks the interface: lying captions, a fake progress bar, a wrong map, swapped controls for part of a level, HUD glitches. Final reveal: the narrator cut the lights because the comic is being cancelled; after the boss fight the player rewrites the last page (Twist).</td><td>11</td></tr>
-  <tr><td>5</td><td><b>Comic look and juice</b></td><td>Ink outline and halftone screen shader, panel-split and page-turn level transitions, onomatopoeia on actions and hits, narrator speech bubbles with text blips.</td><td>8</td></tr>
-  <tr><td>6</td><td><b>Ranks and replay</b></td><td>S/A/B medals per level from time and hearts lost, best splits saved locally.</td><td>4</td></tr>
-  <tr><td>7</td><td><b>First-minute polish</b></td><td>A 30 second in-level tutorial, controls hints, itch.io page with GIFs, README, CREDITS, AI usage log.</td><td>6</td></tr>
-  <tr><td>8</td><td><b>Balance and testing</b></td><td>Difficulty tuning of tasks, sabotage timers and both fights, outside playtests, bug fixing, web performance checks.</td><td>10</td></tr>
+  <tr><th style="width:3%">#</th><th style="width:25%">Feature</th><th>What it adds</th><th style="width:7%">Hours</th></tr>
+  <tr><td>1</td><td><b>Fixed Narrator and four comic heroes</b></td><td>One narrator character (portrait, speech bubbles, text blips) comments on events through all four levels. Four original comic heroes (no existing characters) with their own costume and a small ability, and four themed levels: palette, fonts, props, room names, task skins and music (Comic).</td><td>16</td></tr>
+  <tr><td>2</td><td><b>Vampires and the Reveal / Kill choice</b></td><td>Two vampires per level wander the dark and flee from torchlight. Hold the beam on one to freeze it and choose. The friend leaves helpful clues (quietly finishes a console, drops notes); the villain is seen near consoles just before a sabotage and leaves ink drips. The villain vampire triggers the sabotage timers. All four outcomes have different results (Light + Twist).</td><td>18</td></tr>
+  <tr><td>3</td><td><b>The friend ally</b></td><td>A revealed friend follows you, is not scared by light, slowly completes tasks and shows where the villain is. Killed friends change the ending.</td><td>6</td></tr>
+  <tr><td>4</td><td><b>Villain fight</b> (small fight, every level)</td><td>One reusable arena fight with four villains, each with a different attack pattern. The torch beam is the weapon; hits on you cost hearts.</td><td>10</td></tr>
+  <tr><td>5</td><td><b>Final boss: the Narrator</b></td><td>After level 4, three phases: the Narrator snuffs your torch, floods the floor with ink and attacks the interface; rotating arena mirrors bounce your beam onto his shield. Surviving allies help. Three ending variants depend on your choices (Twist).</td><td>11</td></tr>
+  <tr><td>6</td><td><b>Fourth-wall twists</b></td><td>The Narrator tampers with captions, the progress bar, the map and the controls for short moments.</td><td>3</td></tr>
+  <tr><td>7</td><td><b>Comic look and juice</b></td><td>Ink and halftone screen shader, panel-split level transitions, onomatopoeia on actions and hits.</td><td>4</td></tr>
+  <tr><td>8</td><td><b>Medals</b></td><td>S/A/B per level from time and hearts lost; best splits saved locally.</td><td>2</td></tr>
+  <tr><td>9</td><td><b>First-minute polish</b></td><td>30 second tutorial, controls hints, itch.io page with GIFs, README, CREDITS, AI usage log.</td><td>5</td></tr>
+  <tr><td>10</td><td><b>Balance and testing</b></td><td>Tuning of tasks, timers, clues and fights; outside playtests; bug fixing; web performance.</td><td>9</td></tr>
 </table>
-<p><span class="tag s">STRETCH</span> (only after all of the above are playable, in this order): light puzzle rooms in the world (rotate real mirrors to open a door), a torch battery with recharge lamps, reactive music (faster while a timer runs). <b>Cut first</b> if time is short: stretch items, then medals, then the manga and pop-art levels (fallback: palette swaps only), then the boss mirror phase (fallback: a two-phase boss with torch damage only).</p>
-<div class="box"><b>Fixed limits:</b> 4 levels (no more), no multiplayer, no save slots, no level editor, no new engine features. Quality over quantity.</div>
+<p><span class="tag s">STRETCH</span> (only after all of the above are playable, in this order): light puzzle rooms in the world, a torch battery with recharge lamps, reactive music. <b>Cut first</b> if time is short: stretch items, then medals, then hero abilities, then the per-hero task skins (fallback: palette swaps only), then the boss mirror phase (fallback: a two-phase boss with torch damage only).</p>
+<div class="box"><b>Fixed limits:</b> 4 levels and 4 heroes (no more), original characters only (no existing comic heroes or villains), no multiplayer, no save slots, no level editor, no new engine features.</div>
 
 <h2>3. Roadmap and milestones</h2>
 <table>
   <tr><th style="width:12%">Hours</th><th>Work</th><th style="width:31%">Exit criteria (a playable build every 12 hours)</th></tr>
-  <tr><td>12 - 30</td><td>Plan locked. Controls and camera polish, tutorial in level 1, level 1 genre art pass (pulp), reactive caption and narrator bubbles, first version of the comic shader, web build and audio check.</td><td>Level 1 is fun and good-looking, plays start to finish in the browser.</td></tr>
-  <tr><td>30 - 55</td><td>The Saboteur: patrol AI, light reaction (flee and freeze), sabotage triggers, catch rules, tuning. The small ink-blob fight at the end of levels 2 and 3. Fourth-wall twist scripting for levels 1 to 3. Genre art for levels 2 and 3 (noir, manga).</td><td>Levels 1 to 3 playable with the Saboteur, the small fight and at least two interface twists.</td></tr>
-  <tr><td>55 - 75</td><td>Level 4 (pop-art), the final boss fight (three phases, torch and mirrors), the reveal and last-page puzzle, transitions between levels, onomatopoeia and screen juice, medals and ranks, audio mix.</td><td>Full 12 to 15 minute run from menu through the boss to the ending.</td></tr>
-  <tr><td>75 - 85</td><td>Balance pass, outside playtests, bug fixing, performance, accessibility (colour contrast, key hints). <b>Feature freeze at Hour 85.</b></td><td>No known blocking bugs; difficulty curve confirmed by testers.</td></tr>
-  <tr><td>85 - 96</td><td>Only fixes. Final web export, itch.io page and trailer GIFs, README, CREDITS and AI usage audit, commit history check.</td><td>Public itch.io build submitted by Hour 96.</td></tr>
+  <tr><td>12 - 30</td><td>Plan locked. Clean-up of unused code. Narrator system (portrait, bubbles, event lines). Hero and theme for level 1. Vampire movement (patrol, flee from light, freeze in the beam). Tutorial skeleton.</td><td>Level 1 plays start to finish in the browser with the Narrator and a vampire to catch.</td></tr>
+  <tr><td>30 - 55</td><td>Reveal / Kill choice and all four outcomes, friend and villain clues, villain triggers sabotage, friend ally, villain fight (reusable arena). Heroes and themes for levels 2 and 3.</td><td>Levels 1 to 3 playable with both vampires, the choice and the villain fight.</td></tr>
+  <tr><td>55 - 75</td><td>Level 4 hero and theme, the Narrator boss fight (three phases, mirrors, allies), endings, level transitions, fourth-wall twists, shader, medals, audio mix.</td><td>Full 12 to 15 minute run from menu through the boss to an ending.</td></tr>
+  <tr><td>75 - 85</td><td>Balance pass, outside playtests, bug fixing, performance, accessibility. <b>Feature freeze at Hour 85.</b></td><td>No known blocking bugs; clues and fights confirmed fair by testers.</td></tr>
+  <tr><td>85 - 96</td><td>Only fixes. Final web export, itch.io page and GIFs, README, CREDITS and AI usage audit, commit history check.</td><td>Public itch.io build submitted by Hour 96.</td></tr>
   <tr><td>96 - 100</td><td>Safety margin. Re-verify the live itch.io build and the repository.</td><td>Strict code freeze at Hour 100.</td></tr>
 </table>
 
 <h2>4. How the work is split</h2>
 <ul>
-  <li><b>Claude Code:</b> architecture, Saboteur AI, level generator, twist scripting, bug fixing, code review and merges.</li>
-  <li><b>Antigravity:</b> art direction per genre, UI, shaders and transitions, audio, browser (Playwright) playtests, the itch.io page.</li>
+  <li><b>Claude Code:</b> architecture, vampire AI and the choice system, fights, level generator, narrator event scripting, bug fixing, code review and merges.</li>
+  <li><b>Antigravity:</b> hero and villain art, level themes, UI, shaders and transitions, audio, browser (Playwright) playtests, the itch.io page.</li>
   <li><b>ChatGPT / Codex:</b> tests, balance data, documentation, README and CREDITS, small isolated features.</li>
-  <li><b>Developer (Sankeerth):</b> all design decisions, narrator script and story direction, the playtests, every merge to <code>main</code>. Design choices are logged in <code>docs/DESIGN_LOG.md</code>.</li>
+  <li><b>Developer (Sankeerth):</b> all design decisions, the story, hero and villain concepts, the Narrator's script, the playtests, every merge to <code>main</code>. Design choices are logged in <code>docs/DESIGN_LOG.md</code>.</li>
   <li><b>Method:</b> each tool works in its own git worktree and owns separate folders, a shared task board (<code>docs/TASKS.md</code>) tracks everything, commits are small and frequent so the history is auditable.</li>
 </ul>
 
@@ -88,8 +90,10 @@
   <tr><td>Assets</td><td>Only free, CC0, CC BY, open-source or AI-generated assets. Everything listed in <code>CREDITS.md</code> and on the itch.io page. No paid assets.</td></tr>
   <tr><td>AI disclosure</td><td>Claude Code, Antigravity and ChatGPT/Codex are used for code, art, audio and documents. Every use is logged in <code>docs/AI_USAGE.md</code>. Core design and story direction are the developer's.</td></tr>
   <tr><td>Code origin</td><td>All game code is written inside the 100 hours. Only a generic empty Godot project and an editor plugin used for tooling (not part of the game) were present at the start; the plugin is credited.</td></tr>
-  <tr><td>Risk: Saboteur AI is too hard to tune</td><td>Keep the AI simple (patrol, flee from light, freeze in the beam). Fallback: it only triggers sabotage on a fixed schedule and the player can still stop it with the fix console.</td></tr>
-  <tr><td>Risk: combat is not fun</td><td>Both fights reuse existing mechanics (torch light, mirrors, hearts) instead of a new combat system. Attacks are slow and readable. Early playtests at Hour 45 (small fight) and Hour 70 (boss). Fallbacks: the small fight becomes a freeze-and-catch moment, the boss drops to two phases without mirrors.</td></tr>
+  <tr><td>Risk: the choice is a coin flip</td><td>Clues are deterministic: the friend always finishes one console unseen, the villain is always present near a console when a sabotage starts. Playtests check that testers can deduce the roles. Fallback: the first vampire met is always the friend in level 1 (tutorial).</td></tr>
+  <tr><td>Risk: vampire AI is hard to tune</td><td>Keep it simple (patrol, flee from light, freeze in the beam). Fallback: the villain sabotages on a fixed schedule.</td></tr>
+  <tr><td>Risk: scope (largest plan item)</td><td>The vampire, choice and ally system is built first (Hours 12 to 55) and everything else is cut around it, never the other way round.</td></tr>
+  <tr><td>Risk: combat is not fun</td><td>Both fights reuse existing mechanics (torch light, mirrors, hearts). Attacks are slow and readable. Playtests at Hour 45 (villain fight) and Hour 70 (boss). Fallbacks: the villain fight becomes a freeze-and-catch moment, the boss drops to two phases without mirrors.</td></tr>
   <tr><td>Risk: art style workload</td><td>Genres are palette, font and caption swaps over one shared set of procedural shapes. Fallback: two genres instead of four.</td></tr>
   <tr><td>Risk: web performance</td><td>2D lights are limited to the hero's torch; test every milestone in a browser; keep the export under 40 MB.</td></tr>
   <tr><td>Risk: AI quota limits</td><td>Work is split across three tools with a handoff note on the task board; the developer reassigns tasks to whichever tool has quota left.</td></tr>
