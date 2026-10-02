@@ -2,247 +2,163 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Mirror Page - Game Proposal</title>
+<title>Mirror Page - Proposal and Implementation Plan</title>
 <style>
-  @page { size: A4 portrait; margin: 10mm 12mm; }
+  @page {
+    size: A4 portrait;
+    margin: 11mm 13mm 14mm 13mm;
+    @bottom-left { content: "TGC Game Jam 2026 \2022  Mirror Page \2022  Proposal and Implementation Plan"; font-size: 7.5pt; color: #777; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font-size: 7.5pt; color: #777; }
+  }
   * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #18151d;
-    font-size: 8.8pt;
-    line-height: 1.32;
-    margin: 0;
-    padding: 0;
-  }
-  .page {
-    width: 100%;
-    min-height: 275mm;
-    max-height: 275mm;
-    overflow: hidden;
-    page-break-after: always;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .banner {
-    background: #18151d;
-    color: #ffd034;
-    padding: 10px 14px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    border-left: 6px solid #e63946;
-  }
-  .banner h1 {
-    font-size: 22pt;
-    margin: 0;
-    letter-spacing: 1.5px;
-    color: #ffd034;
-    line-height: 1.1;
-  }
-  .banner .sub {
-    color: #f4e8c1;
-    font-size: 9.5pt;
-    margin-top: 3px;
-    font-weight: 500;
-  }
-  h2 {
-    font-size: 10.5pt;
-    color: #18151d;
-    border-bottom: 2px solid #ffd034;
-    padding-bottom: 1px;
-    margin: 7px 0 4px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  p { margin: 3px 0 5px 0; }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 4px 0;
-    font-size: 8.4pt;
-  }
-  th, td {
-    border: 1px solid #18151d;
-    padding: 3px 6px;
-    text-align: left;
-    vertical-align: top;
-  }
-  th {
-    background: #f4e8c1;
-    color: #18151d;
-    font-weight: 700;
-  }
-  .meta-table {
-    margin-bottom: 6px;
-    background: #fffdf5;
-  }
-  .meta-table td {
-    border: 1px solid #e0d9c4;
-    padding: 2.5px 6px;
-  }
-  .meta-table td.label {
-    width: 18%;
-    font-weight: bold;
-    background: #fbf5e2;
-  }
-  ul {
-    margin: 3px 0 4px 16px;
-    padding: 0;
-  }
-  li { margin: 1.5px 0; }
-  .box {
-    background: #f4e8c1;
-    border-left: 4px solid #2bb3c0;
-    padding: 4px 8px;
-    margin: 5px 0;
-    font-size: 8.4pt;
-  }
-  .tag {
-    display: inline-block;
-    background: #e63946;
-    color: #fff;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 7.5pt;
-    font-weight: bold;
-  }
-  .page-footer {
-    border-top: 1px solid #ccc;
-    font-size: 7.5pt;
-    color: #777;
-    display: flex;
-    justify-content: space-between;
-    padding-top: 3px;
-    margin-top: 4px;
-  }
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #18151d; font-size: 9.2pt; line-height: 1.34; margin: 0; }
+  .banner { background: #18151d; color: #ffd034; padding: 11px 16px; border-radius: 4px; margin-bottom: 8px; border-left: 7px solid #e63946; }
+  .banner h1 { font-size: 24pt; margin: 0; letter-spacing: 1.5px; color: #ffd034; line-height: 1.1; }
+  .banner .sub { color: #f4e8c1; font-size: 10pt; margin-top: 3px; }
+  h2 { font-size: 11pt; border-bottom: 2.5px solid #ffd034; padding-bottom: 2px; margin: 13px 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px; break-after: avoid; }
+  p { margin: 3px 0 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 5px 0; font-size: 8.7pt; }
+  th, td { border: 1px solid #18151d; padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: #f4e8c1; font-weight: 700; }
+  tr { break-inside: avoid; }
+  .meta td { border: 1px solid #e0d9c4; padding: 2.5px 6px; background: #fffdf5; }
+  .meta td.label { width: 17%; font-weight: bold; background: #fbf5e2; }
+  ul { margin: 3px 0 5px 17px; padding: 0; }
+  li { margin: 2px 0; }
+  .box { background: #f4e8c1; border-left: 4px solid #2bb3c0; padding: 5px 9px; margin: 6px 0; font-size: 8.8pt; break-inside: avoid; }
+  .tag { display: inline-block; background: #e63946; color: #fff; padding: 0 6px; border-radius: 9px; font-size: 7.8pt; font-weight: bold; }
+  .tag.s { background: #6c757d; }
+  code { background: #eee; padding: 0 3px; font-size: 8.4pt; }
 </style>
 </head>
 <body>
 
-<!-- ================= PAGE 1 ================= -->
-<div class="page">
-  <div>
-    <div class="banner">
-      <h1>MIRROR PAGE</h1>
-      <div class="sub">A dark comic adventure: find your friend among the vampires, and free the captured hero. • TGC Game Jam 2026 Proposal</div>
-    </div>
-
-    <table class="meta-table">
-      <tr>
-        <td class="label">Team / Creator</td>
-        <td><b>Sankeerth Nara</b> (Solo), team "Game it"</td>
-        <td class="label">Email</td>
-        <td><b>sankeerthnara@gmail.com</b></td>
-      </tr>
-      <tr>
-        <td class="label">IndieConnect ID</td>
-        <td><b>@sankeerthnara</b> (indieconnect.in/@sankeerthnara)</td>
-        <td class="label">Public GitHub</td>
-        <td><b>github.com/SankeerthNara/TGC-Game-Jam</b> (MIT)</td>
-      </tr>
-      <tr>
-        <td class="label">Themes (All 3)</td>
-        <td><span class="tag">COMIC</span> <span class="tag">TWIST</span> <span class="tag">LIGHT</span></td>
-        <td class="label">Target Playtime</td>
-        <td><b>17 – 19 mins</b> first playthrough (20 min hard cap)</td>
-      </tr>
-      <tr>
-        <td class="label">Engine & Renderer</td>
-        <td colspan="3">Godot 4.7, GDScript only, GL Compatibility Renderer (Web/HTML5 export hosted on itch.io)</td>
-      </tr>
-    </table>
-
-    <h2>1. Pitch & Core Concept</h2>
-    <p>The game opens with a cutscene: the Earth once lived in peace, guarded by <b>four superheroes</b>, until a <b>masked villain</b> covered it in darkness. A fixed <b>Narrator</b> then tells four comic stories in a row. Each is built for one comic hero (superhero, noir detective, manga ninja, pop-art space hero) in a <b>pitch-dark level of 8 rooms in a random layout</b> where only your torch is lit; you finish interactive tasks to fill a progress bar. <b>Level 1 is a calm warm-up</b>, and at its end the Narrator captures that hero. <b>From level 2</b>, two identical <b>vampires</b> lurk in the dark: your <b>friend</b> and the comic's <b>villain</b> (random), who starts <b>timed sabotage</b>. Catch one in your torchlight (Among Us style cutscene) and choose <b>REVEAL</b> or <b>KILL</b>: reveal a friend and he becomes an ally who no longer fears light; reveal the villain and you are teleported into a 30 to 60 second parkour chase; kill the villain and he is gone; kill a friend and he dies. After four levels the heroes of levels 2, 3 and 4 fight the <b>Narrator one on one</b>, each with his own special power, to free the captured hero. The first two are canonically defeated, but each cracks a layer of the Narrator's power; the level 4 hero finishes it: if he wins, sunlight makes the Narrator evaporate; if not, he throws the captured hero into lava. A closing cutscene mirrors the opening: the Earth in sunlight with its heroes, or still in darkness.</p>
-
-    <h2>2. Integration of the Three Themes</h2>
-    <table>
-      <tr><th style="width:14%">Theme</th><th>How It Drives Gameplay & Narrative</th></tr>
-      <tr><td><b>Comic</b></td><td>A fixed Narrator frames four comic worlds, each with its own hero and look (ink outlines, halftone paper, caption boxes, onomatopoeia). The light puzzles are comic pages whose panels you drag around.</td></tr>
-      <tr><td><b>Light</b></td><td>Every level is dark: only the area around your torch is visible, so light is how you explore, how you catch vampires (they freeze when held in the beam) and how you solve the mirror puzzles and the final duels.</td></tr>
-      <tr><td><b>Twist</b></td><td>Friend or villain? Two identical vampires, chosen at random, so every Reveal or Kill is a gamble with four different outcomes. The Narrator is the final twist: he captured the first hero and is the real saboteur. He also tampers with the interface and the puzzle rules.</td></tr>
-    </table>
-
-    <h2>3. Core Mechanics</h2>
-    <ul>
-      <li><b>Explore the dark:</b> smooth 8-direction walking in a random 8-room layout that is new every level. Press <code>M</code> for the map.</li>
-      <li><b>28 interactive tasks over 4 levels, none repeated:</b> comic tasks (order panels, speech bubbles, sound effects, connect the dots, ink mixing), college tasks (debug code, logic gates, quiz, proofreading, safe cracking) and classics (wires, fuses, pipes, memory), plus 6 light-puzzle pages with rule twists (lying mirrors, light that bends at gutters, goal flip).</li>
-      <li><b>Villain-started sabotage:</b> from level 2 the villain vampire walks to a spot and starts a timer; a fix console must be completed in time or you lose hearts (big sabotage: 2 hearts). In level 4 he also undoes one finished task.</li>
-      <li><b>Vampires, Reveal or Kill:</b> hold the torch on a vampire for an Among Us style cutscene, then choose. Reveal the friend: an ally who ignores light and helps more each level. Reveal the villain: you are teleported into a 30 to 60 second parkour chase against the clock. Kill the villain: he is gone. Kill the friend: he dies and your ending suffers.</li>
-      <li><b>Adaptive difficulty and score:</b> going over par makes the next level a little easier; a score (tasks, sabotage stopped, hearts, deaths, choices, small time bonus) gives S/A/B/C ranks. Checkpoints at each level start; level and total timers.</li>
-    </ul>
-
-    <h2>4. Levels and Heroes</h2>
-    <table>
-      <tr><th style="width:5%">#</th><th style="width:25%">Hero and world</th><th style="width:8%">Par</th><th style="width:8%">Tasks</th><th>Vampires, sabotage and friend help</th></tr>
-      <tr><td>1</td><td>Superhero pulp</td><td>2:00</td><td>4</td><td>Warm-up: no vampires, no sabotage. At the end the Narrator captures this hero.</td></tr>
-      <tr><td>2</td><td>Noir detective</td><td>3:00</td><td>6</td><td>Vampires appear. 1 sabotage. Revealed friend points to the nearest task.</td></tr>
-      <tr><td>3</td><td>Manga ninja</td><td>4:00</td><td>8</td><td>2 big sabotages. Friend also finishes small tasks and adds time.</td></tr>
-      <tr><td>4</td><td>Pop-art space hero</td><td>5:00</td><td>10</td><td>2 big sabotages and a task undone. Friend also fixes a sabotage and shields you once.</td></tr>
-    </table>
-  </div>
-
-  <div class="page-footer">
-    <span>TGC Game Jam 2026 • Proposal</span>
-    <span>Page 1 of 2</span>
-  </div>
+<div class="banner">
+  <h1>MIRROR PAGE</h1>
+  <div class="sub">A dark comic adventure: find your friend among the vampires, and free the captured hero. &bull; TGC Game Jam 2026 &bull; Proposal and Implementation Plan</div>
 </div>
 
-<!-- ================= PAGE 2 ================= -->
-<div class="page">
-  <div>
-    <h2>5. Final Boss, Cutscenes and Endings</h2>
-    <ul>
-      <li><b>Relay duels, special powers:</b> after level 4 the heroes of levels 2, 3 and 4 fight the Narrator one on one, in that order, at least 3 minutes in all. Each hero has his own special power: the noir detective's <i>Deduction</i> (slows time and shows the Narrator's next attack), the manga ninja's <i>Light Dash</i> (a fast dash that slices through ink), the space hero's <i>Prism Cannon</i> (splits and reflects a beam, and charges a Solar Flare). It is canon that the level 2 and level 3 heroes are defeated, but each one cracks a layer of the Narrator's dark shield. The level 4 hero faces the weakened Narrator, and what you did earlier (friends revealed or killed, how well the first duels went) decides how hard that last duel is.</li>
-      <li><b>Two endings:</b> if the level 4 hero wins, his Solar Flare floods the room with sunlight and the Narrator evaporates. If he loses, the Narrator throws the captured level 1 hero into lava.</li>
-      <li><b>Cutscenes:</b> an opening cutscene (the peaceful Earth guarded by four superheroes, then covered in darkness by a masked villain) and a mirrored closing cutscene (sunlight returns, or darkness stays, depending on the ending). In between, Among Us style scenes for detecting a vampire, revealing a friend, revealing the villain (ending in a teleport to the parkour), killing a friend or the villain (ejection into space), and the level 1 capture. All are skippable.</li>
-    </ul>
+<table class="meta">
+  <tr><td class="label">Team / Creator</td><td><b>Sankeerth Nara</b> (Solo), team "Game it"</td><td class="label">Email</td><td><b>sankeerthnara@gmail.com</b></td></tr>
+  <tr><td class="label">IndieConnect ID</td><td><b>@sankeerthnara</b> (indieconnect.in/@sankeerthnara)</td><td class="label">Public GitHub</td><td><b>github.com/SankeerthNara/TGC-Game-Jam</b> (MIT)</td></tr>
+  <tr><td class="label">Themes (All 3)</td><td><span class="tag">COMIC</span> <span class="tag">TWIST</span> <span class="tag">LIGHT</span></td><td class="label">Target Playtime</td><td><b>17 - 19 mins</b> first playthrough (20 min hard cap)</td></tr>
+  <tr><td class="label">Engine &amp; Renderer</td><td colspan="3">Godot 4.7, GDScript only, GL Compatibility renderer (Web/HTML5 export hosted on itch.io)</td></tr>
+</table>
 
-    <h2>6. Scope Boundaries</h2>
-    <div class="box">
-      <b>In Scope:</b> 4 generated dark levels with torch lighting, 28 tasks (never repeated), villain sabotage, hearts and checkpoints, two vampires with the Reveal / Kill choice and friend ally, parkour chase, relay boss duels, cutscenes, score and ranks, narrator and four heroes, menus, sound and music, web export.<br>
-      <b>Out of Scope (Strictly Cut):</b> level editor, save slots, mobile touch, gamepads, multiplayer, more than 4 levels or heroes, any existing comic character (all heroes and villains are original).
-    </div>
+<h2>1. Pitch &amp; Core Concept</h2>
+<p>The game opens with a cutscene: the Earth once lived in peace, guarded by <b>four superheroes</b>, until a <b>masked villain</b> covered it in darkness. A fixed <b>Narrator</b> then tells four comic stories in a row. Each is built for one comic hero (superhero, noir detective, manga ninja, pop-art space hero) in a <b>pitch-dark level of 8 rooms in a random layout</b> where only your torch is lit; you finish interactive tasks to fill a progress bar. <b>Level 1 is a calm warm-up</b>, and at its end the Narrator captures that hero. <b>From level 2</b>, two identical <b>vampires</b> lurk in the dark: your <b>friend</b> and the comic's <b>villain</b> (random), who starts <b>timed sabotage</b>. Catch one in your torchlight (an Among Us style cutscene) and choose <b>REVEAL</b> or <b>KILL</b>: reveal a friend and he becomes an ally who no longer fears light; reveal the villain and you are teleported into a 30 to 60 second parkour chase; kill the villain and he is gone; kill a friend and he dies. After four levels the heroes of levels 2, 3 and 4 fight the <b>Narrator one on one</b>, each with his own special power, to free the captured hero. The first two are canonically defeated, but each cracks a layer of the Narrator's power; the level 4 hero finishes it: if he wins, sunlight makes the Narrator evaporate; if not, he throws the captured hero into lava. A closing cutscene mirrors the opening: the Earth in sunlight with its heroes, or still in darkness.</p>
 
-    <h2>7. Technical Architecture & Web Feasibility</h2>
-    <ul>
-      <li><b>Godot 4.7, GDScript only, GL Compatibility renderer:</b> single-threaded Web export, no native extensions. 2D lights and darkness verified in a browser build.</li>
-      <li><b>Data-driven and testable:</b> a pure-logic puzzle model with headless unit tests and a brute-force solver that proves every puzzle solvable; levels are generated at run time (8 rooms, corridors, consoles) and a generator test checks that 100+ levels are fully reachable. Every task is its own class registered by name.</li>
-      <li><b>Status at proposal time:</b> the whole loop already runs: levels, tasks, sabotage, vampires, choice, parkour, cutscenes, score and checkpoints.</li>
-    </ul>
+<h2>2. Integration of the Three Themes</h2>
+<table>
+  <tr><th style="width:12%">Theme</th><th>How it drives gameplay and narrative</th></tr>
+  <tr><td><b>Comic</b></td><td>A fixed Narrator frames four comic worlds, each with its own hero and look (ink outlines, halftone paper, caption boxes, onomatopoeia). The light puzzles are comic pages whose panels you drag around.</td></tr>
+  <tr><td><b>Light</b></td><td>Every level is dark: only the area around your torch is visible, so light is how you explore, how you catch vampires (they freeze when held in the beam) and how you solve the mirror puzzles and the final duels.</td></tr>
+  <tr><td><b>Twist</b></td><td>Friend or villain? Two identical vampires, chosen at random, so every Reveal or Kill is a gamble with four different outcomes. The Narrator is the final twist: he captured the first hero and is the real saboteur. He also tampers with the interface and the puzzle rules.</td></tr>
+</table>
 
-    <h2>8. 100-Hour Development Milestones</h2>
-    <table>
-      <tr><th style="width:12%">Hours</th><th>Phase & Deliverables</th><th style="width:20%">Current Status</th></tr>
-      <tr><td><b>0 – 12</b></td><td>Concept lock, core engine and levels, tasks, sabotage, vampires, parkour, cutscenes, proposal.</td><td><b>COMPLETE</b></td></tr>
-      <tr><td><b>12 – 30</b></td><td>Narrator system, hero and theme for level 1, tutorial, level 1 capture cutscene, polish of the vampire choice.</td><td><b>NEXT</b></td></tr>
-      <tr><td><b>30 – 55</b></td><td>Heroes and themes for levels 2 and 3, friend ally and parkour polish, first outside playtests.</td><td>Planned</td></tr>
-      <tr><td><b>55 – 75</b></td><td>Level 4, the three relay duels, sunlight and lava endings, transitions, fourth-wall twists, shader, audio.</td><td>Planned</td></tr>
-      <tr><td><b>75 – 85</b></td><td>Balance, par times, playtests, bug fixing. <b>Feature freeze at Hour 85.</b></td><td>Planned</td></tr>
-      <tr><td><b>85 – 100</b></td><td>Fixes only, web export, itch.io page, README and CREDITS audit, submission by Hour 96.</td><td>Planned</td></tr>
-    </table>
+<h2>3. Levels, Heroes and the Choice</h2>
+<table>
+  <tr><th style="width:4%">#</th><th style="width:19%">Hero and world</th><th style="width:7%">Par</th><th style="width:7%">Tasks</th><th>Vampires, sabotage and friend help</th></tr>
+  <tr><td>1</td><td>Superhero pulp</td><td>2:00</td><td>4</td><td>Warm-up: no vampires, no sabotage. At the end the Narrator captures this hero.</td></tr>
+  <tr><td>2</td><td>Noir detective</td><td>3:00</td><td>6</td><td>Vampires appear. 1 sabotage, started by the villain. A revealed friend points to the nearest task.</td></tr>
+  <tr><td>3</td><td>Manga ninja</td><td>4:00</td><td>8</td><td>2 big sabotages (2 hearts, harder fix, shorter timer). The friend also finishes small tasks and adds time.</td></tr>
+  <tr><td>4</td><td>Pop-art space hero</td><td>5:00</td><td>10</td><td>2 big sabotages, and the villain undoes a finished task. The friend also fixes a sabotage and shields you once.</td></tr>
+</table>
+<table>
+  <tr><th style="width:16%">The vampire is...</th><th>REVEAL (cutscene, then...)</th><th>KILL (ejection cutscene, then...)</th></tr>
+  <tr><td><b>The friend</b></td><td>He becomes your ally and is no longer scared of light.</td><td>He dies, you lose a heart, and the final fight gets harder.</td></tr>
+  <tr><td><b>The villain</b></td><td>He bolts: parkour chase. Catch him: sabotage stops, +1 heart. Fail: you lose a heart.</td><td>He dies at once and the sabotage stops, but there is no heart bonus.</td></tr>
+</table>
 
-    <h2>9. Assets & AI Disclosure</h2>
-    <ul>
-      <li><b>Assets:</b> no paid assets. Fonts <b>Bangers</b> and <b>Comic Neue</b> (SIL OFL 1.1); sound effects and music generated procedurally (CC0); all art is drawn in code or generated procedurally. Every asset is listed in <code>CREDITS.md</code>. The open-source Godot AI plugin (MIT) is used in the editor only and is not part of the game.</li>
-      <li><b>AI tools:</b> Claude Code (architecture and gameplay code), Antigravity (UI, art and audio, browser tests) and ChatGPT/Codex (tests and documents), all logged in <code>docs/AI_USAGE.md</code>. Story, design decisions, characters and direction are the developer's own.</li>
-    </ul>
+<h2>4. Core Mechanics</h2>
+<ul>
+  <li><b>Explore the dark:</b> smooth 8-direction walking in a random 8-room layout that is new every level. Press <code>M</code> for the map.</li>
+  <li><b>28 interactive tasks over 4 levels, none repeated:</b> comic tasks (order panels, speech bubbles, sound effects, connect the dots, ink mixing), college tasks (debug code, logic gates, quiz, proofreading, safe cracking) and classics (wires, fuses, pipes, memory), plus 6 light-puzzle pages with rule twists (lying mirrors, light that bends at gutters, goal flip).</li>
+  <li><b>Villain-started sabotage and health:</b> the villain vampire walks to a spot and starts a timer; a fix console must be completed in time or you lose hearts. Zero hearts: respawn at the level checkpoint.</li>
+  <li><b>Adaptive difficulty and score:</b> going over par makes the next level a little easier; a score (tasks, sabotage stopped, hearts, deaths, choices, small time bonus) gives S/A/B/C ranks. Level and total timers.</li>
+</ul>
 
-    <h2>10. Risks & Mitigations</h2>
-    <table>
-      <tr><th style="width:30%">Identified Risk</th><th>Proactive Mitigation Strategy</th></tr>
-      <tr><td>Scope (four heroes, duels, cutscenes)</td><td>Everything shares one engine, one cutscene template and one duel engine; a written cut list and a feature freeze at Hour 85.</td></tr>
-      <tr><td>A pure-chance choice feels unfair</td><td>All four outcomes are fun, not punishing; early playtests at Hour 30; level 1 is a safe warm-up.</td></tr>
-      <tr><td>Combat or parkour is not fun</td><td>Simple readable mechanics, playtests at Hours 45 and 70, fallbacks (shorter parkour, duels without mirrors).</td></tr>
-      <tr><td>Web export or performance bugs</td><td>Browser test on every milestone, Compatibility renderer from day one, small asset budget.</td></tr>
-    </table>
-  </div>
+<h2>5. Final Boss, Cutscenes and Endings</h2>
+<ul>
+  <li><b>Relay duels, special powers:</b> after level 4 the heroes of levels 2, 3 and 4 fight the Narrator one on one, in that order, at least 3 minutes in all. Each hero has his own special power: the noir detective's <i>Deduction</i> (slows time and shows the Narrator's next attack), the manga ninja's <i>Light Dash</i> (a fast dash that slices through ink), the space hero's <i>Prism Cannon</i> (splits and reflects a beam, and charges a Solar Flare). It is canon that the level 2 and level 3 heroes are defeated, but each cracks a layer of the Narrator's dark shield. The level 4 hero faces the weakened Narrator, and what you did earlier (friends revealed or killed, how well the first duels went) decides how hard that last duel is.</li>
+  <li><b>Two endings:</b> if the level 4 hero wins, his Solar Flare floods the room with sunlight and the Narrator evaporates. If he loses, the Narrator throws the captured level 1 hero into lava.</li>
+  <li><b>Cutscenes:</b> an opening cutscene (the peaceful Earth guarded by four superheroes, then covered in darkness by a masked villain) and a mirrored closing cutscene (sunlight returns, or darkness stays, depending on the ending). In between, Among Us style scenes for detecting a vampire, revealing a friend, revealing the villain (ending in a teleport to the parkour), killing a friend or the villain (ejection into space), and the level 1 capture. All are skippable.</li>
+</ul>
 
-  <div class="page-footer">
-    <span>TGC Game Jam 2026 • Proposal</span>
-    <span>Page 2 of 2</span>
-  </div>
+<h2>6. Scope Boundaries</h2>
+<div class="box">
+  <b>In scope:</b> 4 generated dark levels with torch lighting, 28 tasks (never repeated), villain sabotage, hearts and checkpoints, two vampires with the Reveal / Kill choice and friend ally, parkour chase, relay boss duels, cutscenes, score and ranks, narrator and four heroes, menus, sound and music, web export.<br>
+  <b>Out of scope (strictly cut):</b> level editor, save slots, mobile touch, gamepads, multiplayer, more than 4 levels or heroes, any existing comic character (all heroes and villains are original).<br>
+  <span class="tag s">STRETCH</span> only after everything above is playable, in this order: friends from earlier levels fighting beside the heroes, a torch battery with recharge lamps, reactive music. <b>Cut first</b> if time is short: stretch items, then hero abilities, then per-hero task skins (fallback: palette swaps only), then the mirror part of the duels (fallback: a torch-only duel).
 </div>
+
+<h2>7. Technical Architecture and Web Feasibility</h2>
+<ul>
+  <li><b>Godot 4.7, GDScript only, GL Compatibility renderer:</b> single-threaded Web export, no native extensions. 2D lights and darkness verified in a browser build.</li>
+  <li><b>Data-driven and testable:</b> a pure-logic puzzle model with headless unit tests and a brute-force solver that proves every puzzle solvable; levels are generated at run time (8 rooms, corridors, consoles) and a generator test checks that 100+ levels are fully reachable. Every task is its own class registered by name.</li>
+  <li><b>Status at Hour 12:</b> the whole loop already runs: levels, 26 task types plus 6 puzzle pages, sabotage, vampires with the choice, friend ally, parkour, cutscenes for every vampire moment, score, checkpoints, par times and adaptive difficulty, map screen, comic UI and menus, and a browser build.</li>
+</ul>
+
+<h2>8. Implementation Plan: Features and Hours (88 hours)</h2>
+<table>
+  <tr><th style="width:3%">#</th><th style="width:22%">Feature</th><th>What it adds</th><th style="width:6%">Hours</th></tr>
+  <tr><td>1</td><td><b>Narrator and four comic heroes</b></td><td>One narrator character (portrait, speech bubbles, text blips) commenting through all four levels, and four original heroes with their own look, ability and a themed level (palette, fonts, props, room names, task skins, music). Level 1 ends with the capture of hero 1.</td><td>14</td></tr>
+  <tr><td>2</td><td><b>Vampires and the choice</b> (polish)</td><td>Tuning and fairness of the pure-chance choice, clues in the world (ink drips, red eyes), balance of the four outcomes and their rewards.</td><td>8</td></tr>
+  <tr><td>3</td><td><b>The friend ally</b> (polish)</td><td>Help that grows each level, ally animations, how a friend you killed changes the ending and the final fight.</td><td>5</td></tr>
+  <tr><td>4</td><td><b>Parkour chase</b> (polish)</td><td>Better level pieces per hero theme, enemies from level 3, fair difficulty, 30 to 60 second target.</td><td>6</td></tr>
+  <tr><td>5</td><td><b>Final boss: relay duels vs the Narrator</b></td><td>Three one-on-one rounds, at least 3 minutes in all, each hero with his own special power. The level 2 and 3 heroes are canonically defeated in timed survive-and-hit rounds that each crack a shield layer; the level 4 hero fights the weakened Narrator. Win: sunlight and he evaporates. Lose: lava.</td><td>14</td></tr>
+  <tr><td>6</td><td><b>More cutscenes</b></td><td>The opening cutscene and mirrored closing cutscene, the level 1 capture, hero swaps between duels, the sunlight and lava endings, and polish of the vampire cutscenes. One reusable skippable template.</td><td>9</td></tr>
+  <tr><td>7</td><td><b>Fourth-wall twists</b></td><td>The Narrator tampers with captions, the progress bar, the map and the controls for short moments.</td><td>2</td></tr>
+  <tr><td>8</td><td><b>Comic look and juice</b></td><td>Ink and halftone screen shader, panel-split level transitions, onomatopoeia on actions and hits.</td><td>3</td></tr>
+  <tr><td>9</td><td><b>Score and ranks</b> (built) + saved bests</td><td>Per-level and run score, S/A/B/C ranks, best scores saved locally.</td><td>2</td></tr>
+  <tr><td>10</td><td><b>First-minute polish</b></td><td>30 second tutorial in level 1, controls hints, itch.io page with GIFs, README, CREDITS, AI usage log.</td><td>5</td></tr>
+  <tr><td>11</td><td><b>Balance and testing</b></td><td>Tuning of task counts and difficulty to hit the par times, sabotage timers, the parkour and the duels; outside playtests; bug fixing; web performance.</td><td>10</td></tr>
+</table>
+<p>Committed total: 78 hours, leaving 10 hours of buffer inside the 88.</p>
+
+<h2>9. Milestones (100 hours)</h2>
+<table>
+  <tr><th style="width:11%">Hours</th><th>Work</th><th style="width:30%">Exit criteria (a playable build every 12 hours)</th></tr>
+  <tr><td><b>0 - 12</b></td><td>Concept lock, core engine and levels, tasks, sabotage, vampires, parkour, cutscenes, proposal.</td><td><b>COMPLETE.</b></td></tr>
+  <tr><td><b>12 - 30</b></td><td>Narrator system, hero and theme for level 1, tutorial, opening and level 1 capture cutscenes, polish of the vampire choice.</td><td>Level 1 plays start to finish in the browser with the opening cutscene.</td></tr>
+  <tr><td><b>30 - 55</b></td><td>Heroes and themes for levels 2 and 3, friend ally and parkour polish, first outside playtests (the choice is tested at Hour 30).</td><td>Levels 1 to 3 playable with vampires, the choice and the parkour.</td></tr>
+  <tr><td><b>55 - 75</b></td><td>Level 4, the three relay duels, sunlight and lava endings, closing cutscene, transitions, fourth-wall twists, shader, audio mix.</td><td>Full 17 to 19 minute run from menu to an ending.</td></tr>
+  <tr><td><b>75 - 85</b></td><td>Balance, par times, playtests, bug fixing, performance. <b>Feature freeze at Hour 85.</b></td><td>No known blocking bugs; choice, par times and duels confirmed fair by testers.</td></tr>
+  <tr><td><b>85 - 96</b></td><td>Fixes only. Final web export, itch.io page and GIFs, README, CREDITS and AI usage audit, commit history check.</td><td>Public itch.io build submitted by Hour 96.</td></tr>
+  <tr><td><b>96 - 100</b></td><td>Safety margin; re-verify the live itch.io build and the repository.</td><td>Strict code freeze at Hour 100.</td></tr>
+</table>
+
+<h2>10. Work Split and Workflow</h2>
+<ul>
+  <li><b>Claude Code:</b> architecture, vampire AI and choice system, duels, level generator, event scripting, bug fixing, code review and merges.</li>
+  <li><b>Antigravity:</b> hero and villain art, level themes, UI, shaders and transitions, audio, browser (Playwright) playtests, the itch.io page.</li>
+  <li><b>ChatGPT / Codex:</b> tests, balance data, documentation, README and CREDITS, small isolated features.</li>
+  <li><b>Developer (Sankeerth):</b> all design decisions, the story, hero and villain concepts, the Narrator's script, the playtests, every merge to <code>main</code>. Each tool works in its own git worktree and owns separate folders; a shared task board tracks everything and commits are small and frequent, so the history is auditable.</li>
+</ul>
+
+<h2>11. Assets and AI Disclosure</h2>
+<ul>
+  <li><b>Assets:</b> no paid assets. Fonts <b>Bangers</b> and <b>Comic Neue</b> (SIL OFL 1.1); sound effects and music generated procedurally (CC0); all art is drawn in code or generated procedurally. Every asset is listed in <code>CREDITS.md</code> and on the itch.io page. The open-source Godot AI plugin (MIT) is used in the editor only and is not part of the game.</li>
+  <li><b>AI tools:</b> Claude Code (architecture and gameplay code), Antigravity (UI, art and audio, browser tests) and ChatGPT/Codex (tests and documents), all logged in <code>docs/AI_USAGE.md</code>. All game code is written inside the 100 hours. Story, design decisions, characters and direction are the developer's own.</li>
+</ul>
+
+<h2 style="break-before: page">12. Risks and Mitigations</h2>
+<table>
+  <tr><th style="width:28%">Risk</th><th>Mitigation</th></tr>
+  <tr><td>Scope (four heroes, duels, cutscenes)</td><td>Everything shares one engine, one cutscene template and one duel engine; the written cut list; feature freeze at Hour 85.</td></tr>
+  <tr><td>A pure-chance choice feels unfair</td><td>All four outcomes are fun, not punishing; early playtests at Hour 30; level 1 is a safe warm-up.</td></tr>
+  <tr><td>Combat or parkour is not fun</td><td>Simple readable mechanics, playtests at Hours 45 and 70; fallbacks: shorter parkour with fewer hazards, duels without the mirror part.</td></tr>
+  <tr><td>Par times are missed</td><td>Timed playtests tune task counts and difficulty; going over par already makes the next level easier, so the run stays near 17 to 19 minutes.</td></tr>
+  <tr><td>Web export or performance bugs</td><td>Browser test on every milestone, Compatibility renderer from day one, small asset budget, 2D lights limited to the torch.</td></tr>
+  <tr><td>AI quota limits</td><td>Work is split across three tools with handoff notes on the task board; the developer reassigns tasks to whichever tool has quota left.</td></tr>
+</table>
+
+<h2>13. Definition of Done</h2>
+<ul>
+  <li>A public itch.io page with a playable browser build of the full 17 to 19 minute game.</li>
+  <li>The README shows the itch.io link, setup, controls and team details; CREDITS and the AI usage log are complete.</li>
+  <li>The final game matches this plan: all committed features present, nothing from the cut list promised.</li>
+</ul>
 
 </body>
 </html>
