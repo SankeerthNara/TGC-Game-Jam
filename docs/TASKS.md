@@ -36,3 +36,4 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C11 | Claude | Parkour chase minigame; 13 new task types so no task repeats in a run | done | C10 | `parkour_game.gd`, `scripts/tasks/` |
 | C12b | Claude | Cutscene system for detect/reveal/kill; level 1 warm-up (no vampires or sabotage) | done | C11 | `cutscene.gd` |
 | C15 | Claude | Final boss: three relay duels (hero 2, 3, 4) vs the Narrator, level 1 capture, sunlight and lava ending cutscenes | todo | C12b | at least 3 minutes in all |
+| C16 | Claude | Hero special powers for the final duels (Deduction, Light Dash, Prism Cannon / Solar Flare); scripted knock-outs for heroes 2 and 3 | todo | C15 | |
