@@ -36,6 +36,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if world == null or not world.station_mode:
 		return
+	_draw_health_and_sabotage()
 	var total := world.tasks.size()
 	var done := world.tasks_done.size()
 	var box := Rect2(Vector2(900, 20), Vector2(350, 76))
@@ -67,10 +68,68 @@ func _draw() -> void:
 	for t: Dictionary in world.tasks:
 		var is_done := world.tasks_done.has(t["id"])
 		var c := Color("6c757d") if is_done else INK
+		if t.has("triggers") and not is_done:
+			c = Color("c1121f")
 		draw_rect(Rect2(Vector2(lbox.position.x + 12, y - 13), Vector2(14, 14)), Color(1, 1, 1, 0.8))
 		draw_rect(Rect2(Vector2(lbox.position.x + 12, y - 13), Vector2(14, 14)), INK, false, 2.0)
 		if is_done:
 			draw_line(Vector2(lbox.position.x + 14, y - 6), Vector2(lbox.position.x + 18, y - 1), Color("2dc653"), 3.0)
 			draw_line(Vector2(lbox.position.x + 18, y - 1), Vector2(lbox.position.x + 26, y - 14), Color("2dc653"), 3.0)
-		draw_string(FONT_BODY, Vector2(lbox.position.x + 34, y), "%s: %s" % [t["room"], t["name"]], HORIZONTAL_ALIGNMENT_LEFT, 300, 15, c)
+		var tag := "  (RISKY)" if t.has("triggers") and not is_done else ""
+		draw_string(FONT_BODY, Vector2(lbox.position.x + 34, y), "%s: %s%s" % [t["room"], t["name"], tag], HORIZONTAL_ALIGNMENT_LEFT, 310, 15, c)
 		y += lh
+
+
+func _heart(c: Vector2, r: float, filled: bool) -> void:
+	var pts := PackedVector2Array()
+	for k in 28:
+		var t := k / 28.0 * TAU
+		var x := 16.0 * pow(sin(t), 3.0)
+		var y := -(13.0 * cos(t) - 5.0 * cos(2.0 * t) - 2.0 * cos(3.0 * t) - cos(4.0 * t))
+		pts.append(c + Vector2(x, y) * r / 16.0)
+	if filled:
+		draw_colored_polygon(pts, Color("e63946"))
+	else:
+		draw_colored_polygon(pts, Color(0.2, 0.2, 0.25, 0.7))
+	var closed := pts.duplicate()
+	closed.append(pts[0])
+	draw_polyline(closed, INK, 3.0)
+
+
+func _draw_health_and_sabotage() -> void:
+	for i in world.max_health:
+		_heart(Vector2(52 + i * 52, 142), 20.0, i < world.hp)
+	if world.sabotage.is_empty():
+		return
+	var def: Dictionary = world.sabotage["def"]
+	var left: float = world.sabotage["left"]
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 130.0)
+	var vp := get_viewport_rect().size
+	var a := 0.12 + 0.22 * pulse * (1.0 if left < 15.0 else 0.6)
+	draw_rect(Rect2(0, 0, vp.x, 14), Color(1, 0.1, 0.1, a * 2.0))
+	draw_rect(Rect2(0, vp.y - 14, vp.x, 14), Color(1, 0.1, 0.1, a * 2.0))
+	draw_rect(Rect2(0, 0, 14, vp.y), Color(1, 0.1, 0.1, a * 2.0))
+	draw_rect(Rect2(vp.x - 14, 0, 14, vp.y), Color(1, 0.1, 0.1, a * 2.0))
+	var fix: Dictionary = world.active_fix()
+	var box := Rect2(Vector2(30, 176), Vector2(560, 74))
+	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
+	draw_rect(box, Color(0.55 + 0.35 * pulse, 0.05, 0.08))
+	draw_rect(box, INK, false, 4.0)
+	var tp := box.position + Vector2(34, 36)
+	draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -22), tp + Vector2(-24, 20), tp + Vector2(24, 20)]), Color("ffd23f"))
+	draw_polyline(PackedVector2Array([tp + Vector2(0, -22), tp + Vector2(-24, 20), tp + Vector2(24, 20), tp + Vector2(0, -22)]), INK, 3.0)
+	draw_line(tp + Vector2(0, -8), tp + Vector2(0, 6), INK, 4.0)
+	draw_circle(tp + Vector2(0, 13), 2.5, INK)
+	draw_string(FONT_SHOUT, box.position + Vector2(76, 32), "%s!" % def["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("fff3d1"))
+	draw_string(FONT_BODY, box.position + Vector2(76, 60), "Fix: %s (%s)" % [fix.get("name", "?"), fix.get("room", "?")], HORIZONTAL_ALIGNMENT_LEFT, 360, 18, Color("fff3d1"))
+	var secs := int(ceil(left))
+	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 120, 52), "%d:%02d" % [secs / 60, secs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 48, Color("fff3d1") if left > 10.0 else Color("ffe066"))
+	# arrow around the hero pointing to the fix console
+	if fix.is_empty():
+		return
+	var to := Vector2(float(fix["x"]) + 0.5, float(fix["y"]) + 0.5) * World.TILE - world._foot
+	var dir := to.normalized()
+	var c := Vector2(640, 345) + dir * 130.0
+	var side := dir.orthogonal()
+	draw_colored_polygon(PackedVector2Array([c + dir * 26, c - dir * 14 + side * 18, c - dir * 14 - side * 18]), Color("ff4d4d"))
+	draw_polyline(PackedVector2Array([c + dir * 26, c - dir * 14 + side * 18, c - dir * 14 - side * 18, c + dir * 26]), INK, 3.0)

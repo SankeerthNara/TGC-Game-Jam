@@ -24,3 +24,4 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C6 | Claude | Station mode: huge dark map, torch-only lighting, 15 tasks with progress bar, minimap, 7 mini-games | done | C5 | `scripts/tasks/`, `data/world/station.json` |
 | A8 | Antigravity | Task art/sound: sounds for task start, success, fail (hook `task_started`, `task_completed`), station ambience, wall/floor/prop art polish via `World` draw helpers (ask on this board) | todo | C6 | |
 | G5 | ChatGPT | Headless tests: every task console reachable, tasks list matches map, TaskRegistry covers every type in station.json | todo | C6 | |
+| C7 | Claude | Sabotage timers and hearts, death and restart, free 8-direction movement, 6 comic/college mini-games, 18 tasks and 6 emergency fixes | done | C6 | |

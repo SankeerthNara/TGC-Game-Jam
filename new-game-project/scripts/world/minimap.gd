@@ -52,6 +52,13 @@ func _draw() -> void:
 			draw_circle(p, s * 1.1 * pulse, INK)
 			draw_circle(p, s * 0.85 * pulse, Color("ffd23f"))
 			draw_string(FONT_SHOUT, p + Vector2(-s * 0.35, s * 0.55), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, int(s * 1.5), INK)
+	var fix: Dictionary = world.active_fix()
+	if not fix.is_empty():
+		var fp := origin + (Vector2(float(fix["x"]), float(fix["y"])) + Vector2(0.5, 0.5)) * s
+		var fpulse := 1.0 + 0.35 * sin(Time.get_ticks_msec() / 120.0)
+		draw_circle(fp, s * 1.6 * fpulse, INK)
+		draw_circle(fp, s * 1.25 * fpulse, Color("ff3b3b"))
+		draw_string(FONT_SHOUT, fp + Vector2(-s * 0.5, s * 0.7), "FIX", HORIZONTAL_ALIGNMENT_LEFT, -1, int(s * 1.7), Color.WHITE)
 	var hp := origin + (Vector2(world.tile) + Vector2(0.5, 0.5)) * s
 	draw_circle(hp, s * 1.3, INK)
 	draw_circle(hp, s * 1.0, Color("e63946"))

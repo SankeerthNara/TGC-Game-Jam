@@ -33,3 +33,9 @@ signal door_unlocked(puzzle_index: int)
 ## --- station tasks ---
 signal task_started(task_id: String)
 signal task_completed(task_id: String, done: int, total: int)
+
+## --- sabotage and health ---
+signal sabotage_started(sabotage_name: String, seconds: float)
+signal sabotage_resolved(sabotage_name: String)
+signal sabotage_failed(sabotage_name: String, health_left: int)
+signal player_died

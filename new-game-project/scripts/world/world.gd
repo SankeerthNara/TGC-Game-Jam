@@ -9,6 +9,10 @@ signal door_entered(puzzle_index: int)
 signal message(text: String)
 signal gate_opened(gate_char: String)
 signal task_requested(task_id: String, type: String, param: int)
+signal sabotage_started(def: Dictionary)
+signal sabotage_resolved(def: Dictionary)
+signal sabotage_failed(def: Dictionary, health_left: int)
+signal player_died
 
 const TEX_PAPER := preload("res://assets/art/paper_texture.png")
 const TEX_HALFTONE := preload("res://assets/art/halftone_dot.png")
@@ -23,7 +27,8 @@ const BUSH := Color("3f7a3a")
 const GOLD := Color("ffd23f")
 const DARKNESS := Color(0.17, 0.15, 0.3)
 const HOUSE_COLORS := [Color("e76f51"), Color("2a9d8f"), Color("e9c46a"), Color("9b5de5"), Color("4cc9f0"), Color("f28482"), Color("84a59d"), Color("b5838d")]
-const SOLID_CHARS := ",T#NslGHIoKctpb"
+const SOLID_CHARS := ",T#NslGHIoKFctpb"
+const WALK_SPEED := TILE * 6.2
 const STATION_DARK := Color(0.03, 0.028, 0.065)
 const STATION_WALL := Color("2e2a45")
 const KEEPER_LINES := [
@@ -47,6 +52,12 @@ var rooms: Array = []
 var tasks_done := {} ## task id -> true
 var input_blocked := false ## true while a task overlay is open
 var intro := ""
+var fixes: Array = []
+var sabotage_defs: Dictionary = {}
+var max_health := 3
+var hp := 3
+var sabotage: Dictionary = {} ## active sabotage: {def, left}
+var clock_running := true
 
 var hero := HeroActor.new()
 var tile := Vector2i.ZERO
@@ -88,6 +99,10 @@ var _room_colors: Array[Color] = []
 var _task_hud: TaskHUD
 var _minimap: MiniMap
 var _minimap_open := false
+var _foot := Vector2.ZERO ## free-movement position of the hero's feet (station mode)
+var _face := Vector2.DOWN
+var _console_cd := 0.0
+var _triggered := {}
 
 
 func _ready() -> void:
@@ -131,6 +146,11 @@ func load_map(path: String) -> void:
 	station_mode = data.get("mode", "") == "station"
 	tasks = data.get("tasks", [])
 	rooms = data.get("rooms", [])
+	fixes = data.get("fixes", [])
+	max_health = int(data.get("max_health", 3))
+	sabotage_defs.clear()
+	for sd: Dictionary in data.get("sabotages", []):
+		sabotage_defs[sd["id"]] = sd
 	intro = data.get("intro", "")
 	rows.clear()
 	for r: String in data["rows"]:
@@ -149,6 +169,9 @@ func load_map(path: String) -> void:
 	_task_at.clear()
 	for t: Dictionary in tasks:
 		_task_at[Vector2i(int(t["x"]), int(t["y"]))] = t
+	for f: Dictionary in fixes:
+		f["is_fix"] = true
+		_task_at[Vector2i(int(f["x"]), int(f["y"]))] = f
 	decoys = data.get("decoys", [])
 	gates = data.get("gates", {})
 	npc_lines = data.get("npc_lines", [])
@@ -227,6 +250,10 @@ func reset() -> void:
 	for it: Dictionary in items:
 		it["taken"] = false
 	tasks_done.clear()
+	hp = max_health
+	sabotage = {}
+	_triggered.clear()
+	_console_cd = 0.0
 	input_blocked = false
 	_minimap_open = false
 	_minimap.visible = false
@@ -240,6 +267,8 @@ func reset() -> void:
 	_pending_door = -1
 	_npc_i = 0
 	hero.reset()
+	_foot = _center(tile)
+	_face = Vector2.DOWN
 	hero.snap(_stand_pos(tile), _stand_pos(tile) + Vector2(0, TILE))
 	_sync_hud()
 	_refresh_lights()
@@ -287,22 +316,86 @@ func all_tasks_done() -> bool:
 
 
 func complete_task(task_id: String) -> void:
-	if task_id == "" or tasks_done.has(task_id):
+	if task_id == "":
+		return
+	if task_id.begins_with("f"):
+		_resolve_sabotage(task_id)
+		return
+	if tasks_done.has(task_id):
 		return
 	tasks_done[task_id] = true
 	hero.mood = HeroActor.Mood.HAPPY
 	_mood_timer = 3.0
 	EventBus.task_completed.emit(task_id, tasks_done.size(), tasks.size())
+	for t: Dictionary in tasks:
+		if t["id"] == task_id and t.has("triggers") and sabotage.is_empty() and not _triggered.has(t["triggers"]):
+			_start_sabotage(String(t["triggers"]))
 	queue_redraw()
+
+
+func _start_sabotage(sab_id: String) -> void:
+	var def: Dictionary = sabotage_defs.get(sab_id, {})
+	if def.is_empty():
+		return
+	_triggered[sab_id] = true
+	sabotage = {"def": def, "left": float(def["seconds"])}
+	EventBus.sabotage_started.emit(def["name"], float(def["seconds"]))
+	sabotage_started.emit(def)
+
+
+func _resolve_sabotage(fix_id: String) -> void:
+	if sabotage.is_empty() or sabotage["def"]["fix"] != fix_id:
+		return
+	var def: Dictionary = sabotage["def"]
+	sabotage = {}
+	hero.mood = HeroActor.Mood.HAPPY
+	_mood_timer = 3.0
+	EventBus.sabotage_resolved.emit(def["name"])
+	sabotage_resolved.emit(def)
+
+
+func _update_sabotage(delta: float) -> void:
+	if not clock_running or sabotage.is_empty():
+		return
+	sabotage["left"] = float(sabotage["left"]) - delta
+	if float(sabotage["left"]) > 0.0:
+		return
+	var def: Dictionary = sabotage["def"]
+	sabotage = {}
+	hp = maxi(0, hp - int(def.get("damage", 1)))
+	hero.mood = HeroActor.Mood.SCARED
+	_mood_timer = 3.0
+	_flash = 0.8
+	EventBus.sabotage_failed.emit(def["name"], hp)
+	sabotage_failed.emit(def, hp)
+	if hp <= 0:
+		EventBus.player_died.emit()
+		player_died.emit()
+
+
+## The fix console that currently matters, or an empty dictionary.
+func active_fix() -> Dictionary:
+	if sabotage.is_empty():
+		return {}
+	for f: Dictionary in fixes:
+		if f["id"] == sabotage["def"]["fix"]:
+			return f
+	return {}
 
 
 func _open_task(t: Vector2i) -> void:
 	var task: Dictionary = _task_at.get(t, {})
-	if task.is_empty():
+	if task.is_empty() or _console_cd > 0.0:
 		return
-	if tasks_done.has(task["id"]):
+	if task.get("is_fix", false):
+		if sabotage.is_empty() or sabotage["def"]["fix"] != task["id"]:
+			_console_cd = 1.2
+			message.emit("NARRATOR: Nothing is broken here. Yet.")
+			return
+	elif tasks_done.has(task["id"]):
 		message.emit("NARRATOR: That one is already done. Nice and tidy.")
 		return
+	_console_cd = 1.0
 	EventBus.task_started.emit(task["id"])
 	task_requested.emit(task["id"], task["type"], int(task.get("param", 0)))
 
@@ -532,7 +625,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_minimap.visible = false
 		return
 	if event.keycode in [KEY_Z, KEY_ENTER, KEY_SPACE, KEY_E]:
-		_interact(tile + facing)
+		if station_mode:
+			_interact_station()
+		else:
+			_interact(tile + facing)
 
 
 func _interact(t: Vector2i) -> void:
@@ -570,6 +666,8 @@ func _bump_door(t: Vector2i) -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_update_sabotage(delta)
+	_console_cd = maxf(0.0, _console_cd - delta)
 	if not active:
 		return
 	_bump_cd = maxf(0.0, _bump_cd - delta)
@@ -581,6 +679,9 @@ func _process(delta: float) -> void:
 		_mood_timer -= delta
 		if _mood_timer <= 0.0:
 			hero.mood = HeroActor.Mood.THINK
+	if station_mode:
+		_process_station(delta)
+		return
 	if _shop_open or input_blocked or _minimap_open:
 		hero.update(delta, TILE * 1.15)
 		_update_torch()
@@ -603,6 +704,82 @@ func _process(delta: float) -> void:
 	hero.update(delta, TILE * 1.15)
 	_update_torch()
 	queue_redraw()
+
+
+# --- free movement (station mode): any mix of arrow keys, diagonals, opposing keys cancel ---
+
+func _read_vec() -> Vector2:
+	var x := 0.0
+	var y := 0.0
+	if Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A):
+		x -= 1.0
+	if Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D):
+		x += 1.0
+	if Input.is_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_W):
+		y -= 1.0
+	if Input.is_key_pressed(KEY_DOWN) or Input.is_key_pressed(KEY_S):
+		y += 1.0
+	return Vector2(x, y)
+
+
+var _blocked_tile := Vector2i.ZERO
+
+
+func _box_blocked(f: Vector2) -> bool:
+	var hx := TILE * 0.25
+	var hy := TILE * 0.16
+	for c in [Vector2(-hx, -hy), Vector2(hx, -hy), Vector2(-hx, hy), Vector2(hx, hy)]:
+		var p: Vector2 = f + c
+		var t := Vector2i(floori(p.x / TILE), floori(p.y / TILE))
+		if is_solid(t):
+			_blocked_tile = t
+			return true
+	return false
+
+
+func _move_axis(step: Vector2) -> void:
+	if step == Vector2.ZERO:
+		return
+	var nf := _foot + step
+	if not _box_blocked(nf):
+		_foot = nf
+	else:
+		var ch := _at(_blocked_tile)
+		if (ch == "K" or ch == "F") and _console_cd <= 0.0:
+			_open_task(_blocked_tile)
+
+
+func _process_station(delta: float) -> void:
+	var look := _foot + _face * TILE * 2.0
+	if input_blocked or _minimap_open:
+		hero.drive(_foot + Vector2(0, -TILE * 0.2), false, 0.0, look, delta)
+		_update_torch()
+		queue_redraw()
+		return
+	var v := _read_vec()
+	var moving := v != Vector2.ZERO
+	if moving:
+		_face = v.normalized()
+		var step := _face * WALK_SPEED * delta
+		_move_axis(Vector2(step.x, 0.0))
+		_move_axis(Vector2(0.0, step.y))
+	tile = Vector2i(floori(_foot.x / TILE), floori(_foot.y / TILE))
+	hero.drive(_foot + Vector2(0, -TILE * 0.2), moving, v.x, _foot + _face * TILE * 2.0, delta)
+	_update_torch()
+	queue_redraw()
+
+
+func _interact_station() -> void:
+	var best := Vector2i(-1, -1)
+	var best_d := TILE * 1.75
+	for t: Vector2i in _task_at:
+		var c := _center(t)
+		var d := _foot.distance_to(c)
+		if d < best_d and (c - _foot).normalized().dot(_face) > -0.35:
+			best_d = d
+			best = t
+	if best.x >= 0:
+		_open_task(best)
 
 
 func _try_step(d: Vector2i) -> void:
@@ -983,7 +1160,7 @@ func _draw_station_object(x: int, y: int) -> void:
 			_draw_plant(r, x, y)
 		"b":
 			_draw_shelf(r, x, y)
-		"K":
+		"K", "F":
 			_draw_console(r, x, y)
 
 
@@ -1047,25 +1224,41 @@ func _draw_shelf(r: Rect2, x: int, y: int) -> void:
 
 func _draw_console(r: Rect2, x: int, y: int) -> void:
 	var task: Dictionary = _task_at.get(Vector2i(x, y), {})
-	var is_done := task.is_empty() or tasks_done.has(task.get("id", ""))
+	var is_fix: bool = task.get("is_fix", false)
+	var live_fix: bool = is_fix and not sabotage.is_empty() and sabotage["def"]["fix"] == task.get("id", "")
+	var is_done := task.is_empty() or (not is_fix and tasks_done.has(task.get("id", "")))
 	var body := Rect2(r.position + Vector2(TILE * 0.06, TILE * 0.18), Vector2(TILE * 0.88, TILE * 0.8))
 	draw_rect(Rect2(body.position + Vector2(3, 4), body.size), Color(0, 0, 0, 0.3))
-	draw_rect(body, Color("4a4e69"))
+	draw_rect(body, Color("4a4e69") if not is_fix else Color("5a3a3a"))
 	draw_rect(body, INK, false, 4.0)
 	var screen := Rect2(body.position + Vector2(8, 8), Vector2(body.size.x - 16, body.size.y * 0.52))
 	var pulse := 0.65 + 0.35 * sin(_time * 4.0 + x)
 	draw_rect(screen, INK)
-	var scol := Color("2dc653") if is_done else Color("ffd23f")
-	draw_rect(screen.grow(-4), Color(scol.r * (0.6 if is_done else pulse), scol.g * (0.6 if is_done else pulse), scol.b * 0.35, 1.0))
+	var scol := Color("ffd23f")
+	if is_fix:
+		scol = Color("ff4d4d") if live_fix else Color("6c757d")
+	elif is_done:
+		scol = Color("2dc653")
+	var lit_screen: bool = (not is_done and (not is_fix or live_fix))
+	draw_rect(screen.grow(-4), Color(scol.r * (pulse if lit_screen else 0.6), scol.g * (pulse if lit_screen else 0.6), scol.b * 0.4, 1.0))
 	if is_done:
 		draw_line(screen.get_center() + Vector2(-12, 0), screen.get_center() + Vector2(-3, 9), INK, 5.0)
 		draw_line(screen.get_center() + Vector2(-3, 9), screen.get_center() + Vector2(14, -9), INK, 5.0)
 	else:
-		draw_string(FONT_SHOUT, screen.get_center() + Vector2(-6, 10), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, INK)
+		draw_string(FONT_SHOUT, screen.get_center() + Vector2(-8, 10), "!" if not is_fix else "+", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, INK)
 	for k in 3:
 		draw_circle(body.position + Vector2(14 + k * 16, body.size.y - 12), 4.0, [Color("e63946"), Color("ffd23f"), Color("2dc653")][k])
-	if not is_done and hero.pos.distance_to(r.get_center()) < TILE * 2.6:
+	if task.has("triggers") and not is_done:
+		var tp := body.position + Vector2(body.size.x - 12, 6)
+		draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -14), tp + Vector2(-13, 10), tp + Vector2(13, 10)]), Color("e63946"))
+		draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -9), tp + Vector2(-8, 7), tp + Vector2(8, 7)]), Color("ffd23f"))
+		draw_line(tp + Vector2(0, -4), tp + Vector2(0, 2), INK, 2.5)
+	if live_fix:
+		draw_texture_rect(TEX_GLOW, Rect2(r.get_center() - Vector2(TILE, TILE), Vector2(TILE, TILE) * 2.0), false, Color(1, 0.2, 0.2, 0.6 * pulse))
+	var near := hero.pos.distance_to(r.get_center()) < TILE * 2.6
+	if near and (live_fix or (not is_fix and not is_done)):
 		var f := 22
 		var bob := sin(_time * 6.0) * 4.0
-		draw_string_outline(FONT_SHOUT, r.get_center() + Vector2(-34, -TILE * 0.55 + bob), "PRESS Z", HORIZONTAL_ALIGNMENT_LEFT, -1, f, 8, INK)
-		draw_string(FONT_SHOUT, r.get_center() + Vector2(-34, -TILE * 0.55 + bob), "PRESS Z", HORIZONTAL_ALIGNMENT_LEFT, -1, f, GOLD)
+		var label := "PRESS Z" if not live_fix else "FIX IT! Z"
+		draw_string_outline(FONT_SHOUT, r.get_center() + Vector2(-40, -TILE * 0.55 + bob), label, HORIZONTAL_ALIGNMENT_LEFT, -1, f, 8, INK)
+		draw_string(FONT_SHOUT, r.get_center() + Vector2(-40, -TILE * 0.55 + bob), label, HORIZONTAL_ALIGNMENT_LEFT, -1, f, GOLD if not live_fix else Color("ff6b6b"))

@@ -26,6 +26,20 @@ func reset() -> void:
 	villain = false
 
 
+## Free-movement mode: the world sets the position every frame.
+func drive(new_pos: Vector2, moving: bool, face_x: float, look_at: Vector2, delta: float) -> void:
+	pos = new_pos
+	target = new_pos
+	gaze = look_at
+	_placed = true
+	_t += delta
+	_moving = moving
+	if moving:
+		_walk += delta * 15.0
+	if absf(face_x) > 0.1:
+		_facing = signf(face_x)
+
+
 func is_moving() -> bool:
 	return _moving
 

@@ -13,7 +13,7 @@ var undo_stack: Array[Dictionary] = []
 var busy := false
 var run_id := 0 ## bumps on every level start so stale timers do nothing
 var decoy_revealed := false
-var state := "menu" ## menu | world | task (a mini-game) | playing (a page puzzle) | paused | ended
+var state := "menu" ## menu | world | task (a mini-game) | playing (a page puzzle) | paused | ended | dead
 var active_task := ""
 var _task_layer: CanvasLayer
 
@@ -27,6 +27,13 @@ func _ready() -> void:
 	add_child(world)
 	world.door_entered.connect(_enter_puzzle)
 	world.task_requested.connect(_on_task_requested)
+	world.sabotage_started.connect(_on_sabotage_started)
+	world.sabotage_resolved.connect(func(def: Dictionary) -> void:
+		EventBus.caption_changed.emit("NARRATOR: Crisis averted! %s is under control. Phew." % String(def["name"]).capitalize()))
+	world.sabotage_failed.connect(func(def: Dictionary, left: int) -> void:
+		view.shake(14.0)
+		EventBus.caption_changed.emit("NARRATOR: OUCH! %s hit you. %d heart%s left." % [String(def["name"]).capitalize(), left, "" if left == 1 else "s"]))
+	world.player_died.connect(_on_player_died)
 	_task_layer = CanvasLayer.new()
 	_task_layer.layer = 18
 	add_child(_task_layer)
@@ -58,8 +65,9 @@ func _set_state(s: String) -> void:
 	var in_puzzle := s == "playing" or s == "paused"
 	view.visible = in_puzzle
 	view.input_enabled = s == "playing" and not busy
-	world.set_active(s == "world" or s == "task")
-	world.input_blocked = s == "task"
+	world.set_active(s == "world" or s == "task" or s == "dead")
+	world.input_blocked = s == "task" or s == "dead"
+	world.clock_running = s == "world" or s == "task" or s == "playing"
 	EventBus.game_state_changed.emit(s)
 
 
@@ -161,6 +169,24 @@ func _back_from_task(success: bool) -> void:
 		EventBus.caption_changed.emit("NARRATOR: Task complete! %d of %d done. Keep going, hero." % [world.tasks_done.size(), world.tasks_total()])
 	else:
 		EventBus.caption_changed.emit("NARRATOR: Gave up on that one? It will still be here.")
+
+
+func _on_sabotage_started(def: Dictionary) -> void:
+	var fix := world.active_fix()
+	EventBus.caption_changed.emit("NARRATOR: SABOTAGE! %s! %s Fix it in the %s within %d seconds or lose a heart!" % [def["name"], def["line"], fix.get("room", "station"), int(def["seconds"])])
+
+
+func _on_player_died() -> void:
+	for c in _task_layer.get_children():
+		c.queue_free()
+	active_task = ""
+	_set_state("dead")
+	var overlay := DeathOverlay.new()
+	overlay.restart.connect(func() -> void:
+		overlay.queue_free()
+		_start_game())
+	_task_layer.add_child(overlay)
+	EventBus.caption_changed.emit("NARRATOR: Out of hearts! The station claims another hero. Press Z to try again.")
 
 
 func _wait_playing() -> void:

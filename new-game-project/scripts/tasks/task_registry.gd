@@ -19,4 +19,16 @@ static func create(type: String) -> TaskBase:
 			return BlotsTask.new()
 		"swipe":
 			return SwipeTask.new()
+		"panels":
+			return PanelsTask.new()
+		"bubbles":
+			return BubblesTask.new()
+		"sfx":
+			return SfxTask.new()
+		"debug":
+			return DebugTask.new()
+		"logic":
+			return LogicTask.new()
+		"sort":
+			return SortTask.new()
 	return null
