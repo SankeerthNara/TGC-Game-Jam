@@ -15,5 +15,5 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | A5 | Antigravity | Author levels 4-6 JSON with `level_gen.gd` and `level_check.gd`, plus captions | todo | C1 | See docs/ARCHITECTURE.md |
 | A6 | Antigravity | Web export and Playwright playtest every few hours; report errors and size | todo | C3 | |
 | G1 | ChatGPT | README, CREDITS, AI_USAGE skeletons | done | - | |
-| G2 | ChatGPT | Unit tests for BeamSolver and PageModel (reflection tables, bend rule, swap, status) in `tests/` | todo | C1 | Headless script runnable like level_check |
+| G2 | ChatGPT | Unit tests for BeamSolver and PageModel (reflection tables, bend rule, swap, status) in `tests/` | done | C1 | Headless script runnable like level_check |
 | G3 | ChatGPT | Per-level optimal move counts from `level_check.gd` into `data/balance/` for a hint system | todo | C1 | |
