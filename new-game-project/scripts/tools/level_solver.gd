@@ -3,7 +3,7 @@ extends RefCounted
 ## Brute-force BFS over every panel arrangement and mirror orientation.
 ## All actions are reversible, so a level is solvable iff some reachable state is solved.
 
-const MAX_STATES := 300000
+static var MAX_STATES := 300000
 
 
 static func _key(s: Dictionary) -> String:

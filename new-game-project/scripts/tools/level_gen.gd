@@ -1,19 +1,22 @@
 extends SceneTree
 ## Random level generator that keeps layouts whose minimum solution length is in a range.
 ##   godot --headless --path . --script res://scripts/tools/level_gen.gd -- seed=1 cols=2 rows=2 pw=3 ph=3 walls=4 mirrors=2 min=3 max=6 count=3 rule=normal
+## Twist levels: add bad=1 flip=1 (min/max then apply to solve moves + re-solve moves combined).
+## Locked panels: lock=1 locks that many random panels (they are listed in the output).
 ## Prints a ready-to-paste "cells" array. Always playtest and add captions yourself.
 
 const CH := {PageModel.Kind.EMPTY: ".", PageModel.Kind.WALL: "#", PageModel.Kind.MIRROR_SLASH: "/",
-	PageModel.Kind.MIRROR_BACK: "\\", PageModel.Kind.TARGET_GOOD: "T"}
+	PageModel.Kind.MIRROR_BACK: "\\", PageModel.Kind.TARGET_GOOD: "T", PageModel.Kind.TARGET_BAD: "X"}
 
 
 func _init() -> void:
 	var a := {"seed": 1, "cols": 2, "rows": 2, "pw": 3, "ph": 3, "walls": 4, "mirrors": 2, "min": 3, "max": 6,
-		"count": 3, "rule": "normal", "tries": 4000}
+		"count": 3, "rule": "normal", "tries": 4000, "bad": 0, "flip": 0, "lock": 0}
 	for arg in OS.get_cmdline_user_args():
 		var kv := arg.split("=")
 		if kv.size() == 2:
 			a[kv[0]] = kv[1] if kv[0] == "rule" else int(kv[1])
+	LevelSolver.MAX_STATES = int(a.get("cap", 300000))
 	seed(a["seed"])
 	var found := 0
 	for t in a["tries"]:
@@ -21,9 +24,14 @@ func _init() -> void:
 		var start := m.snapshot()
 		var res := LevelSolver.solve(m, false)
 		m.restore(start)
-		if res["dist"] >= a["min"] and res["dist"] <= a["max"]:
+		var total: int = res["dist"]
+		if a["flip"] == 1 and total > 0:
+			var again := LevelSolver.solve(m, true, res["state"])["dist"] as int
+			m.restore(start)
+			total = total + again if again > 0 else -1
+		if total >= a["min"] and total <= a["max"] and res["dist"] > 0:
 			found += 1
-			print("--- min moves ", res["dist"])
+			print("--- min moves ", res["dist"], " total ", total, " locked ", m.locked)
 			_print(m)
 			if found >= a["count"]:
 				break
@@ -49,6 +57,12 @@ func _random_model(a: Dictionary) -> PageModel:
 	m.kind[t] = PageModel.Kind.TARGET_GOOD
 	for i in a["walls"]:
 		m.kind[free.pop_back()] = PageModel.Kind.WALL
+	for i in a["bad"]:
+		m.kind[free.pop_back()] = PageModel.Kind.TARGET_BAD
+	for i in a["lock"]:
+		var p := randi() % m.panel_count()
+		if not m.locked.has(p):
+			m.locked.append(p)
 	for i in a["mirrors"]:
 		m.kind[free.pop_back()] = PageModel.Kind.MIRROR_SLASH if randi() % 2 == 0 else PageModel.Kind.MIRROR_BACK
 	return m

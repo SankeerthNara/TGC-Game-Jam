@@ -14,8 +14,8 @@
   "caption_twist": "NARRATOR: WAIT! The 'hero' was the VILLAIN all along! Light the red X, and leave the star in the dark!",
   "caption_solved": "NARRATOR: Nobody saw that coming. (Everyone saw that coming.)",
   "cells": [
-    ".........",
-    ">...X.T..",
-    "........."
+    ".#...X../",
+    "..<../T..",
+    "#........"
   ]
 }

@@ -13,11 +13,11 @@
   "caption_intro": "NARRATOR: Mirrors! Click one to flip its angle. Panels still move, too.",
   "caption_solved": "NARRATOR: Reflections of a brighter tomorrow!",
   "cells": [
-    "..\\..#",
-    "...T..",
-    ".#.#.#",
-    "<..\\..",
+    "#.T...",
+    "..#.#\\",
     "......",
-    "......"
+    ".\\....",
+    "/....<",
+    "..#..."
   ]
 }
