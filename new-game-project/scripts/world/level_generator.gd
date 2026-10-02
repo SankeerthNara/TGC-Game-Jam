@@ -50,6 +50,60 @@ const TASK_NAMES := {
 	"charge": ["Charge the Printing Press", "Charge the Reactor", "Charge the Torch Bank"],
 }
 
+const TASK_NAMES_NEW := {
+	"dots": ["Connect the Dots", "Trace the Hero Outline"],
+	"whack": ["Whack the Lanterns", "Snuff the Flares"],
+	"memory": ["Match the Comic Stickers", "Pair the Trading Cards"],
+	"unscramble": ["Unscramble the Word", "Fix the Torn Caption"],
+	"math": ["Pop Quiz", "Balance the Budget"],
+	"inkmix": ["Mix the Ink", "Match the Paint Swatch"],
+	"rain": ["Catch the Ink Drops", "Empty the Leaky Pipe"],
+	"needle": ["Calibrate the Gauge", "Tune the Oscilloscope"],
+	"proofread": ["Proofread the Paragraph", "Check the Essay"],
+	"lightsout": ["Lights Out", "Relight the Panel"],
+	"pipes": ["Connect the Ink Pipes", "Fix the Plumbing"],
+	"slide": ["Slide the Comic Panels", "Rebuild the Torn Page"],
+	"safe": ["Crack the Safe", "Open the Locker"],
+}
+
+## Task tiers: easy ones come first, hard ones last. Every non-mirror task is used at most once per run.
+const TIERS := {
+	"easy": ["dots", "whack", "memory", "unscramble", "math", "inkmix", "rain", "bubbles", "wires", "swipe"],
+	"medium": ["blots", "dial", "switches", "sort", "panels", "needle", "proofread", "lightsout", "simon", "sfx"],
+	"hard": ["logic", "debug", "safe", "pipes", "slide", "charge"],
+}
+const MIRRORS := [["mirror:0"], ["mirror:1"], ["mirror:3"], ["mirror:4", "mirror:6", "mirror:7"]]
+
+
+## The task list of every level for this run: no task type appears twice.
+static func run_plan(run_seed: int) -> Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = run_seed * 31 + 7
+	var easy: Array = TIERS["easy"].duplicate()
+	var medium: Array = TIERS["medium"].duplicate()
+	var hard: Array = TIERS["hard"].duplicate()
+	_shuffle(easy, rng)
+	_shuffle(medium, rng)
+	_shuffle(hard, rng)
+	var l1: Array = easy.slice(0, 3)
+	var l2: Array = easy.slice(3, 5) + medium.slice(0, 3)
+	var l3: Array = medium.slice(3, 7) + hard.slice(0, 3)
+	var rest: Array = easy.slice(5) + medium.slice(7)
+	_shuffle(rest, rng)
+	var l4: Array = hard.slice(3, 6) + rest.slice(0, 4)
+	var out: Array = []
+	var lists := [l1, l2, l3, l4]
+	for i in 4:
+		var specs: Array = []
+		for t in lists[i]:
+			specs.append(t)
+		for m in MIRRORS[i]:
+			specs.append(m)
+		_shuffle(specs, rng)
+		out.append(specs)
+	return out
+
+
 const SABOTAGES := [
 	{"name": "POWER SURGE", "line": "Sparks everywhere!", "fix_name": "Vent the Boiler", "fix_type": "charge"},
 	{"name": "REACTOR OVERLOAD", "line": "The core is overheating!", "fix_name": "Cool the Reactor Core", "fix_type": "switches"},
@@ -79,15 +133,16 @@ static func level_title(level: int) -> String:
 ## Always returns a valid, fully reachable level (retries with a new sub-seed if needed).
 ## ease (0 to 2): the player ran over par on the last level, so this one has fewer tasks and kinder timers.
 static func generate(level: int, run_seed: int, ease := 0) -> Dictionary:
+	var specs: Array = run_plan(run_seed)[clampi(level, 0, 3)]
 	for attempt in 12:
-		var data := _try_generate(level, run_seed * 7919 + attempt * 104729, ease)
+		var data := _try_generate(level, run_seed * 7919 + attempt * 104729, ease, specs)
 		if not data.is_empty():
 			return data
 	push_error("LevelGenerator failed to build a level")
 	return {}
 
 
-static func _try_generate(level: int, seed_value: int, ease := 0) -> Dictionary:
+static func _try_generate(level: int, seed_value: int, ease := 0, specs: Array = []) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value + level * 31
 	var def: Dictionary = LEVELS[clampi(level, 0, LEVELS.size() - 1)]
@@ -159,7 +214,7 @@ static func _try_generate(level: int, seed_value: int, ease := 0) -> Dictionary:
 			if g[y][x] == "." and _room_at(rooms, x, y) < 0:
 				is_corridor[Vector2i(x, y)] = true
 	# --- task and fix consoles against the top wall of rooms ---
-	var plan := _plan_tasks(def, level, rng, ease)
+	var plan := _plan_tasks(specs if not specs.is_empty() else def["tasks"], rng, ease)
 	var tasks: Array = []
 	var fixes: Array = []
 	var used: Array[Vector2i] = []
@@ -185,23 +240,19 @@ static func _try_generate(level: int, seed_value: int, ease := 0) -> Dictionary:
 			break
 		if not placed:
 			return _fail("task_spot")
-	# --- sabotage definitions and their fix consoles ---
+	# --- sabotage plan: the villain starts these himself; each fix console is far from where it starts ---
 	var sabotages: Array = []
-	var risky: Array = []
-	for t in tasks:
-		if t.has("risky"):
-			risky.append(t)
 	var sab_pool: Array = SABOTAGES.duplicate()
 	_shuffle(sab_pool, rng)
-	for i in risky.size():
-		var t: Dictionary = risky[i]
+	var point_rooms: Array = range(1, rooms.size())
+	_shuffle(point_rooms, rng)
+	for i in int(def["risky"]):
 		var sab: Dictionary = sab_pool[i % sab_pool.size()]
-		var trigger_room: int = t["room_index"]
-		# a fix room far from the trigger room
+		var point_room: int = point_rooms[i % point_rooms.size()]
 		var far: Array = range(rooms.size())
-		far.erase(trigger_room)
+		far.erase(point_room)
 		far.sort_custom(func(a: int, b: int) -> bool:
-			return _center(rooms[a]["rect"]).distance_to(_center(rooms[trigger_room]["rect"])) > _center(rooms[b]["rect"]).distance_to(_center(rooms[trigger_room]["rect"])))
+			return _center(rooms[a]["rect"]).distance_to(_center(rooms[point_room]["rect"])) > _center(rooms[b]["rect"]).distance_to(_center(rooms[point_room]["rect"])))
 		var spot := Vector2i(-1, -1)
 		var fix_room := -1
 		var start := rng.randi_range(0, mini(2, far.size() - 1))
@@ -218,8 +269,8 @@ static func _try_generate(level: int, seed_value: int, ease := 0) -> Dictionary:
 		var fid := "f%02d" % (i + 1)
 		var sid := "s%02d" % (i + 1)
 		fixes.append({"id": fid, "x": spot.x, "y": spot.y, "type": sab["fix_type"], "name": sab["fix_name"], "room": rooms[fix_room]["name"], "param": 0, "sabotage": sid, "difficulty_bonus": 1 if def["big"] else 0})
-		t["triggers"] = sid
-		sabotages.append({"id": sid, "name": sab["name"], "seconds": 60, "damage": 2 if def["big"] else 1, "big": def["big"], "fix": fid, "line": sab["line"]})
+		sabotages.append({"id": sid, "name": sab["name"], "seconds": 60, "damage": 2 if def["big"] else 1, "big": def["big"], "fix": fid, "line": sab["line"],
+			"fire_at": int(def["par"] * (0.26 + 0.34 * i)) + rng.randi_range(-4, 6), "point_room": point_room})
 	# --- furniture along walls ---
 	_decorate(g, rooms, is_corridor, used, rng)
 	# --- spawn in the first room ---
@@ -233,17 +284,26 @@ static func _try_generate(level: int, seed_value: int, ease := 0) -> Dictionary:
 	for t in tasks + fixes:
 		if not reach.has(Vector2i(int(t["x"]), int(t["y"]) + 1)):
 			return _fail("unreachable")
-	# --- sabotage timers from real walking distance ---
+	# --- where the villain starts each sabotage, and where the two vampires wait ---
 	for sab in sabotages:
-		var trig: Dictionary = {}
+		var pt := _free_tile_near(g, _center(rooms[sab["point_room"]]["rect"]))
+		sab["point"] = [pt.x, pt.y]
+	var vroom: Array = range(1, rooms.size())
+	_shuffle(vroom, rng)
+	var roles: Array = ["friend", "villain"]
+	_shuffle(roles, rng)
+	var vamps: Array = []
+	for i in 2:
+		var vt := _free_tile_near(g, _center(rooms[vroom[i]]["rect"]))
+		vamps.append({"x": vt.x, "y": vt.y, "role": roles[i]})
+	# --- sabotage timers from real walking distance (start point to fix console) ---
+	for sab in sabotages:
 		var fix: Dictionary = {}
-		for t in tasks:
-			if t.get("triggers", "") == sab["id"]:
-				trig = t
 		for f in fixes:
 			if f["id"] == sab["fix"]:
 				fix = f
-		var dist := _path_len(g, Vector2i(int(trig["x"]), int(trig["y"]) + 1), Vector2i(int(fix["x"]), int(fix["y"]) + 1), width, height)
+		var pt2: Array = sab["point"]
+		var dist := _path_len(g, Vector2i(int(pt2[0]), int(pt2[1])), Vector2i(int(fix["x"]), int(fix["y"]) + 1), width, height)
 		if dist < 0:
 			return _fail("path")
 		var secs := maxi(30, int(round(float(dist) / WALK_TILES_PER_SEC * (2.7 - 0.3 * level) + 15.0)))
@@ -258,40 +318,38 @@ static func _try_generate(level: int, seed_value: int, ease := 0) -> Dictionary:
 		var rr: Rect2i = r["rect"]
 		out_rooms.append({"name": r["name"], "x": rr.position.x, "y": rr.position.y, "w": rr.size.x, "h": rr.size.y, "color": r["color"]})
 	for t in tasks:
-		t.erase("risky")
 		t.erase("room_index")
 	return {
 		"mode": "station", "rows": rows, "rooms": out_rooms, "tasks": tasks, "fixes": fixes,
-		"sabotages": sabotages, "max_health": 3, "intro": "NARRATOR: " + String(def["intro"]), "par": def["par"], "ease": ease,
+		"sabotages": sabotages, "max_health": 3, "intro": "NARRATOR: " + String(def["intro"]), "par": def["par"], "ease": ease, "vampires": vamps, "disrupt_at": int(def["par"] * 0.5) if int(def["disrupt"]) > 0 else -1,
 		"level": level, "title": def["title"],
 	}
 
 
-static func _plan_tasks(def: Dictionary, level: int, rng: RandomNumberGenerator, ease := 0) -> Dictionary:
+static func _plan_tasks(spec_list: Array, rng: RandomNumberGenerator, ease := 0) -> Dictionary:
 	var out: Array = []
-	var specs: Array = def["tasks"].duplicate()
+	var specs: Array = spec_list.duplicate()
 	for i in ease:
 		if specs.size() > 3:
-			specs.remove_at(specs.size() - 1) # drop the last (hardest) task
+			specs.remove_at(specs.size() - 1) # drop the last task
 	for spec: String in specs:
 		var parts := spec.split(":")
 		var type := parts[0]
-		var names: Array = TASK_NAMES[type]
+		var names: Array = TASK_NAMES[type] if TASK_NAMES.has(type) else TASK_NAMES_NEW[type]
 		var t := {"type": type, "name": names[rng.randi_range(0, names.size() - 1)], "param": int(parts[1]) if parts.size() > 1 else 0}
 		out.append(t)
-	var candidates: Array = []
-	for t in out:
-		if t["type"] != "mirror":
-			candidates.append(t)
-	_shuffle(candidates, rng)
-	for i in mini(int(def["risky"]), candidates.size()):
-		candidates[i]["risky"] = true
-	var extra := int(def["risky"])
-	for i in int(def["disrupt"]):
-		if extra + i < candidates.size():
-			candidates[extra + i]["disrupts"] = true
-	_shuffle(out, rng)
 	return {"tasks": out}
+
+
+static func _free_tile_near(g: Array, c: Vector2i) -> Vector2i:
+	for r in 14:
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				var x := c.x + dx
+				var y := c.y + dy
+				if y > 0 and x > 0 and y < g.size() - 1 and x < g[0].size() - 1 and g[y][x] == ".":
+					return Vector2i(x, y)
+	return c
 
 
 static func _center(r: Rect2i) -> Vector2i:

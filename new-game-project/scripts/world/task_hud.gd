@@ -57,6 +57,7 @@ func _draw() -> void:
 	for k in range(1, total):
 		var x := inner.position.x + inner.size.x * k / total
 		draw_line(Vector2(x, inner.position.y), Vector2(x, inner.end.y), Color(0, 0, 0, 0.35), 1.5)
+	_draw_ally_arrow()
 	if not list_open:
 		return
 	var n := world.tasks.size()
@@ -150,3 +151,26 @@ func _draw_timers() -> void:
 	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 12 - 120, 45), "TOTAL %s" % _fmt(world.total_time), HORIZONTAL_ALIGNMENT_RIGHT, 120, 20, Color("fff3d1"))
 	draw_string(FONT_BODY, box.position + Vector2(box.size.x - 12 - 190, 22), world.level_title, HORIZONTAL_ALIGNMENT_RIGHT, 190, 15, Color("ffffff"))
 	draw_string(FONT_SHOUT, box.position + Vector2(12, 76), "SCORE  %d" % world.score_total, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("ffd23f"))
+
+
+## Once a friend has been revealed he points to the nearest unfinished task.
+func _draw_ally_arrow() -> void:
+	if world.vampires.ally_index < 0:
+		return
+	var best := Vector2.ZERO
+	var best_d := 1e9
+	for t: Dictionary in world.tasks:
+		if world.tasks_done.has(t["id"]):
+			continue
+		var p := Vector2(float(t["x"]) + 0.5, float(t["y"]) + 0.5) * World.TILE
+		var d := p.distance_to(world._foot)
+		if d < best_d:
+			best_d = d
+			best = p
+	if best_d > 1e8:
+		return
+	var dir := (best - world._foot).normalized()
+	var c := Vector2(640, 345) + dir * 108.0
+	var side := dir.orthogonal()
+	draw_colored_polygon(PackedVector2Array([c + dir * 20, c - dir * 11 + side * 14, c - dir * 11 - side * 14]), Color("4cc9f0"))
+	draw_polyline(PackedVector2Array([c + dir * 20, c - dir * 11 + side * 14, c - dir * 11 - side * 14, c + dir * 20]), INK, 3.0)

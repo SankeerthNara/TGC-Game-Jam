@@ -32,6 +32,7 @@ func _draw_glints() -> void:
 	var t := world._time
 	if world.station_mode:
 		_draw_beacons(vp, origin, t)
+		_draw_eyes(vp, origin, t)
 		return
 	for it: Dictionary in world.items:
 		if it["taken"]:
@@ -75,3 +76,21 @@ func _draw_beacons(vp: Vector2, origin: Vector2, t: float) -> void:
 		var pulse := 0.5 + 0.5 * sin(t * 3.0 + float(task["x"]))
 		_drawer.draw_circle(sp, 9.0 + 5.0 * pulse, Color(1.0, 0.85, 0.3, 0.12 + 0.1 * pulse))
 		_drawer.draw_circle(sp, 3.5, Color(1.0, 0.9, 0.4, 0.6 + 0.3 * pulse))
+
+
+## Two red eyes in the dark where a vampire lurks outside the torchlight.
+func _draw_eyes(vp: Vector2, origin: Vector2, t: float) -> void:
+	for v: Dictionary in world.vampires.list:
+		if not v["alive"] or v["state"] == "ally":
+			continue
+		var p: Vector2 = v["pos"] + Vector2(0, -World.TILE * 0.62)
+		var d := (v["pos"] as Vector2).distance_to(world.hero.pos) / World.TILE
+		if d < Vampires.LIGHT_R or d > 11.0:
+			continue
+		var sp := p - origin
+		if sp.x < -20 or sp.y < -20 or sp.x > vp.x + 20 or sp.y > vp.y + 20:
+			continue
+		var blink := 0.65 + 0.35 * sin(t * 2.0 + float(v["seed"]))
+		for side in [-1.0, 1.0]:
+			_drawer.draw_circle(sp + Vector2(side * 7.0, 0), 5.0, Color(1, 0.1, 0.1, 0.18 * blink))
+			_drawer.draw_circle(sp + Vector2(side * 7.0, 0), 2.4, Color(1, 0.2, 0.2, 0.9 * blink))

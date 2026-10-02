@@ -13,7 +13,8 @@ var undo_stack: Array[Dictionary] = []
 var busy := false
 var run_id := 0 ## bumps on every level start so stale timers do nothing
 var decoy_revealed := false
-var state := "menu" ## menu | world | task (a mini-game) | playing (a page puzzle) | paused | ended | dead
+var state := "menu" ## menu | world | task | playing (a page puzzle) | choice | parkour | paused | ended | dead
+var friends_killed := 0
 var active_task := ""
 var run_seed := 0
 var level_idx := 0
@@ -45,6 +46,12 @@ func _ready() -> void:
 		view.shake(14.0)
 		EventBus.caption_changed.emit("NARRATOR: OUCH! %s hit you. %d heart%s left." % [String(def["name"]).capitalize(), left, "" if left == 1 else "s"]))
 	world.player_died.connect(_on_player_died)
+	world.vampire_caught.connect(_on_vampire_caught)
+	world.tasks_all_done.connect(func() -> void:
+		if state == "world":
+			_level_complete())
+	world.ally_helped.connect(func(what: String) -> void:
+		EventBus.caption_changed.emit("NARRATOR: Your friend helped: %s!" % what))
 	world.task_disrupted.connect(func(task_name: String) -> void:
 		score.on_disrupted()
 		view.shake(10.0)
@@ -81,8 +88,8 @@ func _set_state(s: String) -> void:
 	var in_puzzle := s == "playing" or s == "paused"
 	view.visible = in_puzzle
 	view.input_enabled = s == "playing" and not busy
-	world.set_active(s == "world" or s == "task" or s == "dead" or s == "levelend")
-	world.input_blocked = s == "task" or s == "dead" or s == "levelend"
+	world.set_active(s == "world" or s == "task" or s == "dead" or s == "levelend" or s == "choice")
+	world.input_blocked = s == "task" or s == "dead" or s == "levelend" or s == "choice"
 	world.clock_running = s == "world" or s == "task" or s == "playing"
 	EventBus.game_state_changed.emit(s)
 
@@ -105,6 +112,7 @@ func _start_game() -> void:
 	level_splits.clear()
 	total_time = 0.0
 	score.new_run()
+	friends_killed = 0
 	for i in level_ease.size():
 		level_ease[i] = 0
 	_clear_overlay()
@@ -119,6 +127,7 @@ func _load_level(i: int) -> void:
 	score.start_level(_retrying)
 	_retrying = false
 	var data := LevelGenerator.generate(i, run_seed, level_ease[clampi(i, 0, level_ease.size() - 1)])
+	world.level_time = level_time
 	world.level_index = i
 	world.level_count = LevelGenerator.level_count()
 	world.level_title = LevelGenerator.level_title(i)
@@ -221,6 +230,80 @@ func _back_from_task(success: bool) -> void:
 		EventBus.caption_changed.emit("NARRATOR: Task complete! %d of %d done. Keep going, hero." % [world.tasks_done.size(), world.tasks_total()])
 	else:
 		EventBus.caption_changed.emit("NARRATOR: Gave up on that one? It will still be here.")
+
+
+## The hero held a vampire in the torchlight: reveal or kill? (The other vampire is known by then, so no choice is left.)
+func _on_vampire_caught(i: int) -> void:
+	if state != "world":
+		return
+	if world.vampires.other_resolved(i):
+		_apply_vampire_choice(i, true)
+		return
+	_set_state("choice")
+	var ov := VampireChoice.new()
+	ov.role = world.vampires.role_of(i)
+	_overlay = ov
+	_task_layer.add_child(ov)
+	ov.finished.connect(func(reveal: bool) -> void:
+		_clear_overlay()
+		_apply_vampire_choice(i, reveal))
+	EventBus.caption_changed.emit("NARRATOR: A vampire! Is he a friend or the villain? Reveal or kill...")
+
+
+func _apply_vampire_choice(i: int, reveal: bool) -> void:
+	var role := world.vampires.role_of(i)
+	if reveal and role == "friend":
+		world.vampires.reveal_friend(i)
+		world.on_ally_revealed()
+		score.on_friend_revealed()
+		_enter_world()
+		var helps := ["points you to the nearest task", "also finishes small tasks for you", "also buys you time during sabotage", "also fixes a sabotage and shields you once"]
+		EventBus.caption_changed.emit("NARRATOR: A friend! He is not afraid of light now, and he %s." % helps[clampi(level_idx, 0, 3)])
+	elif reveal:
+		world.vampires.reveal_villain(i)
+		_start_parkour(i)
+	elif role == "friend":
+		world.vampires.kill(i)
+		friends_killed += 1
+		score.on_friend_killed()
+		world.hp = maxi(0, world.hp - 1)
+		_enter_world()
+		if world.hp <= 0:
+			world.player_died.emit()
+		else:
+			EventBus.caption_changed.emit("NARRATOR: You killed your friend... He was on your side. You lose a heart.")
+	else:
+		world.vampires.kill(i)
+		score.on_villain_killed()
+		world.sab_plan.clear()
+		_enter_world()
+		EventBus.caption_changed.emit("NARRATOR: The villain is dead. No more sabotage. Efficient, if a little cold.")
+
+
+## He is revealed and runs: the hero is teleported into a short parkour chase.
+func _start_parkour(i: int) -> void:
+	_set_state("parkour")
+	var g := ParkourGame.new()
+	g.difficulty = clampi(level_idx, 0, 3)
+	_task_layer.add_child(g)
+	EventBus.caption_changed.emit("NARRATOR: The villain bolts! Chase him down!")
+	g.finished.connect(func(success: bool) -> void:
+		g.queue_free()
+		if success:
+			world.vampires.defeat_villain(i)
+			world.sab_plan.clear()
+			world.hp = mini(world.max_health, world.hp + 1)
+			score.on_villain_defeated()
+			_enter_world()
+			EventBus.caption_changed.emit("NARRATOR: Caught him! The sabotage is over and you recover a heart.")
+		else:
+			world.vampires.release(i)
+			world.hp = maxi(0, world.hp - 1)
+			_enter_world()
+			if world.hp <= 0:
+				world.player_died.emit()
+			else:
+				EventBus.caption_changed.emit("NARRATOR: He got away and you lost a heart. Catch him in the light again!"))
 
 
 func _on_sabotage_started(def: Dictionary) -> void:

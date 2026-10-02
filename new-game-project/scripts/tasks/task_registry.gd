@@ -31,4 +31,30 @@ static func create(type: String) -> TaskBase:
 			return LogicTask.new()
 		"sort":
 			return SortTask.new()
+		"dots":
+			return DotsTask.new()
+		"whack":
+			return WhackTask.new()
+		"memory":
+			return MemoryTask.new()
+		"unscramble":
+			return UnscrambleTask.new()
+		"math":
+			return MathTask.new()
+		"inkmix":
+			return InkMixTask.new()
+		"rain":
+			return RainTask.new()
+		"needle":
+			return NeedleTask.new()
+		"proofread":
+			return ProofreadTask.new()
+		"lightsout":
+			return LightsOutTask.new()
+		"pipes":
+			return PipesTask.new()
+		"slide":
+			return SlideTask.new()
+		"safe":
+			return SafeTask.new()
 	return null

@@ -27,10 +27,11 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C7 | Claude | Sabotage timers and hearts, death and restart, free 8-direction movement, 6 comic/college mini-games, 18 tasks and 6 emergency fixes | done | C6 | |
 | C8 | Claude | Levels: 4 generated levels of 8 random rooms, rising difficulty, checkpoints and respawn, level and total timers, split summary | done | C7 | `level_generator.gd`, `level_overlay.gd` |
 | C9 | Claude | Remove unused town code (shop, items, keys, decoy pages) | todo | C8 | one clean-up commit first |
-| C10 | Claude | Vampires: patrol, flee from light, freeze in beam; Reveal/Kill dialog and four outcomes; villain triggers sabotage; clues | todo | C9 | docs/implementation_plan.html feature 2 |
-| C11 | Claude | Friend ally (follows, ignores light, helps with tasks); villain fight arena (4 variants); Narrator boss fight and endings | todo | C10 | |
 | C12 | Claude | Narrator system: portrait, bubbles, event-driven lines | todo | C9 | lines written by the developer |
 | A9 | Antigravity | Four hero and villain looks, level themes (palette, props, fonts), boss and vampire art, fight music and SFX | todo | C12 | original characters only |
 | G6 | ChatGPT | Headless tests for the choice outcomes, ally behaviour, fight states and respawn | todo | C10 | |
 | C13 | Claude | Par times (2/3/4/5 min), 4/6/8/10 tasks, hidden risky tasks, sabotage counts 1/2/2/2 with big sabotages, task-undo disruption in level 4 | done | C8 | tune from timed playtests |
 | C14 | Claude | Adaptive difficulty (easier next level after going over par) and the score system with ranks and breakdown | done | C13 | `score_keeper.gd`, `level_overlay.gd` |
+| C10 | Claude | Vampires (patrol, flee from light, freeze), Reveal/Kill choice, four outcomes, villain starts sabotage himself, friend ally with growing help | done | C9 | `vampires.gd`, `vampire_choice.gd` |
+| C11 | Claude | Parkour chase minigame; 13 new task types so no task repeats in a run | done | C10 | `parkour_game.gd`, `scripts/tasks/` |
+| C15 | Claude | Narrator boss fight (3+ minutes) and endings from choices | todo | C11 | |

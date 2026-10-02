@@ -13,6 +13,9 @@ signal sabotage_started(def: Dictionary)
 signal sabotage_resolved(def: Dictionary)
 signal sabotage_failed(def: Dictionary, health_left: int)
 signal task_disrupted(task_name: String)
+signal vampire_caught(index: int)
+signal tasks_all_done
+signal ally_helped(what: String)
 signal player_died
 
 const TEX_PAPER := preload("res://assets/art/paper_texture.png")
@@ -68,6 +71,15 @@ var level_par := 0
 var level_ease := 0
 var score_total := 0
 var _disrupt_armed := false
+var vampires := Vampires.new()
+var sab_plan: Array = []
+var disrupt_at := -1
+var shield := false
+var _sab_src: Array = []
+var _vamp_src: Array = []
+var _disrupt_done := false
+var _autofix_used := false
+var _level_t0 := 0.0
 
 var hero := HeroActor.new()
 var tile := Vector2i.ZERO
@@ -167,6 +179,10 @@ func load_data(data: Dictionary) -> void:
 	intro = data.get("intro", "")
 	level_par = int(data.get("par", 0))
 	level_ease = int(data.get("ease", 0))
+	_sab_src = (data.get("sabotages", []) as Array).duplicate(true)
+	_sab_src.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["fire_at"] < b["fire_at"])
+	disrupt_at = int(data.get("disrupt_at", -1))
+	_vamp_src = data.get("vampires", [])
 	_disrupt_armed = false
 	rows.clear()
 	for r: String in data["rows"]:
@@ -239,6 +255,7 @@ func load_data(data: Dictionary) -> void:
 		light.position = _center(t) + Vector2(0, -TILE * 0.2)
 		add_child(light)
 		_lights[t] = light
+	vampires.setup(self, _vamp_src)
 	_cam.limit_left = 0
 	_cam.limit_top = 0
 	_cam.limit_right = int(cols * TILE)
@@ -268,6 +285,13 @@ func reset() -> void:
 	tasks_done.clear()
 	hp = max_health
 	sabotage = {}
+	sab_plan = _sab_src.duplicate(true)
+	_disrupt_done = false
+	_autofix_used = false
+	shield = false
+	_level_t0 = level_time
+	if vampires.world != null:
+		vampires.reset()
 	_triggered.clear()
 	_console_cd = 0.0
 	input_blocked = false
@@ -343,13 +367,6 @@ func complete_task(task_id: String) -> void:
 	hero.mood = HeroActor.Mood.HAPPY
 	_mood_timer = 3.0
 	EventBus.task_completed.emit(task_id, tasks_done.size(), tasks.size())
-	for t: Dictionary in tasks:
-		if t["id"] == task_id and t.has("triggers") and sabotage.is_empty() and not _triggered.has(t["triggers"]):
-			_start_sabotage(String(t["triggers"]))
-		if t["id"] == task_id and t.get("disrupts", false):
-			_disrupt_armed = true
-	if _disrupt_armed:
-		_try_disrupt(task_id)
 	queue_redraw()
 
 
@@ -374,14 +391,93 @@ func _try_disrupt(source_id: String) -> void:
 	task_disrupted.emit(nm)
 
 
-func _start_sabotage(sab_id: String) -> void:
-	var def: Dictionary = sabotage_defs.get(sab_id, {})
-	if def.is_empty():
-		return
-	_triggered[sab_id] = true
-	sabotage = {"def": def, "left": float(def["seconds"])}
-	EventBus.sabotage_started.emit(def["name"], float(def["seconds"]))
+## Called when the villain reaches his spot: the sabotage starts and the clock runs.
+func fire_sabotage(def: Dictionary) -> void:
+	var secs := float(def["seconds"])
+	if vampires.ally_index >= 0 and level_index >= 2:
+		secs *= 1.5 # a friend buys you time
+	sabotage = {"def": def, "left": secs}
+	_triggered[def["id"]] = true
+	if vampires.ally_index >= 0 and level_index >= 3 and not _autofix_used:
+		vampires.autofix_t = 14.0 # a friend in level 4 fixes the first sabotage himself
+		_autofix_used = true
+	EventBus.sabotage_started.emit(def["name"], secs)
 	sabotage_started.emit(def)
+
+
+func fire_next_sabotage() -> void:
+	if sab_plan.is_empty() or not sabotage.is_empty():
+		return
+	var def: Dictionary = sab_plan.pop_front()
+	fire_sabotage(def)
+
+
+## The next planned sabotage if its time has come, else an empty dictionary.
+func next_sabotage_due() -> Dictionary:
+	if sab_plan.is_empty() or vampires.villain_gone or not sabotage.is_empty():
+		return {}
+	if level_time - _level_t0 >= float(sab_plan[0]["fire_at"]):
+		return sab_plan[0]
+	return {}
+
+
+## Level 4: when due, the villain walks to a finished console to undo it. Returns the tile to walk to.
+func disrupt_target_due() -> Vector2i:
+	if disrupt_at < 0 or _disrupt_done or vampires.villain_gone or tasks_done.is_empty():
+		return Vector2i(-1, -1)
+	if level_time - _level_t0 < float(disrupt_at):
+		return Vector2i(-1, -1)
+	var ids: Array = tasks_done.keys()
+	var pick: String = ids[randi() % ids.size()]
+	for t: Dictionary in tasks:
+		if t["id"] == pick:
+			return Vector2i(int(t["x"]), int(t["y"]) + 1)
+	return Vector2i(-1, -1)
+
+
+func villain_disrupt() -> void:
+	_disrupt_done = true
+	_try_disrupt("")
+
+
+func center_of(t: Vector2i) -> Vector2:
+	return _center(t)
+
+
+func find_free_tile(t: Vector2i) -> Vector2i:
+	for r in 12:
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				var c := t + Vector2i(dx, dy)
+				if not is_solid(c):
+					return c
+	return t
+
+
+func on_ally_revealed() -> void:
+	shield = level_index >= 3
+
+
+func ally_finish_a_task() -> void:
+	var open: Array = []
+	for t: Dictionary in tasks:
+		if not tasks_done.has(t["id"]) and t["type"] != "mirror":
+			open.append(t)
+	if open.is_empty():
+		return
+	var pick: Dictionary = open[randi() % open.size()]
+	complete_task(pick["id"])
+	ally_helped.emit(String(pick["name"]))
+	if all_tasks_done():
+		tasks_all_done.emit()
+
+
+func ally_fix_sabotage() -> void:
+	if sabotage.is_empty():
+		return
+	var fix_id: String = sabotage["def"]["fix"]
+	_resolve_sabotage(fix_id)
+	ally_helped.emit("the sabotage")
 
 
 func _resolve_sabotage(fix_id: String) -> void:
@@ -403,7 +499,12 @@ func _update_sabotage(delta: float) -> void:
 		return
 	var def: Dictionary = sabotage["def"]
 	sabotage = {}
-	hp = maxi(0, hp - int(def.get("damage", 1)))
+	var dmg := int(def.get("damage", 1))
+	if shield:
+		shield = false
+		dmg = 0 # the friend's shield takes the hit
+		ally_helped.emit("a shield for you")
+	hp = maxi(0, hp - dmg)
 	hero.mood = HeroActor.Mood.SCARED
 	_mood_timer = 3.0
 	_flash = 0.8
@@ -813,6 +914,7 @@ func _process_station(delta: float) -> void:
 		_move_axis(Vector2(step.x, 0.0))
 		_move_axis(Vector2(0.0, step.y))
 	tile = Vector2i(floori(_foot.x / TILE), floori(_foot.y / TILE))
+	vampires.update(delta)
 	hero.drive(_foot + Vector2(0, -TILE * 0.2), moving, v.x, _foot + _face * TILE * 2.0, delta)
 	_update_torch()
 	queue_redraw()
@@ -1175,6 +1277,9 @@ func _draw_station() -> void:
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
 			_draw_station_object(x, y)
+		for vi in vampires.list.size():
+			if int(floor((vampires.list[vi]["pos"] as Vector2).y / TILE)) == y:
+				vampires.draw_one(self, vi, _time, INK)
 		if y == hero_row:
 			_draw_hero()
 	if hero_row < y0 or hero_row > y1:

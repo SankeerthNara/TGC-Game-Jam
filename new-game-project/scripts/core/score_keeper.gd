@@ -26,6 +26,10 @@ var failed := 0
 var failed_big := 0
 var disrupts := 0
 var deaths := 0
+var friend_revealed := 0
+var villain_defeated := 0
+var villain_killed := 0
+var friend_killed := 0
 
 
 func new_run() -> void:
@@ -42,6 +46,10 @@ func _clear_events() -> void:
 	failed = 0
 	failed_big = 0
 	disrupts = 0
+	friend_revealed = 0
+	villain_defeated = 0
+	villain_killed = 0
+	friend_killed = 0
 
 
 ## retry = the level restarted after a death: events are replaced, deaths are remembered.
@@ -69,6 +77,22 @@ func on_disrupted() -> void:
 	disrupts += 1
 
 
+func on_friend_revealed() -> void:
+	friend_revealed += 1
+
+
+func on_villain_defeated() -> void:
+	villain_defeated += 1
+
+
+func on_villain_killed() -> void:
+	villain_killed += 1
+
+
+func on_friend_killed() -> void:
+	friend_killed += 1
+
+
 func on_death() -> void:
 	deaths += 1
 
@@ -83,7 +107,11 @@ func live(level: int, tasks_done: int) -> int:
 
 
 func _events_points() -> int:
-	return fixed * FIX_POINTS + fixed_big * FIX_POINTS_BIG - failed * FAIL_PENALTY - failed_big * FAIL_PENALTY_BIG - disrupts * DISRUPT_PENALTY - deaths * DEATH_PENALTY
+	return fixed * FIX_POINTS + fixed_big * FIX_POINTS_BIG - failed * FAIL_PENALTY - failed_big * FAIL_PENALTY_BIG - disrupts * DISRUPT_PENALTY - deaths * DEATH_PENALTY + _choice_points()
+
+
+func _choice_points() -> int:
+	return friend_revealed * 200 + villain_defeated * 300 + villain_killed * 150 - friend_killed * 300
 
 
 ## Final score of a level. sabotages = list of "big" flags for every sabotage the level could throw.
@@ -105,6 +133,18 @@ func finish_level(level: int, tasks_total: int, seconds: float, par: int, hearts
 	if disrupts > 0:
 		lines.append(["Tasks tampered with (%d)" % disrupts, -disrupts * DISRUPT_PENALTY])
 		pts -= disrupts * DISRUPT_PENALTY
+	if friend_revealed > 0:
+		lines.append(["Friend revealed", friend_revealed * 200])
+		pts += friend_revealed * 200
+	if villain_defeated > 0:
+		lines.append(["Villain caught in the parkour", villain_defeated * 300])
+		pts += villain_defeated * 300
+	if villain_killed > 0:
+		lines.append(["Villain killed", villain_killed * 150])
+		pts += villain_killed * 150
+	if friend_killed > 0:
+		lines.append(["Friend killed", -friend_killed * 300])
+		pts -= friend_killed * 300
 	var heart_pts := hearts * HEART_POINTS
 	lines.append(["Hearts left (%d)" % hearts, heart_pts])
 	pts += heart_pts
@@ -120,7 +160,7 @@ func finish_level(level: int, tasks_total: int, seconds: float, par: int, hearts
 		lines.append(["Under par time", time_pts])
 		pts += time_pts
 	# the best possible score of this level, for the rank
-	var best := task_pts + max_hearts * HEART_POINTS + NO_DEATH_BONUS + TIME_BONUS_MAX
+	var best := task_pts + max_hearts * HEART_POINTS + NO_DEATH_BONUS + TIME_BONUS_MAX + 500
 	for big in sabotages:
 		best += FIX_POINTS_BIG if big else FIX_POINTS
 	pts = maxi(pts, 0)

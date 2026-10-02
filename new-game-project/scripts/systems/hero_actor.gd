@@ -10,6 +10,7 @@ var target := Vector2.ZERO
 var gaze := Vector2.ZERO
 var mood: Mood = Mood.THINK
 var villain := false
+var bubble := true ## thought bubble above the head
 var torch := true ## carries a flickering torch in the right hand
 var glow: Texture2D
 
@@ -182,6 +183,8 @@ func draw(c: CanvasItem, s: float, ink: Color, paper: Color, font: Font, base: V
 		c.draw_circle(drop, s * 0.03, Color("4cc9f0"))
 
 	# thought / shout bubble
+	if not bubble:
+		return
 	var symbol := "?"
 	match mood:
 		Mood.HAPPY:
