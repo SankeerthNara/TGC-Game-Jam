@@ -2,8 +2,8 @@ class_name SwipeTask
 extends TaskBase
 ## Swipe the card through the reader: not too fast, not too slow.
 
-const MIN_TIME := 0.5
-const MAX_TIME := 1.15
+const MIN_TIME := 0.18
+const MAX_TIME := 1.5
 
 var _card_x := 0.0
 var _dragging := false
@@ -14,7 +14,7 @@ var _passed_left := false
 
 func _begin() -> void:
 	title = "SWIPE THE PANTRY CARD"
-	hint = "Drag the card through the reader at a steady speed. Not too fast, not too slow!"
+	hint = "Press on the card and drag it right through the reader at a steady speed."
 	_card_x = _rail().position.x + 20.0
 
 
@@ -46,17 +46,17 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion and _dragging:
 		_card_x = clampf(event.position.x + _grab_dx, r.position.x + 10.0, r.end.x - 160.0)
 		var rd := _reader()
-		if not _passed_left and _card_x + 150.0 > rd.position.x + 30.0:
+		if not _passed_left and _card_x + 150.0 > rd.position.x + 10.0:
 			_passed_left = true
 			_start_t = _t
-		if _passed_left and _card_x > rd.end.x - 150.0 - 30.0 and _start_t >= 0.0:
+		if _passed_left and _card_x > rd.end.x - 160.0 and _start_t >= 0.0:
 			var dur := _t - _start_t
 			_dragging = false
 			if dur < MIN_TIME:
-				flash("TOO FAST!", 8.0)
+				flash("TOO FAST! (%.2fs)" % dur, 8.0)
 				_card_x = r.position.x + 20.0
 			elif dur > MAX_TIME:
-				flash("TOO SLOW!", 8.0)
+				flash("TOO SLOW! (%.2fs)" % dur, 8.0)
 				_card_x = r.position.x + 20.0
 			else:
 				succeed()

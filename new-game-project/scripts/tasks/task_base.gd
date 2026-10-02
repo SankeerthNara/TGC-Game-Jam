@@ -27,8 +27,16 @@ var _msg_t := 0.0
 var _shake := 0.0
 
 
+func _fit() -> void:
+	# The parent is a CanvasLayer, so anchors do nothing: size the overlay by hand.
+	# Without a real size the control never receives mouse clicks.
+	position = Vector2.ZERO
+	size = get_viewport_rect().size
+
+
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fit()
+	get_viewport().size_changed.connect(_fit)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_ALL
 	grab_focus()

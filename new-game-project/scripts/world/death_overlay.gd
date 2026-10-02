@@ -11,7 +11,8 @@ var _t := 0.0
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	position = Vector2.ZERO
+	size = get_viewport_rect().size
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 
