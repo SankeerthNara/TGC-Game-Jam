@@ -1,0 +1,8 @@
+# Editor tooling (not part of the game)
+godot-ai/
+
+# Godot
+.godot/
+
+# Web export output
+build/
