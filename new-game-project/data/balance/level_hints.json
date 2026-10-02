@@ -6,16 +6,25 @@
 		},
 		{
 			"file": "level_02.json",
-			"optimal_moves": 3
+			"optimal_moves": 4
 		},
 		{
 			"file": "level_03.json",
-			"optimal_moves": 1,
-			"twist_optimal_moves": 1
+			"optimal_moves": 2,
+			"twist_optimal_moves": 2
 		},
 		{
 			"file": "level_04.json",
-			"optimal_moves": 2
+			"optimal_moves": 6
+		},
+		{
+			"file": "level_05.json",
+			"optimal_moves": 5
+		},
+		{
+			"file": "level_06.json",
+			"optimal_moves": 3,
+			"twist_optimal_moves": 3
 		}
 	],
 	"source": "LevelSolver.solve via scripts/tools/update_hints.gd"
