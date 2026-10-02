@@ -1,0 +1,14 @@
+{
+  "name": "Page One",
+  "panel_size": [3, 3],
+  "layout": [3, 1],
+  "rule": "normal",
+  "twist": "none",
+  "caption_intro": "NARRATOR: Our hero's light fades at the edge of the panel! Drag the panels to carry the beam to the star.",
+  "caption_solved": "NARRATOR: And so the light found its way. TURN THE PAGE!",
+  "cells": [
+    ".........",
+    ">..#....T",
+    "........."
+  ]
+}
