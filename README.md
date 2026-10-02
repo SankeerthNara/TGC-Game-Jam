@@ -14,7 +14,11 @@ An in-progress game made for the TGC Game Jam.
 
 ## Controls
 
-[Controls to be added]
+- Drag a panel onto another panel to swap them.
+- Click a mirror to flip it.
+- Press **Z** to undo the last move.
+- Press **R** to reset the current level.
+- Press **Esc** to pause or resume.
 
 ## Team
 
