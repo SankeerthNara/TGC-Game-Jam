@@ -29,6 +29,10 @@ The page is the puzzle piece: panels move, so the emitter, walls and targets mov
 - **The hero:** a small caped comic hero with a torch. He walks, thinks (?), cheers (!), looks scared, and turns into the villain after the twist.
 - **The narrator** ("Mr. Caption" in town, caption boxes everywhere) and **Mr. Barter**, the shopkeeper.
 
+## Fights (planned)
+- **Small fight (end of levels 2 and 3):** the Saboteur splits into three ink blobs in a short arena. Hold the torch beam on each blob to burn it away while they rush you in the dark.
+- **Final boss fight (end of level 4):** the villain duel in three phases. The torch is the weapon; rotating arena mirrors bounce the beam onto the villain's shield; the villain snuffs your torch, floods the floor with ink and attacks the interface. Hearts decide the fight.
+
 ## Content
 | Page | District | Teaches | Rule |
 |---|---|---|---|

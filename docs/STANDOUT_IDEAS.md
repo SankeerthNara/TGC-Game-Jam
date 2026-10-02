@@ -12,6 +12,7 @@ Judging compares the finished game with the plan, rewards a complete stable 10-1
 | 6 | **Torch as a resource**: the torch dims over time and recharges at lamps and when you finish tasks; the light cone reveals hidden ink clues and secret passages. | More tension and a reason to explore. | Low-Medium | Light |
 | 7 | **Rank and replay**: S/A/B medals per level from time and hearts lost, best-time splits saved locally, a "seed" shown on the end screen so runs can be compared. | The timers already exist, so this is cheap and adds replay value. | Low | - |
 | 8 | **Reactive audio**: music speeds up while a sabotage timer runs, a heartbeat at 1 heart, comic SFX words. | Makes pressure feel real. | Low-Medium | - |
+| 10 | **Two fights**: a small ink-blob fight (end of levels 2 and 3) and a final boss duel built from torch light and mirrors. | Gives the game climaxes. Reuses existing mechanics. | Medium-High | Light, Twist |
 | 9 | **First-minute polish**: a 30 second tutorial that teaches movement, torch, tasks and risky tasks inside level 1, plus an itch.io page with GIFs. | Judges often play only a few minutes. | Low | - |
 
 ## Recommendation
