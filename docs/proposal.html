@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mirror Page - Proposal</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b1b24; font-size: 10.5pt; line-height: 1.42; }
+  h1 { font-size: 28pt; margin: 0; letter-spacing: 1px; }
+  .sub { color: #5a5a6a; margin: 2px 0 10px 0; font-size: 11.5pt; }
+  .banner { background: #1b1b24; color: #ffd23f; padding: 14px 18px; border-radius: 4px; margin-bottom: 12px; }
+  .banner h1 { color: #ffd23f; }
+  .banner .sub { color: #f6ecd2; }
+  h2 { font-size: 13pt; border-bottom: 2.5px solid #ffd23f; padding-bottom: 2px; margin: 16px 0 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 9.8pt; }
+  th, td { border: 1px solid #1b1b24; padding: 4px 7px; text-align: left; vertical-align: top; }
+  th { background: #f6ecd2; }
+  ul { margin: 4px 0 4px 18px; padding: 0; }
+  li { margin: 2px 0; }
+  .meta td { border: none; padding: 1px 8px 1px 0; }
+  .box { background: #f6ecd2; border-left: 5px solid #ffb703; padding: 6px 10px; margin: 8px 0; }
+  .pb { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <h1>MIRROR PAGE</h1>
+  <div class="sub">A comic-page light puzzle where the narrator breaks the rules. TGC Game Jam proposal.</div>
+</div>
+
+<table class="meta">
+  <tr><td><b>Team</b></td><td>Sankeerth Nara (solo)</td></tr>
+  <tr><td><b>Repository</b></td><td>https://github.com/SankeerthNara/TGC-Game-Jam (public, MIT license)</td></tr>
+  <tr><td><b>Themes</b></td><td>Comic, Twist, Light (all three, in one game)</td></tr>
+  <tr><td><b>Engine / platform</b></td><td>Godot 4.7, GDScript, Compatibility renderer; browser (HTML5) build on itch.io</td></tr>
+  <tr><td><b>Target playtime</b></td><td>15 minutes first playthrough (20 minutes maximum)</td></tr>
+</table>
+
+<h2>1. Pitch</h2>
+<p>Every level is a page of a comic book. A beam of light starts in one panel and must reach the stars on the page. You solve it by <b>dragging whole comic panels to swap them</b> and <b>flipping mirrors</b>. Because emitters, walls and targets live inside panels, rearranging the page rearranges the puzzle. An unreliable narrator speaks in caption boxes, and keeps breaking the rules of the world.</p>
+
+<h2>2. How the three themes work together</h2>
+<table>
+  <tr><th style="width:16%">Theme</th><th>How it appears in the game</th></tr>
+  <tr><td><b>Comic</b></td><td>The page is the puzzle. Panels are the movable pieces, gutters are rule-changing borders, narrator captions tell a story, panels shake with comic impact effects, and sound effects appear as comic words (POW, ZAP).</td></tr>
+  <tr><td><b>Light</b></td><td>The beam of light is the only mechanic. It reflects off mirrors, stops at walls and lights targets. It is the player's only tool and the only feedback.</td></tr>
+  <tr><td><b>Twist</b></td><td>The narrator twists the game itself. (1) <b>Goal twist:</b> after you solve a page, the caption reveals the hero you were lighting is the villain. Good and bad targets swap and you must re-solve the same page. (2) <b>Rule twists:</b> mirrors start lying, and the gutters start bending light.</td></tr>
+</table>
+
+<h2>3. Core mechanics</h2>
+<ul>
+  <li><b>Swap panels:</b> drag one panel onto another. Everything inside moves with it.</li>
+  <li><b>Flip mirrors:</b> click a mirror to switch its angle (/ or \).</li>
+  <li><b>Beam:</b> reflects off mirrors, is blocked by walls, ends on a target. A level is solved when every good target is lit and no bad target is lit.</li>
+  <li><b>Locked panels:</b> some panels cannot be moved, which constrains the solution in later levels.</li>
+  <li><b>Undo / reset:</b> unlimited undo, so players can experiment freely.</li>
+</ul>
+
+<h2>4. Rule twists (what makes it unique)</h2>
+<table>
+  <tr><th style="width:18%">Rule</th><th>Effect</th><th style="width:22%">Level</th></tr>
+  <tr><td>Normal</td><td>Mirrors reflect as drawn.</td><td>1, 2, 3</td></tr>
+  <tr><td>Goal flip</td><td>After the first solve, stars become villains and red X targets become the goal.</td><td>3 and 6</td></tr>
+  <tr><td>Lying mirrors</td><td>Every mirror reflects the opposite way to what it shows.</td><td>4</td></tr>
+  <tr><td>Gutter bend</td><td>A beam entering a different panel turns 90 degrees clockwise. Panel order now decides the path.</td><td>5, 6</td></tr>
+</table>
+
+<h2>5. Gameplay loop and content (about 15 minutes)</h2>
+<table>
+  <tr><th style="width:5%">#</th><th style="width:20%">Page</th><th>Teaches / new idea</th><th style="width:14%">Time</th></tr>
+  <tr><td>1</td><td>Page One</td><td>Swapping panels to carry light</td><td>1.5 min</td></tr>
+  <tr><td>2</td><td>Looking Glass</td><td>Mirrors combined with panel swaps</td><td>2.5 min</td></tr>
+  <tr><td>3</td><td>The Twist</td><td>Goal twist: hero becomes villain</td><td>2.5 min</td></tr>
+  <tr><td>4</td><td>Liar, Liar</td><td>Lying mirrors</td><td>3 min</td></tr>
+  <tr><td>5</td><td>Gutter Bend</td><td>Beam bends at panel borders, locked panels</td><td>3 min</td></tr>
+  <tr><td>6</td><td>The Last Page</td><td>All rules together plus final flip, then the ending</td><td>3 min</td></tr>
+</table>
+<p>Loop per page: read the caption, rearrange the page, light the stars, watch the narrator react, turn the page. Pages get a short intro caption, a solve caption, and a twist caption where relevant.</p>
+
+<h2>6. Final scope</h2>
+<p><b>In scope:</b> panel swapping, mirror flipping, undo and reset, locked panels, three rule types, the goal-flip twist, narrator captions, 6 levels, main menu, pause menu, ending screen, music and sound effects, comic-style art, browser build on itch.io.</p>
+<p><b>Out of scope (cut first if time runs short):</b> level editor, save system, more than 6 levels, controller and mobile touch support, localisation.</p>
+<div class="box"><b>Success criteria:</b> a new player finishes all 6 levels in 15 to 20 minutes with no instructions beyond the in-game captions, and the web build runs without errors in a browser.</div>
+
+<h2>7. Technical plan</h2>
+<ul>
+  <li><b>Architecture:</b> a pure-logic model (<code>PageModel</code>, <code>BeamSolver</code>) separated from the view (<code>PageView</code>) and game flow. UI, audio and effects only listen to a global signal bus. This keeps the logic testable without running the game.</li>
+  <li><b>Levels as data:</b> JSON files describing panels and cells. A built-in headless <b>level validator</b> brute-forces every panel arrangement to prove each level is solvable and reports its minimum number of moves; a level generator proposes candidate layouts.</li>
+  <li><b>Web safety:</b> Compatibility renderer and GDScript only (required for Godot web export); no threads or native plugins. Web builds are tested in a browser regularly, not only at the end.</li>
+  <li><b>Status at proposal time:</b> a playable core prototype already exists in the repository (panel swapping, mirrors, beam, goal-flip twist, 3 levels, validator), with placeholder visuals.</li>
+</ul>
+
+<h2>8. Milestones (100 hours)</h2>
+<table>
+  <tr><th style="width:16%">Hours</th><th>Goal</th></tr>
+  <tr><td>0 - 12</td><td>Concept and scope lock; core prototype; documentation; this proposal.</td></tr>
+  <tr><td>12 - 30</td><td>Vertical slice: menu, HUD, caption boxes, first art and audio pass, levels 1-3 polished, web export working.</td></tr>
+  <tr><td>30 - 60</td><td>Levels 4-6, lying and bend rules, locked panels, full comic art and sound, music.</td></tr>
+  <tr><td>60 - 85</td><td>Polish, game feel, difficulty tuning from playtests, tutorial captions, bug fixing.</td></tr>
+  <tr><td>85 - 100</td><td>Feature freeze at hour 85, final web build, itch.io page, README and CREDITS, submission before the deadline.</td></tr>
+</table>
+
+<h2>9. Assets and AI disclosure</h2>
+<ul>
+  <li><b>Assets:</b> only free, open-source, CC0 / CC BY or AI-generated assets. No paid assets. Every third-party asset is listed in <code>CREDITS.md</code> with source and license, and on the itch.io page.</li>
+  <li><b>AI tools used:</b> Claude Code (architecture, core gameplay code, review), Antigravity (UI, art and audio generation, level authoring, browser testing) and ChatGPT / Codex (tests, documentation, small isolated features). All use is logged in <code>docs/AI_USAGE.md</code>.</li>
+  <li><b>Human direction:</b> concept selection, design decisions, level and narrator writing direction and all merges are done by the developer; reasoning is recorded in the design log. Workflow and ownership between the tools is documented in <code>AI_WORKFLOW.md</code>.</li>
+  <li><b>Editor tooling:</b> the open-source Godot AI plugin (MIT) is used in the editor only and is not part of the game.</li>
+</ul>
+
+<h2>10. Risks and mitigations</h2>
+<table>
+  <tr><th style="width:32%">Risk</th><th>Mitigation</th></tr>
+  <tr><td>Levels too easy, too hard or unsolvable</td><td>Automatic solvability and minimum-move check on every level; playtests; undo and hints.</td></tr>
+  <tr><td>Web build problems</td><td>Compatibility renderer from day one; browser test of every milestone; small asset budget.</td></tr>
+  <tr><td>AI quota limits</td><td>Work split across three tools with owned folders and a shared task board with handoff notes.</td></tr>
+  <tr><td>Scope creep</td><td>Fixed 6-level scope; cut list defined above; feature freeze at hour 85.</td></tr>
+</table>
+
+</body>
+</html>
