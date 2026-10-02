@@ -3,7 +3,8 @@ extends Node
 ## Contains a throwaway debug HUD; Antigravity's ui/ HUD replaces it by listening to EventBus.
 
 var model: PageModel
-const UI_SCENE := "res://ui/ui_root.tscn"
+const UI_SCENE := "res://ui/comic_ui.tscn"
+const MENU_SCENE := "res://ui/main_menu.tscn"
 
 var view: PageView
 var level_data: Dictionary
@@ -29,7 +30,7 @@ func _ready() -> void:
 	EventBus.request_quit_to_menu.connect(_to_menu)
 	EventBus.request_skip_level.connect(func() -> void: if OS.is_debug_build() and state == "playing": _advance())
 	if ResourceLoader.exists(UI_SCENE):
-		add_child((load(UI_SCENE) as PackedScene).instantiate()) # Antigravity's UI replaces the debug HUD
+		add_child((load(UI_SCENE) as PackedScene).instantiate()) # Antigravity's comic UI replaces the debug HUD
 		_to_menu()
 	else:
 		_build_debug_hud()
@@ -47,6 +48,12 @@ func _to_menu() -> void:
 	GameState.restart_game()
 	busy = false
 	_set_state("menu")
+	if ResourceLoader.exists(MENU_SCENE):
+		var layer := CanvasLayer.new()
+		layer.layer = 20
+		add_child(layer)
+		layer.add_child((load(MENU_SCENE) as PackedScene).instantiate()) # frees itself on start
+		EventBus.request_start_game.connect(layer.queue_free, CONNECT_ONE_SHOT)
 
 
 func _start_game() -> void:

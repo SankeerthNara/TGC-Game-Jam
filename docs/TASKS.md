@@ -7,7 +7,7 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C1 | Claude | Core: page model, beam solver, view, flow, 3 levels, validator | done | - | Playable placeholder build |
 | C2 | Claude | Locked panels, final-level logic, polish of rules 4-6 | done | C1 | |
 | C3 | Claude | Web export preset (Compatibility, include `*.json`) | done | C1 | |
-| C4 | Claude | Verify EventBus contract works for UI/audio | todo | C1 | Wire `ui/comic_ui.tscn` into `main.gd` / `main.tscn` and retire debug labels |
+| C4 | Claude | Verify EventBus contract works for UI/audio | done | C1 | comic_ui.tscn and main_menu.tscn wired into main.gd through request_* signals and game_state_changed; verified by rendered frames |
 | A1 | Antigravity | Phase 0 research: art direction, palette, fonts, audio sources | done | - | Chosen direction: Vintage Pulp & Ink (docs/ART_DIRECTIONS.md). Research mentions platformer ideas; our game is a panel/mirror puzzle |
 | A2 | Antigravity | Comic UI in `ui/`: menu, HUD, caption box, pause, end screen (listen to EventBus) | done | A1, C1 | Built `ui/comic_ui.*` and `ui/main_menu.*` with EventBus listeners |
 | A3 | Antigravity | Art pass: panel paper, ink walls, mirrors, emitter, targets, beam glow, comic SFX words (POW, ZAP) | done | A1 | Created textures in `assets/art/` and open fonts in `assets/fonts/` |

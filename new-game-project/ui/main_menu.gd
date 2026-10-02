@@ -289,4 +289,7 @@ func _build_credits_modal() -> void:
 
 
 func _on_start_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
+	var eb := get_node_or_null("/root/EventBus")
+	if eb:
+		eb.request_start_game.emit()
+	queue_free()

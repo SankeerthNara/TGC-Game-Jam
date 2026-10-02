@@ -24,6 +24,7 @@ var _status_label: Label
 var _caption_box: PanelContainer
 var _banner_rect: TextureRect
 var _pause_modal: Control
+var _hud_root: Control
 var _end_modal: Control
 
 var _audio_players: Dictionary = {}
@@ -99,11 +100,13 @@ func _connect_event_bus() -> void:
 	eb.panel_rejected.connect(_on_panel_rejected)
 	eb.panel_swapped.connect(_on_panel_swapped)
 	eb.mirror_toggled.connect(_on_mirror_toggled)
+	eb.game_state_changed.connect(_on_game_state_changed)
 
 
 func _build_ui() -> void:
 	# Main Root Control
 	var root := Control.new()
+	_hud_root = root
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
@@ -220,7 +223,7 @@ func _build_ui() -> void:
 	bar.add_child(btn_reset)
 
 	var btn_pause := _make_comic_button("PAUSE [ESC]")
-	btn_pause.pressed.connect(toggle_pause)
+	btn_pause.pressed.connect(func() -> void: _request("request_pause", [true]))
 	bar.add_child(btn_pause)
 
 	# --- CENTER COMIC BURST BANNER ---
@@ -315,14 +318,14 @@ func _build_pause_modal(parent: Control) -> void:
 
 	var btn_resume := _make_comic_button("RESUME")
 	btn_resume.custom_minimum_size = Vector2(0, 44)
-	btn_resume.pressed.connect(toggle_pause)
+	btn_resume.pressed.connect(func() -> void: _request("request_pause", [false]))
 	vbox.add_child(btn_resume)
 
 	var btn_restart := _make_comic_button("RESTART LEVEL")
 	btn_restart.custom_minimum_size = Vector2(0, 44)
 	btn_restart.pressed.connect(func() -> void:
-		toggle_pause()
-		_on_reset_pressed())
+		_request("request_pause", [false])
+		_request("request_restart_level"))
 	vbox.add_child(btn_restart)
 
 	var btn_mute := _make_comic_button("TOGGLE SOUND")
@@ -387,29 +390,29 @@ func _build_end_modal(parent: Control) -> void:
 	var btn_again := _make_comic_button("READ AGAIN")
 	btn_again.custom_minimum_size = Vector2(0, 48)
 	btn_again.pressed.connect(func() -> void:
-		_end_modal.visible = false
-		if _get_game_state():
-			_get_game_state().restart_game()
-		get_tree().reload_current_scene())
+		_request("request_quit_to_menu"))
 	vbox.add_child(btn_again)
 
 
-func toggle_pause() -> void:
-	_pause_modal.visible = not _pause_modal.visible
+## Emits one of EventBus's request_* signals (the game's main.gd acts on it).
+func _request(signal_name: String, args: Array = []) -> void:
+	var eb := _get_event_bus()
+	if eb:
+		eb.callv("emit_signal", [signal_name] + args)
 
 
 func _on_undo_pressed() -> void:
-	var ev := InputEventKey.new()
-	ev.pressed = true
-	ev.keycode = KEY_Z
-	Input.parse_input_event(ev)
+	_request("request_undo")
 
 
 func _on_reset_pressed() -> void:
-	var ev := InputEventKey.new()
-	ev.pressed = true
-	ev.keycode = KEY_R
-	Input.parse_input_event(ev)
+	_request("request_restart_level")
+
+
+func _on_game_state_changed(state: String) -> void:
+	_hud_root.visible = state != "menu"
+	_pause_modal.visible = state == "paused"
+	_end_modal.visible = state == "ended"
 
 
 # --- EventBus Listeners ---
@@ -462,7 +465,7 @@ func _on_level_solved(_index: int) -> void:
 
 
 func _on_game_finished() -> void:
-	_end_modal.visible = true
+	pass # the "ended" game state shows the end modal
 
 
 func _show_banner(tex: Texture2D, duration: float) -> void:
