@@ -57,6 +57,7 @@ Read AI_WORKFLOW.md. Fix the repo hygiene items in section 7, switch the rendere
 ### Antigravity
 
 ```
+WORKING FOLDER: open and edit ONLY D:\Infinium\wt-anti (branch anti/work). Never edit D:\Infinium\TGC-Game-Jam directly. First run: git merge main.
 Read AI_WORKFLOW.md, docs/SCOPE.md and docs/ARCHITECTURE.md. Concept: "Mirror Page", a comic-page light-routing puzzle where players drag panels and flip mirrors, and a narrator twists the rules (see docs/SCOPE.md).
 Build, in your owned folders only: (1) a main menu, pause menu and HUD in ui/ that listen to the signals in docs/ARCHITECTURE.md, (2) the first art pass and placeholder audio in assets/, (3) the first level data file in data/levels/ using the agreed format.
 Log every generated asset in docs/AI_USAGE.md and every third-party asset in CREDITS.md.
@@ -66,6 +67,7 @@ After each task, export for Web, run it in the browser with Playwright, report c
 ### ChatGPT / Codex
 
 ```
+WORKING FOLDER: open and edit ONLY D:\Infinium\wt-gpt (branch gpt/work). Never edit D:\Infinium\TGC-Game-Jam directly. First run: git merge main.
 Read AI_WORKFLOW.md, docs/SCOPE.md and docs/ARCHITECTURE.md. Concept: "Mirror Page", a comic-page light-routing puzzle where players drag panels and flip mirrors, and a narrator twists the rules (see docs/SCOPE.md).
 Take ONE task at a time from docs/TASKS.md where Owner = ChatGPT. Implement it in scripts/entities/, scripts/tools/, tests/ or data/balance/ against the interfaces in docs/ARCHITECTURE.md. Do not change the interfaces. If one is missing something, add a task for Claude instead.
 Finish, run the project to confirm nothing is broken, mark the task done, commit with an "entities:", "tools:" or "tests:" prefix, then stop and report.
