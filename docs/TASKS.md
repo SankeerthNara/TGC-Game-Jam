@@ -17,3 +17,4 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | G1 | ChatGPT | README, CREDITS, AI_USAGE skeletons | done | - | |
 | G2 | ChatGPT | Unit tests for BeamSolver and PageModel (reflection tables, bend rule, swap, status) in `tests/` | done | C1 | Headless script runnable like level_check |
 | G3 | ChatGPT | Per-level optimal move counts from `level_check.gd` into `data/balance/` for a hint system | done | C1 | |
+| G3b | ChatGPT | Add hint-data generator for indexed levels; document its command and README controls | done | G3 | `update_hints.gd` regenerates all indexed levels, including twist counts |

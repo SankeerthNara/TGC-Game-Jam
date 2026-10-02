@@ -76,7 +76,11 @@ A backslash must be written `\\` inside JSON.
 ```bash
 godot --headless --path new-game-project --script res://scripts/tools/level_check.gd
 ```
-3. Generator example (prints the `cells` rows):
+3. Regenerate the hint move counts for every level in `index.json`. Flip-twist levels also get `twist_optimal_moves`:
+```bash
+godot --headless --path new-game-project --script res://scripts/tools/update_hints.gd
+```
+4. Generator example (prints the `cells` rows):
 ```bash
 godot --headless --path new-game-project --script res://scripts/tools/level_gen.gd -- seed=7 cols=3 rows=2 pw=3 ph=3 walls=5 mirrors=3 min=4 max=7 count=3 rule=bend
 ```
