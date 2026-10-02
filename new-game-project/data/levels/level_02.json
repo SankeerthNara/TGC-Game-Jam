@@ -1,0 +1,23 @@
+{
+  "name": "Looking Glass",
+  "panel_size": [
+    3,
+    3
+  ],
+  "layout": [
+    2,
+    2
+  ],
+  "rule": "normal",
+  "twist": "none",
+  "caption_intro": "NARRATOR: Mirrors! Click one to flip its angle. Panels still move, too.",
+  "caption_solved": "NARRATOR: Reflections of a brighter tomorrow!",
+  "cells": [
+    "..\\..#",
+    "...T..",
+    ".#.#.#",
+    "<..\\..",
+    "......",
+    "......"
+  ]
+}
