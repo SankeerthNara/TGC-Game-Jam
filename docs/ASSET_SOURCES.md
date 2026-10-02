@@ -12,7 +12,6 @@ Curated list of verified open-source and free asset repositories for our 100-hou
 | **[Freesound.org](https://freesound.org/)** | Real-world Foley, paper rustles, lantern clicks, ink drips | Filter: CC0 1.0 or CC BY 3.0/4.0 | [Freesound Legal / FAQ](https://freesound.org/help/faq/#licensing) | Flashlight switch clicks, paper sliding, deep hums, ink splats. |
 | **[Incompetech](https://incompetech.com/)** (Kevin MacLeod) | High-quality instrumental & cinematic loops | CC BY 4.0 International | [Incompetech License Info](https://incompetech.com/music/royalty-free/licenses/) | Mood-setting noir jazz, vintage comic adventure, tense mystery music. |
 | **[OpenGameArt.org](https://opengameart.org/art-search-advanced?keys=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13)** | Looping background tracks, ambient drones | Filter: CC0 or CC BY 3.0/4.0 | [OpenGameArt Terms](https://opengameart.org/content/faq#q-licensing) | Level background music, ambient drone loops for dark panel scenes. |
-| **[Sonniss GDC Game Audio Archives](https://sonniss.com/gameaudioarchive)** | Commercial-grade professional SFX libraries | Royalty-Free / Commercial & Jam Allowed | [Sonniss License Terms](https://sonniss.com/licensing-terms/) | High-fidelity atmospheric winds, light beam hums, cinematic stingers. |
 | **[jsfxr / ChipTone](https://sfbgames.itch.io/chiptone)** | Custom procedural sound generator | 100% Public Domain / CC0 | [jsfxr GitHub CC0](https://github.com/chrismdp/jsfxr) | Quick custom onomatopoeia sounds ("BAM", "ZAP", "POW", "BEEP"). |
 
 ---

@@ -30,6 +30,12 @@ var _dragging := false
 var _shake := 0.0
 
 
+func _ready() -> void:
+	get_viewport().size_changed.connect(func() -> void:
+		_layout()
+		queue_redraw())
+
+
 func set_model(m: PageModel) -> void:
 	model = m
 	_layout()
