@@ -153,7 +153,7 @@
     </table>
 
     <h2>1. Pitch & Core Concept</h2>
-    <p>Somebody has sabotaged the lights of an old comic studio. You are a small caped comic hero with a torch in a <b>huge, pitch-dark station</b> of 20 rooms: only the area around you is lit. Explore, find the task consoles, and finish <b>15 interactive tasks</b> (rewire panels, fix fuse boxes, repeat lantern codes, align a telescope, wipe ink spills and more) to fill the <b>progress bar</b>. Some tasks are light puzzles on comic pages where you drag panels and flip mirrors to steer a beam. Who cut the lights, and why? The narrator has a few twists planned.</p>
+    <p>Somebody has sabotaged the lights of an old comic studio. You are a small caped comic hero with a torch in a <b>huge, pitch-dark station</b> of 20 rooms: only the area around you is lit. Explore, find the task consoles, and finish <b>18 interactive tasks</b> (rewire panels, order comic panels, fill speech bubbles, debug code, wire logic gates, align a telescope and more) to fill the <b>progress bar</b>. Careful: some tasks trigger a <b>sabotage countdown</b>. Fix it in time or lose hearts, and die at zero. Some tasks are light puzzles on comic pages where you drag panels and flip mirrors to steer a beam. Who cut the lights, and why? The narrator has a few twists planned.</p>
 
     <h2>2. Integration of the Three Themes</h2>
     <table>
@@ -175,7 +175,8 @@
     <h2>3. Core Mechanics</h2>
     <ul>
       <li><b>Explore the dark:</b> Pokemon-style grid walking in one seamless 108x72 tile map. Only the area around the torch is lit. Press <code>M</code> for the station map.</li>
-      <li><b>15 interactive tasks, one progress bar:</b> wires, fuse box, lantern memory code, torch charge timing, telescope alignment, ink-spill reflex game, card swipe, and light-puzzle pages.</li>
+      <li><b>18 interactive tasks, one progress bar:</b> comic tasks (order the panels, fill speech bubbles, letter sound effects), college tasks (debug code, logic gates, shelve books), plus wires, fuses, lantern code, torch charge, telescope, ink spills, card swipe, and light-puzzle pages.</li>
+      <li><b>Sabotage and health:</b> six risky tasks start a timer when completed. A complementary fix console must be completed before it runs out, or the hero loses a heart. Zero hearts: restart.</li>
       <li><b>Light puzzle pages:</b> drag panels to swap them (their contents move too), click mirrors to flip them, steer the beam onto every goal. Unlimited undo.</li>
       <li><b>Beam Tracing:</b> an instant headless raycast lights targets and flags hazards after every move.</li>
       <li><b>Frictionless:</b> <code>[Z]</code> interact/undo, <code>[R]</code> reset, <code>[M]</code> map, <code>Esc</code> leave a task; no softlocks.</li>
@@ -210,18 +211,18 @@
       <tr><td>5</td><td>Gutter Bend</td><td><b>Gutter Bend:</b> Beams turn 90° at boundaries; locked panels limit swap freedom.</td><td>3.0 min</td></tr>
       <tr><td>6</td><td>The Last Page</td><td><b>Grand Finale:</b> Combines lying mirrors, gutter bends, locked tiles, and final flip.</td><td>3.0 min</td></tr>
     </table>
-    <p><b>Station loop:</b> read the task list &rarr; walk through the dark to the next console &rarr; play its mini-game &rarr; progress bar fills &rarr; narrator reacts. 20 rooms, 15 tasks (4 are light puzzle pages), then the ending.</p>
+    <p><b>Station loop:</b> read the task list &rarr; walk through the dark to the next console &rarr; play its mini-game &rarr; progress bar fills &rarr; narrator reacts. 20 rooms, 18 tasks (4 are light puzzle pages), 6 sabotage events, then the ending.</p>
 
     <h2>6. Scope Boundaries</h2>
     <div class="box">
-      <b>In Scope:</b> huge dark station with torch lighting, 15 mini-game tasks with a progress bar, station map, 6 tuned light-puzzle pages, 3 rule mutations, goal flip twist, saboteur story twist, narrator caption UI, menus, end screen, comic sound effects, music, web export.<br>
+      <b>In Scope:</b> huge dark station with torch lighting, 18 mini-game tasks with a progress bar, sabotage timers and hearts, station map, 6 tuned light-puzzle pages, 3 rule mutations, goal flip twist, saboteur story twist, narrator caption UI, menus, end screen, comic sound effects, music, web export.<br>
       <b>Out of Scope (Strictly Cut):</b> Level editor, save slots, mobile touch, gamepads, multiplayer, more than 20 rooms.
     </div>
 
     <h2>7. Technical Architecture & Web Feasibility</h2>
     <ul>
       <li><b>Engine & Renderer:</b> Godot 4.7 with GL Compatibility renderer; single-threaded Web export with zero native extensions or GDExtensions.</li>
-      <li><b>Model-View Decoupling:</b> pure GDScript puzzle model (<code>PageModel</code>, <code>BeamSolver</code>) separate from rendering; the station (<code>World</code>) and its 15 tasks are data-driven from a JSON map; each mini-game is its own class. Tested headless.</li>
+      <li><b>Model-View Decoupling:</b> pure GDScript puzzle model (<code>PageModel</code>, <code>BeamSolver</code>) separate from rendering; the station (<code>World</code>) and its 18 tasks are data-driven from a JSON map; each mini-game is its own class. Tested headless.</li>
       <li><b>Automated Validation:</b> Built-in BFS/DFS solver (<code>level_check.gd</code>) verifies every level is 100% solvable within 2–8 optimal moves.</li>
       <li><b>Web Export:</b> game package under 1 MB PCK (build about 38 MB uncompressed, ~8 MB gzip). 2D lights and darkness verified in a browser build.</li>
     </ul>
