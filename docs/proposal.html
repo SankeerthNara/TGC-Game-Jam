@@ -124,7 +124,7 @@
   <div>
     <div class="banner">
       <h1>MIRROR PAGE</h1>
-      <div class="sub">A comic-strip light-routing puzzle where an unreliable narrator twists the rules. • TGC Game Jam 2026 Proposal</div>
+      <div class="sub">A dark comic adventure: find your friend among the vampires, and free the captured hero. • TGC Game Jam 2026 Proposal</div>
     </div>
 
     <table class="meta-table">
@@ -144,7 +144,7 @@
         <td class="label">Themes (All 3)</td>
         <td><span class="tag">COMIC</span> <span class="tag">TWIST</span> <span class="tag">LIGHT</span></td>
         <td class="label">Target Playtime</td>
-        <td><b>12 – 15 mins</b> first playthrough (20 min hard cap)</td>
+        <td><b>17 – 19 mins</b> first playthrough (20 min hard cap)</td>
       </tr>
       <tr>
         <td class="label">Engine & Renderer</td>
@@ -158,39 +158,27 @@
     <h2>2. Integration of the Three Themes</h2>
     <table>
       <tr><th style="width:14%">Theme</th><th>How It Drives Gameplay & Narrative</th></tr>
-      <tr>
-        <td><b>Comic</b></td>
-        <td>The station is a comic-book studio (ink outlines, halftone paper, narrator captions, onomatopoeia) and the light puzzles are comic pages whose panels are movable tiles; gutters act as light refractors.</td>
-      </tr>
-      <tr>
-        <td><b>Light</b></td>
-        <td>The whole map is dark by design: only the area around your torch is visible, so light is how you explore. Light is also the puzzle: steering a beam off mirrors onto star targets.</td>
-      </tr>
-      <tr>
-        <td><b>Twist</b></td>
-        <td>Who is the friend and who is the villain? Nobody can tell, so every choice is a gamble. The Narrator is the final twist: he is the real saboteur. In the puzzle pages the narrator also twists the rules (the hero you light turns out to be the villain, mirrors lie, gutters bend light).</td>
-      </tr>
+      <tr><td><b>Comic</b></td><td>A fixed Narrator frames four comic worlds, each with its own hero and look (ink outlines, halftone paper, caption boxes, onomatopoeia). The light puzzles are comic pages whose panels you drag around.</td></tr>
+      <tr><td><b>Light</b></td><td>Every level is dark: only the area around your torch is visible, so light is how you explore, how you catch vampires (they freeze when held in the beam) and how you solve the mirror puzzles and the final duels.</td></tr>
+      <tr><td><b>Twist</b></td><td>Friend or villain? Two identical vampires, chosen at random, so every Reveal or Kill is a gamble with four different outcomes. The Narrator is the final twist: he captured the first hero and is the real saboteur. He also tampers with the interface and the puzzle rules.</td></tr>
     </table>
 
     <h2>3. Core Mechanics</h2>
     <ul>
-      <li><b>Explore the dark:</b> Smooth 8-direction walking in a seamless tile map, a new random 8-room layout every level. Only the area around the torch is lit. Press <code>M</code> for the station map.</li>
-      <li><b>28 interactive tasks over 4 levels, none repeated, one progress bar per level:</b> comic tasks (order the panels, fill speech bubbles, letter sound effects), college tasks (debug code, logic gates, shelve books), plus wires, fuses, lantern code, torch charge, telescope, ink spills, card swipe, and light-puzzle pages.</li>
-      <li><b>Villain-started sabotage and health:</b> the villain vampire himself walks to a spot and starts a timer: 1 sabotage in level 1, 2 in level 2, 2 big ones in levels 3 and 4, and in level 4 a hidden task also undoes one of your finished tasks. A fix console must be completed in time or the hero loses hearts. Zero hearts: respawn at the level checkpoint. Par times and a total timer track your speed.</li>
-      <li><b>Light puzzle pages:</b> drag panels to swap them (their contents move too), click mirrors to flip them, steer the beam onto every goal. Unlimited undo.</li>
-      <li><b>Vampires, Reveal or Kill:</b> two identical vampires per level (friend and villain, random) flee from your torch. Catch one in the light and choose REVEAL (friend: ally; villain: a parkour chase) or KILL (villain dies; friend dies). The friend helps more each level.</li>
-      <li><b>Parkour chase and final boss:</b> revealing the villain starts a 30 to 60 second parkour run to catch him. The final boss fight is three one-on-one duels (heroes of levels 2, 3 and 4 in turn) against the Narrator, at least 3 minutes in all, with two cutscene endings (sunlight or lava).</li>
-      <li><b>Beam Tracing:</b> an instant headless raycast lights targets and flags hazards after every move.</li>
-      <li><b>Frictionless:</b> <code>[Z]</code> interact/undo, <code>[R]</code> reset, <code>[M]</code> map, <code>Esc</code> leave a task; no softlocks.</li>
+      <li><b>Explore the dark:</b> smooth 8-direction walking in a random 8-room layout that is new every level. Press <code>M</code> for the map.</li>
+      <li><b>28 interactive tasks over 4 levels, none repeated:</b> comic tasks (order panels, speech bubbles, sound effects, connect the dots, ink mixing), college tasks (debug code, logic gates, quiz, proofreading, safe cracking) and classics (wires, fuses, pipes, memory), plus 6 light-puzzle pages with rule twists (lying mirrors, light that bends at gutters, goal flip).</li>
+      <li><b>Villain-started sabotage:</b> from level 2 the villain vampire walks to a spot and starts a timer; a fix console must be completed in time or you lose hearts (big sabotage: 2 hearts). In level 4 he also undoes one finished task.</li>
+      <li><b>Vampires, Reveal or Kill:</b> hold the torch on a vampire for an Among Us style cutscene, then choose. Reveal the friend: an ally who ignores light and helps more each level. Reveal the villain: you are teleported into a 30 to 60 second parkour chase against the clock. Kill the villain: he is gone. Kill the friend: he dies and your ending suffers.</li>
+      <li><b>Adaptive difficulty and score:</b> going over par makes the next level a little easier; a score (tasks, sabotage stopped, hearts, deaths, choices, small time bonus) gives S/A/B/C ranks. Checkpoints at each level start; level and total timers.</li>
     </ul>
 
-    <h2>4. The Narrator's Rule Twists</h2>
+    <h2>4. Levels and Heroes</h2>
     <table>
-      <tr><th style="width:16%">Rule</th><th>Mechanical Impact</th><th style="width:18%">Introduced</th></tr>
-      <tr><td><b>Normal</b></td><td>Standard optical reflections: mirrors reflect as drawn; gutters maintain beam angle.</td><td>Levels 1, 2, 3</td></tr>
-      <tr><td><b>Goal Flip</b></td><td>Narrator caption flips polarity: good stars become toxic; hazards (red X) become the required target.</td><td>Levels 3 and 6</td></tr>
-      <tr><td><b>Lying Mirrors</b></td><td>Mirrors reflect the exact opposite of their drawn slant (slashes act as backslashes).</td><td>Level 4</td></tr>
-      <tr><td><b>Gutter Bend</b></td><td>Crossing a panel gutter forces a mandatory 90° clockwise beam deflection on the entry cell.</td><td>Levels 5 and 6</td></tr>
+      <tr><th style="width:5%">#</th><th style="width:25%">Hero and world</th><th style="width:8%">Par</th><th style="width:8%">Tasks</th><th>Vampires, sabotage and friend help</th></tr>
+      <tr><td>1</td><td>Superhero pulp</td><td>2:00</td><td>4</td><td>Warm-up: no vampires, no sabotage. At the end the Narrator captures this hero.</td></tr>
+      <tr><td>2</td><td>Noir detective</td><td>3:00</td><td>6</td><td>Vampires appear. 1 sabotage. Revealed friend points to the nearest task.</td></tr>
+      <tr><td>3</td><td>Manga ninja</td><td>4:00</td><td>8</td><td>2 big sabotages. Friend also finishes small tasks and adds time.</td></tr>
+      <tr><td>4</td><td>Pop-art space hero</td><td>5:00</td><td>10</td><td>2 big sabotages and a task undone. Friend also fixes a sabotage and shields you once.</td></tr>
     </table>
   </div>
 
@@ -203,60 +191,50 @@
 <!-- ================= PAGE 2 ================= -->
 <div class="page">
   <div>
-    <h2>5. Content Plan & Gameplay Loop (15 Minutes)</h2>
-    <table>
-      <tr><th style="width:6%">#</th><th style="width:18%">Level Name</th><th>Core Mechanic / Rule Introduced</th><th style="width:14%">Target Time</th></tr>
-      <tr><td>1</td><td>Page One (Library)</td><td>Panel swapping across gutters to carry a straight beam to the hero's star.</td><td>1.5 min</td></tr>
-      <tr><td>2</td><td>Looking Glass</td><td>Combining panel swapping with mirror angle toggles and wall obstacles.</td><td>2.5 min</td></tr>
-      <tr><td>3</td><td>The Twist</td><td><b>Goal Flip Twist:</b> Solves normally, narrator flips roles, re-solve page for villain.</td><td>2.5 min</td></tr>
-      <tr><td>4</td><td>Liar, Liar</td><td><b>Lying Mirrors:</b> Slashes reflect counter-intuitively; mental inversion puzzle.</td><td>2.5 min</td></tr>
-      <tr><td>5</td><td>Gutter Bend</td><td><b>Gutter Bend:</b> Beams turn 90° at boundaries; locked panels limit swap freedom.</td><td>3.0 min</td></tr>
-      <tr><td>6</td><td>The Last Page</td><td><b>Grand Finale:</b> Combines lying mirrors, gutter bends, locked tiles, and final flip.</td><td>3.0 min</td></tr>
-    </table>
-    <p><b>Station loop:</b> read the task list &rarr; walk through the dark to the next console &rarr; play its mini-game &rarr; progress bar fills &rarr; narrator reacts. 4 levels x 8 random rooms, 26 tasks (5 are light puzzle pages), up to 4 sabotage events per level, checkpoints between levels, then the ending and a split-time summary.</p>
+    <h2>5. Final Boss, Cutscenes and Endings</h2>
+    <ul>
+      <li><b>Relay duels:</b> after level 4 the heroes of levels 2, 3 and 4 fight the Narrator one on one, one after the other, to free the captured level 1 hero. At least 3 minutes in all, with one shared Narrator health bar. Each hero uses his own twist on torch light and mirrors, and surviving friends give a power-up.</li>
+      <li><b>Two endings:</b> if the Narrator is defeated, sunlight shines on him and he evaporates. If not, he throws the level 1 hero into lava.</li>
+      <li><b>Cutscenes:</b> Among Us style scenes for detecting a vampire, revealing a friend, revealing the villain (ending in a teleport to the parkour), killing a friend or the villain (ejection into space), the level 1 capture and both endings. All are skippable.</li>
+    </ul>
 
     <h2>6. Scope Boundaries</h2>
     <div class="box">
-      <b>In Scope:</b> 4 generated dark levels with torch lighting, 26 mini-game tasks with a progress bar, sabotage timers and hearts, station map, 6 tuned light-puzzle pages, 3 rule mutations, goal flip twist, saboteur story twist, narrator caption UI, menus, end screen, comic sound effects, music, web export.<br>
-      <b>Out of Scope (Strictly Cut):</b> Level editor, save slots, mobile touch, gamepads, multiplayer, more than 20 rooms.
+      <b>In Scope:</b> 4 generated dark levels with torch lighting, 28 tasks (never repeated), villain sabotage, hearts and checkpoints, two vampires with the Reveal / Kill choice and friend ally, parkour chase, relay boss duels, cutscenes, score and ranks, narrator and four heroes, menus, sound and music, web export.<br>
+      <b>Out of Scope (Strictly Cut):</b> level editor, save slots, mobile touch, gamepads, multiplayer, more than 4 levels or heroes, any existing comic character (all heroes and villains are original).
     </div>
 
     <h2>7. Technical Architecture & Web Feasibility</h2>
     <ul>
-      <li><b>Engine & Renderer:</b> Godot 4.7 with GL Compatibility renderer; single-threaded Web export with zero native extensions or GDExtensions.</li>
-      <li><b>Model-View Decoupling:</b> pure GDScript puzzle model (<code>PageModel</code>, <code>BeamSolver</code>) separate from rendering; the station (<code>World</code>) and its levels and tasks are data-driven from a JSON map; each mini-game is its own class. Tested headless.</li>
-      <li><b>Automated Validation:</b> Built-in BFS/DFS solver (<code>level_check.gd</code>) verifies every level is 100% solvable within 2–8 optimal moves.</li>
-      <li><b>Web Export:</b> game package under 1 MB PCK (build about 38 MB uncompressed, ~8 MB gzip). 2D lights and darkness verified in a browser build.</li>
+      <li><b>Godot 4.7, GDScript only, GL Compatibility renderer:</b> single-threaded Web export, no native extensions. 2D lights and darkness verified in a browser build.</li>
+      <li><b>Data-driven and testable:</b> a pure-logic puzzle model with headless unit tests and a brute-force solver that proves every puzzle solvable; levels are generated at run time (8 rooms, corridors, consoles) and a generator test checks that 100+ levels are fully reachable. Every task is its own class registered by name.</li>
+      <li><b>Status at proposal time:</b> the whole loop already runs: levels, tasks, sabotage, vampires, choice, parkour, cutscenes, score and checkpoints.</li>
     </ul>
 
     <h2>8. 100-Hour Development Milestones</h2>
     <table>
-      <tr><th style="width:18%">Hours</th><th>Phase & Deliverables</th><th style="width:16%">Current Status</th></tr>
-      <tr><td><b>0 – 12</b></td><td>Concept lock, core engine prototype, level format, art research, proposal submission.</td><td><b>COMPLETE</b></td></tr>
-      <tr><td><b>12 – 30</b></td><td>Vertical slice: dark station, tasks and progress bar, comic UI, first art pass, CC0 audio, pages 1–6 playable.</td><td><b>IN PROGRESS</b></td></tr>
-      <tr><td><b>30 – 60</b></td><td>Station polish, more tasks and room props, saboteur twist, sound and music integration, difficulty tuning from playtests.</td><td>Planned</td></tr>
-      <tr><td><b>60 – 85</b></td><td>Balancing, narrative comedic timing, web playtests, UI juice (panel shake, onomatopoeia).</td><td>Planned</td></tr>
-      <tr><td><b>85 – 100</b></td><td><b>Feature freeze at Hour 85.</b> Web export audit, itch.io upload, README and CREDITS audit.</td><td>Planned</td></tr>
+      <tr><th style="width:12%">Hours</th><th>Phase & Deliverables</th><th style="width:20%">Current Status</th></tr>
+      <tr><td><b>0 – 12</b></td><td>Concept lock, core engine and levels, tasks, sabotage, vampires, parkour, cutscenes, proposal.</td><td><b>COMPLETE</b></td></tr>
+      <tr><td><b>12 – 30</b></td><td>Narrator system, hero and theme for level 1, tutorial, level 1 capture cutscene, polish of the vampire choice.</td><td><b>NEXT</b></td></tr>
+      <tr><td><b>30 – 55</b></td><td>Heroes and themes for levels 2 and 3, friend ally and parkour polish, first outside playtests.</td><td>Planned</td></tr>
+      <tr><td><b>55 – 75</b></td><td>Level 4, the three relay duels, sunlight and lava endings, transitions, fourth-wall twists, shader, audio.</td><td>Planned</td></tr>
+      <tr><td><b>75 – 85</b></td><td>Balance, par times, playtests, bug fixing. <b>Feature freeze at Hour 85.</b></td><td>Planned</td></tr>
+      <tr><td><b>85 – 100</b></td><td>Fixes only, web export, itch.io page, README and CREDITS audit, submission by Hour 96.</td><td>Planned</td></tr>
     </table>
 
     <h2>9. Assets & AI Disclosure</h2>
     <ul>
-      <li><b>Asset Rule Compliance:</b> Zero paid assets. All assets are 100% free, CC0, or open source with full attribution in <code>CREDITS.md</code>:
-        <ul>
-          <li><i>Fonts:</i> <b>Bangers</b> (SIL OFL 1.1) and <b>Comic Neue</b> (SIL OFL 1.1) from Google Fonts.</li>
-          <li><i>Audio:</i> Procedural CC0 synthesized sound effects and jazz loop generated in Python.</li>
-          <li><i>Art & Textures:</i> Vintage newsprint textures, Ben-Day halftone dots, and comic burst badges generated procedurally.</li>
-        </ul>
-      </li>
-      <li><b>AI Collaboration:</b> All AI usage is documented in <code>docs/AI_USAGE.md</code> across Claude Code (architecture/core logic), Antigravity (UI, art/audio assets, browser QA), and ChatGPT (tests/docs). Core creative direction and design decisions remain human-authored.</li>
+      <li><b>Assets:</b> no paid assets. Fonts <b>Bangers</b> and <b>Comic Neue</b> (SIL OFL 1.1); sound effects and music generated procedurally (CC0); all art is drawn in code or generated procedurally. Every asset is listed in <code>CREDITS.md</code>. The open-source Godot AI plugin (MIT) is used in the editor only and is not part of the game.</li>
+      <li><b>AI tools:</b> Claude Code (architecture and gameplay code), Antigravity (UI, art and audio, browser tests) and ChatGPT/Codex (tests and documents), all logged in <code>docs/AI_USAGE.md</code>. Story, design decisions, characters and direction are the developer's own.</li>
     </ul>
 
     <h2>10. Risks & Mitigations</h2>
     <table>
       <tr><th style="width:30%">Identified Risk</th><th>Proactive Mitigation Strategy</th></tr>
-      <tr><td>Web Export / Browser Bugs</td><td>Tested every milestone via Playwright headless Chromium. Compatibility renderer enforced from Day 1.</td></tr>
-      <tr><td>Puzzles Unsolvable / Obscure</td><td>Automated headless level validator verifies solvability and move counts before authoring.</td></tr>
-      <tr><td>Scope Overrun</td><td>Strict 6-level cap, 15-minute loop target, hard feature freeze at Hour 85.</td></tr>
+      <tr><td>Scope (four heroes, duels, cutscenes)</td><td>Everything shares one engine, one cutscene template and one duel engine; a written cut list and a feature freeze at Hour 85.</td></tr>
+      <tr><td>A pure-chance choice feels unfair</td><td>All four outcomes are fun, not punishing; early playtests at Hour 30; level 1 is a safe warm-up.</td></tr>
+      <tr><td>Combat or parkour is not fun</td><td>Simple readable mechanics, playtests at Hours 45 and 70, fallbacks (shorter parkour, duels without mirrors).</td></tr>
+      <tr><td>Web export or performance bugs</td><td>Browser test on every milestone, Compatibility renderer from day one, small asset budget.</td></tr>
     </table>
   </div>
 
