@@ -13,7 +13,9 @@ var undo_stack: Array[Dictionary] = []
 var busy := false
 var run_id := 0 ## bumps on every level start so stale timers do nothing
 var decoy_revealed := false
-var state := "menu" ## menu | world | playing (a page puzzle) | paused | ended
+var state := "menu" ## menu | world | task (a mini-game) | playing (a page puzzle) | paused | ended
+var active_task := ""
+var _task_layer: CanvasLayer
 
 var _caption: Label
 var _info: Label
@@ -24,6 +26,10 @@ func _ready() -> void:
 	world = World.new()
 	add_child(world)
 	world.door_entered.connect(_enter_puzzle)
+	world.task_requested.connect(_on_task_requested)
+	_task_layer = CanvasLayer.new()
+	_task_layer.layer = 18
+	add_child(_task_layer)
 	world.message.connect(func(t: String) -> void: EventBus.caption_changed.emit(t))
 	world.gate_opened.connect(func(_g: String) -> void:
 		EventBus.caption_changed.emit("NARRATOR: The ink-gate dissolves into light! New streets are open."))
@@ -52,7 +58,8 @@ func _set_state(s: String) -> void:
 	var in_puzzle := s == "playing" or s == "paused"
 	view.visible = in_puzzle
 	view.input_enabled = s == "playing" and not busy
-	world.set_active(s == "world")
+	world.set_active(s == "world" or s == "task")
+	world.input_blocked = s == "task"
 	EventBus.game_state_changed.emit(s)
 
 
@@ -72,7 +79,7 @@ func _start_game() -> void:
 	GameState.restart_game()
 	world.reset()
 	_enter_world()
-	EventBus.caption_changed.emit("NARRATOR: Gutter Town has gone dark! Walk with the ARROW KEYS, press Z or SPACE to talk. Find hidden items, trade them for keys at the shop, and open the PAGE doors.")
+	EventBus.caption_changed.emit(world.intro if world.intro != "" else "NARRATOR: Gutter Town has gone dark! Walk with the ARROW KEYS, press Z or SPACE to talk.")
 
 
 func _enter_world() -> void:
@@ -90,6 +97,13 @@ func _enter_puzzle(index: int) -> void:
 
 ## Back to the town after finishing a page (or giving up on it with M).
 func _finish_puzzle(solved := true) -> void:
+	if world.station_mode:
+		var id := active_task
+		active_task = ""
+		if solved:
+			world.complete_task(id)
+		_back_from_task(solved)
+		return
 	var idx := GameState.level_index
 	if solved:
 		world.mark_done(idx)
@@ -107,6 +121,46 @@ func _finish_puzzle(solved := true) -> void:
 		EventBus.caption_changed.emit("NARRATOR: Wrong key, wrong door, wrong comic. Back to Gutter Town. The real page is still waiting; check the keyhole next time!")
 	else:
 		EventBus.caption_changed.emit("NARRATOR: Giving up on that page? It will wait for you.")
+
+
+## The hero reached a task console. Mirror tasks reuse the light puzzle pages; the rest are mini-games.
+func _on_task_requested(task_id: String, type: String, param: int) -> void:
+	if state != "world":
+		return
+	active_task = task_id
+	if type == "mirror":
+		_set_state("playing")
+		start_level(param)
+		return
+	var game := TaskRegistry.create(type)
+	if game == null:
+		active_task = ""
+		return
+	_set_state("task")
+	_task_layer.add_child(game)
+	game.finished.connect(func(success: bool) -> void: _on_task_finished(game, success))
+
+
+func _on_task_finished(game: Node, success: bool) -> void:
+	game.queue_free()
+	var id := active_task
+	active_task = ""
+	if success:
+		world.complete_task(id)
+	_back_from_task(success)
+
+
+func _back_from_task(success: bool) -> void:
+	if world.all_tasks_done():
+		_set_state("ended")
+		EventBus.game_finished.emit()
+		EventBus.caption_changed.emit("NARRATOR: Every task done and the progress bar is full! ...but who cut the lights in the first place?")
+		return
+	_enter_world()
+	if success:
+		EventBus.caption_changed.emit("NARRATOR: Task complete! %d of %d done. Keep going, hero." % [world.tasks_done.size(), world.tasks_total()])
+	else:
+		EventBus.caption_changed.emit("NARRATOR: Gave up on that one? It will still be here.")
 
 
 func _wait_playing() -> void:

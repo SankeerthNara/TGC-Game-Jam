@@ -21,3 +21,6 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C5 | Claude | Town overworld: walking, torch, lights, items, shop, keys, wrong-key decoy pages | done | C1 | `scripts/world/`, `data/world/town.json` |
 | A7 | Antigravity | Town art and sound: shop and item sounds on `item_collected`, `trade_made`, `door_unlocked`; footsteps; town music; tweak house and tree art in `scripts/world/world.gd` drawing helpers only if Claude agrees via this board | todo | C5 | |
 | G4 | ChatGPT | Headless town tests: every door reachable once gates open, items reachable, item and key budget is affordable, decoy keys open decoy pages (`tests/world_test.gd`) | todo | C5 | |
+| C6 | Claude | Station mode: huge dark map, torch-only lighting, 15 tasks with progress bar, minimap, 7 mini-games | done | C5 | `scripts/tasks/`, `data/world/station.json` |
+| A8 | Antigravity | Task art/sound: sounds for task start, success, fail (hook `task_started`, `task_completed`), station ambience, wall/floor/prop art polish via `World` draw helpers (ask on this board) | todo | C6 | |
+| G5 | ChatGPT | Headless tests: every task console reachable, tasks list matches map, TaskRegistry covers every type in station.json | todo | C6 | |

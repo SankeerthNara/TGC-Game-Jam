@@ -8,6 +8,7 @@ extends Node2D
 signal door_entered(puzzle_index: int)
 signal message(text: String)
 signal gate_opened(gate_char: String)
+signal task_requested(task_id: String, type: String, param: int)
 
 const TEX_PAPER := preload("res://assets/art/paper_texture.png")
 const TEX_HALFTONE := preload("res://assets/art/halftone_dot.png")
@@ -22,7 +23,9 @@ const BUSH := Color("3f7a3a")
 const GOLD := Color("ffd23f")
 const DARKNESS := Color(0.17, 0.15, 0.3)
 const HOUSE_COLORS := [Color("e76f51"), Color("2a9d8f"), Color("e9c46a"), Color("9b5de5"), Color("4cc9f0"), Color("f28482"), Color("84a59d"), Color("b5838d")]
-const SOLID_CHARS := ",T#NslGHIo"
+const SOLID_CHARS := ",T#NslGHIoKctpb"
+const STATION_DARK := Color(0.03, 0.028, 0.065)
+const STATION_WALL := Color("2e2a45")
 const KEEPER_LINES := [
 	"Welcome, welcome! Mr. Barter's Swap & Stock. Bring me odds and ends, I will hand you keys.",
 	"Mind the keyholes, friend. Some of my keys are a LITTLE bit different from what is on the door.",
@@ -38,6 +41,12 @@ var npc_lines: Array = []
 var door_info: Dictionary = {} ## puzzle index -> {label, key}
 var key_defs: Array = [] ## shop stock definitions
 var items: Array = [] ## [{x, y, type, taken}]
+var station_mode := false ## the huge dark station with Among Us style tasks
+var tasks: Array = [] ## [{id, x, y, type, name, room, param}]
+var rooms: Array = []
+var tasks_done := {} ## task id -> true
+var input_blocked := false ## true while a task overlay is open
+var intro := ""
 
 var hero := HeroActor.new()
 var tile := Vector2i.ZERO
@@ -73,6 +82,12 @@ var _bump_cd := 0.0
 var _flash := 0.0
 var _mood_timer := 0.0
 var _pops: Array[Dictionary] = []
+var _task_at := {} ## Vector2i -> task dictionary
+var _room_of := PackedInt32Array()
+var _room_colors: Array[Color] = []
+var _task_hud: TaskHUD
+var _minimap: MiniMap
+var _minimap_open := false
 
 
 func _ready() -> void:
@@ -94,6 +109,12 @@ func _ready() -> void:
 	add_child(_ui)
 	_inv_hud = InventoryHUD.new()
 	_ui.add_child(_inv_hud)
+	_task_hud = TaskHUD.new()
+	_task_hud.world = self
+	_ui.add_child(_task_hud)
+	_minimap = MiniMap.new()
+	_minimap.world = self
+	_ui.add_child(_minimap)
 	_shop = ShopUI.new()
 	_shop.buy_requested.connect(_buy)
 	_shop.closed.connect(_close_shop)
@@ -101,17 +122,33 @@ func _ready() -> void:
 	shop_layer.layer = 15
 	add_child(shop_layer)
 	shop_layer.add_child(_shop)
-	load_map("res://data/world/town.json")
+	load_map("res://data/world/station.json")
 	set_active(false)
 
 
 func load_map(path: String) -> void:
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	station_mode = data.get("mode", "") == "station"
+	tasks = data.get("tasks", [])
+	rooms = data.get("rooms", [])
+	intro = data.get("intro", "")
 	rows.clear()
 	for r: String in data["rows"]:
 		rows.append(r)
 	count_rows = rows.size()
 	cols = rows[0].length()
+	_room_of.resize(cols * count_rows)
+	_room_of.fill(-1)
+	_room_colors.clear()
+	for i in rooms.size():
+		var rm: Dictionary = rooms[i]
+		_room_colors.append(Color(String(rm["color"])))
+		for yy in range(int(rm["y"]), int(rm["y"]) + int(rm["h"])):
+			for xx in range(int(rm["x"]), int(rm["x"]) + int(rm["w"])):
+				_room_of[yy * cols + xx] = i
+	_task_at.clear()
+	for t: Dictionary in tasks:
+		_task_at[Vector2i(int(t["x"]), int(t["y"]))] = t
 	decoys = data.get("decoys", [])
 	gates = data.get("gates", {})
 	npc_lines = data.get("npc_lines", [])
@@ -189,6 +226,10 @@ func reset() -> void:
 	keys_used.clear()
 	for it: Dictionary in items:
 		it["taken"] = false
+	tasks_done.clear()
+	input_blocked = false
+	_minimap_open = false
+	_minimap.visible = false
 	_pops.clear()
 	_shop_open = false
 	_pending_shop = false
@@ -211,6 +252,10 @@ func set_active(on: bool) -> void:
 	_cam.enabled = on
 	_mod.visible = on
 	_ui.visible = on
+	_inv_hud.visible = not station_mode
+	_task_hud.visible = station_mode
+	_mod.color = STATION_DARK if station_mode else DARKNESS
+	_hero_light.texture_scale = 2.1 if station_mode else 2.3
 	if on:
 		_cam.make_current()
 		_cam.position = hero.pos
@@ -221,6 +266,45 @@ func set_active(on: bool) -> void:
 
 func _sync_hud() -> void:
 	_inv_hud.update_state(inv, keys_owned)
+
+
+# --- station tasks --------------------------------------------------------------
+
+func room_index_at(x: int, y: int) -> int:
+	return _room_of[y * cols + x]
+
+
+func room_color(i: int) -> Color:
+	return _room_colors[i]
+
+
+func tasks_total() -> int:
+	return tasks.size()
+
+
+func all_tasks_done() -> bool:
+	return station_mode and tasks_done.size() >= tasks.size()
+
+
+func complete_task(task_id: String) -> void:
+	if task_id == "" or tasks_done.has(task_id):
+		return
+	tasks_done[task_id] = true
+	hero.mood = HeroActor.Mood.HAPPY
+	_mood_timer = 3.0
+	EventBus.task_completed.emit(task_id, tasks_done.size(), tasks.size())
+	queue_redraw()
+
+
+func _open_task(t: Vector2i) -> void:
+	var task: Dictionary = _task_at.get(t, {})
+	if task.is_empty():
+		return
+	if tasks_done.has(task["id"]):
+		message.emit("NARRATOR: That one is already done. Nice and tidy.")
+		return
+	EventBus.task_started.emit(task["id"])
+	task_requested.emit(task["id"], task["type"], int(task.get("param", 0)))
 
 
 # --- map queries --------------------------------------------------------------
@@ -436,7 +520,16 @@ func _read_dir() -> Vector2i:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not active or _shop_open or not (event is InputEventKey) or not event.pressed or event.echo:
+	if not active or _shop_open or input_blocked or not (event is InputEventKey) or not event.pressed or event.echo:
+		return
+	if station_mode and (event.keycode == KEY_M or event.keycode == KEY_TAB):
+		_minimap_open = not _minimap_open
+		_minimap.visible = _minimap_open
+		return
+	if _minimap_open:
+		if event.keycode == KEY_ESCAPE:
+			_minimap_open = false
+			_minimap.visible = false
 		return
 	if event.keycode in [KEY_Z, KEY_ENTER, KEY_SPACE, KEY_E]:
 		_interact(tile + facing)
@@ -444,7 +537,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _interact(t: Vector2i) -> void:
 	var ch := _at(t)
-	if ch == "N":
+	if ch == "K":
+		_open_task(t)
+	elif ch == "N":
 		if not npc_lines.is_empty():
 			message.emit(npc_lines[_npc_i % npc_lines.size()])
 			_npc_i += 1
@@ -486,7 +581,7 @@ func _process(delta: float) -> void:
 		_mood_timer -= delta
 		if _mood_timer <= 0.0:
 			hero.mood = HeroActor.Mood.THINK
-	if _shop_open:
+	if _shop_open or input_blocked or _minimap_open:
 		hero.update(delta, TILE * 1.15)
 		_update_torch()
 		queue_redraw()
@@ -521,6 +616,8 @@ func _try_step(d: Vector2i) -> void:
 		elif _bump_cd <= 0.0:
 			_bump_cd = 1.2
 			_bump_door(nxt)
+	elif ch == "K":
+		_open_task(nxt)
 	elif ch == "S":
 		_move_to(nxt, d)
 		_pending_shop = true
@@ -555,6 +652,9 @@ func _h(x: int, y: int) -> float:
 
 func _draw() -> void:
 	if rows.is_empty():
+		return
+	if station_mode:
+		_draw_station()
 		return
 	var vp := get_viewport_rect().size
 	var cc := _cam.get_screen_center_position() if _cam.is_current() else hero.pos
@@ -814,3 +914,158 @@ func _draw_lamp(r: Rect2, t: Vector2i) -> void:
 	draw_circle(c + Vector2(0, -TILE * 0.3), TILE * 0.12, Color("ffe08a") if on else Color("5a5470"))
 	if on:
 		draw_texture_rect(TEX_GLOW, Rect2(c + Vector2(-TILE, -TILE * 1.3), Vector2(TILE, TILE) * 2.0), false, Color(1, 0.9, 0.5, 0.35))
+
+
+# --- station drawing ------------------------------------------------------------------
+
+func _is_floorish(x: int, y: int) -> bool:
+	if x < 0 or y < 0 or x >= cols or y >= count_rows:
+		return false
+	return rows[y][x] != "#"
+
+
+func _draw_station() -> void:
+	var vp := get_viewport_rect().size
+	var cc := _cam.get_screen_center_position() if _cam.is_current() else hero.pos
+	var x0 := maxi(int((cc.x - vp.x * 0.5) / TILE) - 1, 0)
+	var y0 := maxi(int((cc.y - vp.y * 0.5) / TILE) - 2, 0)
+	var x1 := mini(int((cc.x + vp.x * 0.5) / TILE) + 2, cols - 1)
+	var y1 := mini(int((cc.y + vp.y * 0.5) / TILE) + 2, count_rows - 1)
+	var view := Rect2(Vector2(x0, y0) * TILE, Vector2(x1 - x0 + 1, y1 - y0 + 1) * TILE)
+	draw_rect(view, INK)
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			if rows[y][x] != "#":
+				_draw_floor(x, y)
+	draw_texture_rect(TEX_HALFTONE, view, true, Color(0.1, 0.1, 0.2, 0.07))
+	for i in rooms.size():
+		var rm: Dictionary = rooms[i]
+		var rr := Rect2(Vector2(rm["x"], rm["y"]) * TILE, Vector2(rm["w"], rm["h"]) * TILE)
+		if rr.intersects(view):
+			var label: String = String(rm["name"]).to_upper()
+			var sz := FONT_SHOUT.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 64)
+			draw_string(FONT_SHOUT, rr.get_center() + Vector2(-sz.x * 0.5, 22), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 64, Color(0.1, 0.08, 0.15, 0.13))
+	var hero_row := clampi(int(floor((hero.pos.y + TILE * 0.2) / TILE)), 0, count_rows - 1)
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			_draw_station_object(x, y)
+		if y == hero_row:
+			_draw_hero()
+	if hero_row < y0 or hero_row > y1:
+		_draw_hero()
+	_draw_pops()
+
+
+func _draw_floor(x: int, y: int) -> void:
+	var ri := _room_of[y * cols + x]
+	var col := Color("d7cdb8") if ri < 0 else _room_colors[ri]
+	var r := Rect2(Vector2(x, y) * TILE, Vector2(TILE, TILE))
+	draw_rect(r, col)
+	if (x + y) % 2 == 0:
+		draw_rect(r, Color(0, 0, 0, 0.045))
+	draw_rect(Rect2(r.position, Vector2(TILE, 2)), Color(0, 0, 0, 0.08))
+	draw_rect(Rect2(r.position, Vector2(2, TILE)), Color(0, 0, 0, 0.08))
+	if not _is_floorish(x, y - 1) or rows[y - 1][x] == "#":
+		draw_rect(Rect2(r.position, Vector2(TILE, 12)), Color(0, 0, 0, 0.16)) # shadow under the wall
+
+
+func _draw_station_object(x: int, y: int) -> void:
+	var ch := rows[y][x]
+	var r := Rect2(Vector2(x, y) * TILE, Vector2(TILE, TILE))
+	match ch:
+		"#":
+			_draw_station_wall(r, x, y)
+		"c":
+			_draw_crate(r)
+		"t":
+			_draw_table(r)
+		"p":
+			_draw_plant(r, x, y)
+		"b":
+			_draw_shelf(r, x, y)
+		"K":
+			_draw_console(r, x, y)
+
+
+func _draw_station_wall(r: Rect2, x: int, y: int) -> void:
+	draw_rect(r, INK)
+	if _is_floorish(x, y + 1):
+		var face := Rect2(r.position + Vector2(0, TILE * 0.2), Vector2(TILE, TILE * 0.8))
+		draw_rect(face, STATION_WALL)
+		for k in range(1, 3):
+			draw_line(face.position + Vector2(0, face.size.y * k / 3.0), face.position + Vector2(TILE, face.size.y * k / 3.0), Color(0, 0, 0, 0.35), 2.0)
+		for k in 4:
+			var off := TILE * 0.25 * k + (TILE * 0.125 if (k + y) % 2 == 0 else 0.0)
+			draw_line(face.position + Vector2(off, 0), face.position + Vector2(off, face.size.y / 3.0), Color(0, 0, 0, 0.3), 2.0)
+		draw_line(face.position, face.position + Vector2(TILE, 0), Color("5b5580"), 3.0)
+		draw_line(face.position + Vector2(0, face.size.y), face.position + Vector2(TILE, face.size.y), INK, 4.0)
+
+
+func _draw_crate(r: Rect2) -> void:
+	var b := r.grow(-TILE * 0.1)
+	draw_rect(Rect2(b.position + Vector2(3, 4), b.size), Color(0, 0, 0, 0.3))
+	draw_rect(b, Color("c08457"))
+	draw_rect(b, INK, false, 4.0)
+	draw_line(b.position, b.end, INK, 3.0)
+	draw_line(Vector2(b.end.x, b.position.y), Vector2(b.position.x, b.end.y), INK, 3.0)
+
+
+func _draw_table(r: Rect2) -> void:
+	var b := r.grow(-TILE * 0.04)
+	draw_rect(Rect2(b.position + Vector2(4, 5), b.size), Color(0, 0, 0, 0.3))
+	draw_rect(b, Color("a98467"))
+	draw_rect(b, INK, false, 4.0)
+	draw_rect(b.grow(-9), Color("c9a27e"))
+	draw_circle(b.get_center() + Vector2(-8, -6), 7.0, Color("f1e9d2"))
+	draw_circle(b.get_center() + Vector2(10, 8), 5.0, Color("e63946"))
+
+
+func _draw_plant(r: Rect2, x: int, y: int) -> void:
+	var c := r.get_center() + Vector2(0, TILE * 0.18)
+	draw_colored_polygon(PackedVector2Array([c + Vector2(-TILE * 0.2, 0), c + Vector2(TILE * 0.2, 0), c + Vector2(TILE * 0.13, TILE * 0.28), c + Vector2(-TILE * 0.13, TILE * 0.28)]), INK)
+	draw_colored_polygon(PackedVector2Array([c + Vector2(-TILE * 0.16, 0.0), c + Vector2(TILE * 0.16, 0), c + Vector2(TILE * 0.1, TILE * 0.23), c + Vector2(-TILE * 0.1, TILE * 0.23)]), Color("e07a5f"))
+	for k in 5:
+		var a := -PI / 2.0 + (k - 2) * 0.55 + sin(_time * 1.2 + x + k) * 0.05
+		var tip := c + Vector2(cos(a), sin(a)) * TILE * 0.42
+		draw_line(c, tip, INK, 8.0)
+		draw_line(c, tip, Color("3d9a45"), 4.5)
+
+
+func _draw_shelf(r: Rect2, x: int, y: int) -> void:
+	var b := Rect2(r.position + Vector2(TILE * 0.04, TILE * 0.06), Vector2(TILE * 0.92, TILE * 0.88))
+	draw_rect(Rect2(b.position + Vector2(3, 4), b.size), Color(0, 0, 0, 0.3))
+	draw_rect(b, Color("8d5524"))
+	draw_rect(b, INK, false, 4.0)
+	var book_cols := [Color("e63946"), Color("3a86ff"), Color("ffd23f"), Color("2dc653"), Color("9b5de5")]
+	for row in 2:
+		var by := b.position.y + 8.0 + row * (b.size.y * 0.46)
+		for k in 6:
+			var h := b.size.y * (0.28 + 0.1 * fposmod(sin(x * 3.1 + k * 1.7 + row), 1.0))
+			draw_rect(Rect2(Vector2(b.position.x + 7 + k * (b.size.x - 14) / 6.0, by + b.size.y * 0.4 - h), Vector2((b.size.x - 14) / 6.0 - 2, h)), book_cols[(k + row + x) % 5])
+		draw_line(Vector2(b.position.x, by + b.size.y * 0.4), Vector2(b.end.x, by + b.size.y * 0.4), INK, 3.0)
+
+
+func _draw_console(r: Rect2, x: int, y: int) -> void:
+	var task: Dictionary = _task_at.get(Vector2i(x, y), {})
+	var is_done := task.is_empty() or tasks_done.has(task.get("id", ""))
+	var body := Rect2(r.position + Vector2(TILE * 0.06, TILE * 0.18), Vector2(TILE * 0.88, TILE * 0.8))
+	draw_rect(Rect2(body.position + Vector2(3, 4), body.size), Color(0, 0, 0, 0.3))
+	draw_rect(body, Color("4a4e69"))
+	draw_rect(body, INK, false, 4.0)
+	var screen := Rect2(body.position + Vector2(8, 8), Vector2(body.size.x - 16, body.size.y * 0.52))
+	var pulse := 0.65 + 0.35 * sin(_time * 4.0 + x)
+	draw_rect(screen, INK)
+	var scol := Color("2dc653") if is_done else Color("ffd23f")
+	draw_rect(screen.grow(-4), Color(scol.r * (0.6 if is_done else pulse), scol.g * (0.6 if is_done else pulse), scol.b * 0.35, 1.0))
+	if is_done:
+		draw_line(screen.get_center() + Vector2(-12, 0), screen.get_center() + Vector2(-3, 9), INK, 5.0)
+		draw_line(screen.get_center() + Vector2(-3, 9), screen.get_center() + Vector2(14, -9), INK, 5.0)
+	else:
+		draw_string(FONT_SHOUT, screen.get_center() + Vector2(-6, 10), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, INK)
+	for k in 3:
+		draw_circle(body.position + Vector2(14 + k * 16, body.size.y - 12), 4.0, [Color("e63946"), Color("ffd23f"), Color("2dc653")][k])
+	if not is_done and hero.pos.distance_to(r.get_center()) < TILE * 2.6:
+		var f := 22
+		var bob := sin(_time * 6.0) * 4.0
+		draw_string_outline(FONT_SHOUT, r.get_center() + Vector2(-34, -TILE * 0.55 + bob), "PRESS Z", HORIZONTAL_ALIGNMENT_LEFT, -1, f, 8, INK)
+		draw_string(FONT_SHOUT, r.get_center() + Vector2(-34, -TILE * 0.55 + bob), "PRESS Z", HORIZONTAL_ALIGNMENT_LEFT, -1, f, GOLD)

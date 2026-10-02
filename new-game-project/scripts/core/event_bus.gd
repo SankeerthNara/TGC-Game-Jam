@@ -29,3 +29,7 @@ signal level_restarted
 signal item_collected(type: String) ## "ink", "gear" or "shard"
 signal trade_made(key_id: String)
 signal door_unlocked(puzzle_index: int)
+
+## --- station tasks ---
+signal task_started(task_id: String)
+signal task_completed(task_id: String, done: int, total: int)

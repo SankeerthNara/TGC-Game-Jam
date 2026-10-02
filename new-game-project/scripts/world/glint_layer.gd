@@ -30,6 +30,9 @@ func _draw_glints() -> void:
 	var cc := cam.get_screen_center_position() if cam != null else world.hero.pos
 	var origin := cc - vp * 0.5
 	var t := world._time
+	if world.station_mode:
+		_draw_beacons(vp, origin, t)
+		return
 	for it: Dictionary in world.items:
 		if it["taken"]:
 			continue
@@ -55,3 +58,20 @@ func _draw_glints() -> void:
 		var blink := 0.5 + 0.5 * sin(t * 3.0 * f["s"] + f["p"] * 3.0)
 		_drawer.draw_circle(sp2, 6.0 * blink + 3.0, Color(1.0, 0.95, 0.5, 0.18 * blink))
 		_drawer.draw_circle(sp2, 2.0, Color(1.0, 0.98, 0.7, 0.35 + 0.5 * blink))
+
+
+## Faint pulsing marks over unfinished task consoles, so the dark map can still be navigated.
+func _draw_beacons(vp: Vector2, origin: Vector2, t: float) -> void:
+	for task: Dictionary in world.tasks:
+		if world.tasks_done.has(task["id"]):
+			continue
+		var wp := Vector2(float(task["x"]) + 0.5, float(task["y"]) + 0.5) * World.TILE
+		var sp := wp - origin
+		if sp.x < -20 or sp.y < -20 or sp.x > vp.x + 20 or sp.y > vp.y + 20:
+			continue
+		var d := wp.distance_to(world.hero.pos)
+		if d < World.TILE * 5.0:
+			continue
+		var pulse := 0.5 + 0.5 * sin(t * 3.0 + float(task["x"]))
+		_drawer.draw_circle(sp, 9.0 + 5.0 * pulse, Color(1.0, 0.85, 0.3, 0.12 + 0.1 * pulse))
+		_drawer.draw_circle(sp, 3.5, Color(1.0, 0.9, 0.4, 0.6 + 0.3 * pulse))

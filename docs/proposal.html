@@ -153,32 +153,32 @@
     </table>
 
     <h2>1. Pitch & Core Concept</h2>
-    <p>Gutter Town has gone dark. You play a small caped comic hero carrying a torch. Walk the seamless town with the arrow keys, find <b>hidden items</b> that glint in the dark, and trade them at the shop for <b>keys</b>. Each key opens a <b>page door</b> into a light puzzle: a comic page of swappable panels where you <b>drag panels</b> and <b>flip mirrors</b> to steer a beam onto the stars. Solving a page lights its district. An unreliable narrator rewrites the rules, and cheap lookalike keys can open the <b>wrong door</b>, dropping you into a page from some other comic.</p>
+    <p>Somebody has sabotaged the lights of an old comic studio. You are a small caped comic hero with a torch in a <b>huge, pitch-dark station</b> of 20 rooms: only the area around you is lit. Explore, find the task consoles, and finish <b>15 interactive tasks</b> (rewire panels, fix fuse boxes, repeat lantern codes, align a telescope, wipe ink spills and more) to fill the <b>progress bar</b>. Some tasks are light puzzles on comic pages where you drag panels and flip mirrors to steer a beam. Who cut the lights, and why? The narrator has a few twists planned.</p>
 
     <h2>2. Integration of the Three Themes</h2>
     <table>
       <tr><th style="width:14%">Theme</th><th>How It Drives Gameplay & Narrative</th></tr>
       <tr>
         <td><b>Comic</b></td>
-        <td>The town is a comic world (ink outlines, halftone paper, narrator captions, onomatopoeia like WHOOSH and ZAP) and every puzzle is a comic page whose panels are movable tiles; gutters act as light refractors.</td>
+        <td>The station is a comic-book studio (ink outlines, halftone paper, narrator captions, onomatopoeia) and the light puzzles are comic pages whose panels are movable tiles; gutters act as light refractors.</td>
       </tr>
       <tr>
         <td><b>Light</b></td>
-        <td>The town is dark: your torch, street lamps and braziers push the dark back, and solving a page switches its district's lights on. The puzzles are all about steering a beam off mirrors onto star targets.</td>
+        <td>The whole map is dark by design: only the area around your torch is visible, so light is how you explore. Light is also the puzzle: steering a beam off mirrors onto star targets.</td>
       </tr>
       <tr>
         <td><b>Twist</b></td>
-        <td>(1) <i>Goal Twist (Page 3):</i> the hero you were lighting is the villain; targets swap roles and you re-solve. (2) <i>Rule Twists (Pages 4–6):</i> mirrors lie, gutters bend light 90°. (3) <i>Wrong Key, Wrong Door:</i> lookalike keys open decoy pages from other comics until the narrator admits the mistake.</td>
+        <td>The light sabotage is the story twist: the saboteur is among the characters and is revealed late. In the puzzle pages the narrator also twists the rules: the hero you light turns out to be the villain, mirrors lie, and gutters bend light 90°. (More twists are planned.)</td>
       </tr>
     </table>
 
     <h2>3. Core Mechanics</h2>
     <ul>
-      <li><b>Explore & Collect:</b> Pokemon-style walking in one seamless map. 37 hidden items (ink drops, gears, star shards) glint in the dark.</li>
-      <li><b>Trade for Keys:</b> At the shop, items buy keys. Each key has a shape that must match a door's keyhole; cheap lookalikes open decoy pages.</li>
-      <li><b>Panel Drag-Swap & Mirror Toggle:</b> drag panels to swap them (their contents move too), click mirrors to flip them. Locked panels add constraints.</li>
+      <li><b>Explore the dark:</b> Pokemon-style grid walking in one seamless 108x72 tile map. Only the area around the torch is lit. Press <code>M</code> for the station map.</li>
+      <li><b>15 interactive tasks, one progress bar:</b> wires, fuse box, lantern memory code, torch charge timing, telescope alignment, ink-spill reflex game, card swipe, and light-puzzle pages.</li>
+      <li><b>Light puzzle pages:</b> drag panels to swap them (their contents move too), click mirrors to flip them, steer the beam onto every goal. Unlimited undo.</li>
       <li><b>Beam Tracing:</b> an instant headless raycast lights targets and flags hazards after every move.</li>
-      <li><b>Frictionless Undo / Reset:</b> <code>[Z]</code> undo, <code>[R]</code> reset, <code>[M]</code> back to the map; no softlocks.</li>
+      <li><b>Frictionless:</b> <code>[Z]</code> interact/undo, <code>[R]</code> reset, <code>[M]</code> map, <code>Esc</code> leave a task; no softlocks.</li>
     </ul>
 
     <h2>4. The Narrator's Rule Twists</h2>
@@ -203,35 +203,35 @@
     <h2>5. Content Plan & Gameplay Loop (15 Minutes)</h2>
     <table>
       <tr><th style="width:6%">#</th><th style="width:18%">Level Name</th><th>Core Mechanic / Rule Introduced</th><th style="width:14%">Target Time</th></tr>
-      <tr><td>1</td><td>Page One (plaza)</td><td>Panel swapping across gutters to carry a straight beam to the hero's star.</td><td>1.5 min</td></tr>
+      <tr><td>1</td><td>Page One (Library)</td><td>Panel swapping across gutters to carry a straight beam to the hero's star.</td><td>1.5 min</td></tr>
       <tr><td>2</td><td>Looking Glass</td><td>Combining panel swapping with mirror angle toggles and wall obstacles.</td><td>2.5 min</td></tr>
       <tr><td>3</td><td>The Twist</td><td><b>Goal Flip Twist:</b> Solves normally, narrator flips roles, re-solve page for villain.</td><td>2.5 min</td></tr>
       <tr><td>4</td><td>Liar, Liar</td><td><b>Lying Mirrors:</b> Slashes reflect counter-intuitively; mental inversion puzzle.</td><td>2.5 min</td></tr>
       <tr><td>5</td><td>Gutter Bend</td><td><b>Gutter Bend:</b> Beams turn 90° at boundaries; locked panels limit swap freedom.</td><td>3.0 min</td></tr>
       <tr><td>6</td><td>The Last Page</td><td><b>Grand Finale:</b> Combines lying mirrors, gutter bends, locked tiles, and final flip.</td><td>3.0 min</td></tr>
     </table>
-    <p><b>Town loop:</b> explore &rarr; find items &rarr; trade for the right key &rarr; open a door &rarr; solve the page &rarr; district lights up &rarr; narrator reacts. Four districts, four ink-gates, two wrong-key decoy pages.</p>
+    <p><b>Station loop:</b> read the task list &rarr; walk through the dark to the next console &rarr; play its mini-game &rarr; progress bar fills &rarr; narrator reacts. 20 rooms, 15 tasks (4 are light puzzle pages), then the ending.</p>
 
     <h2>6. Scope Boundaries</h2>
     <div class="box">
-      <b>In Scope:</b> walkable lit town with torch, hidden items, trade shop, keys and locked doors, wrong-key decoy pages, 6 tuned puzzle pages, 3 rule mutations, goal flip twist, narrator caption UI, menus, end screen, comic sound effects, music, web export.<br>
-      <b>Out of Scope (Strictly Cut):</b> Level editor, save slots, mobile touch, gamepads, side quests, more than 6 real pages.
+      <b>In Scope:</b> huge dark station with torch lighting, 15 mini-game tasks with a progress bar, station map, 6 tuned light-puzzle pages, 3 rule mutations, goal flip twist, saboteur story twist, narrator caption UI, menus, end screen, comic sound effects, music, web export.<br>
+      <b>Out of Scope (Strictly Cut):</b> Level editor, save slots, mobile touch, gamepads, multiplayer, more than 20 rooms.
     </div>
 
     <h2>7. Technical Architecture & Web Feasibility</h2>
     <ul>
       <li><b>Engine & Renderer:</b> Godot 4.7 with GL Compatibility renderer; single-threaded Web export with zero native extensions or GDExtensions.</li>
-      <li><b>Model-View Decoupling:</b> pure GDScript puzzle model (<code>PageModel</code>, <code>BeamSolver</code>) separate from rendering; the town (<code>World</code>) is data-driven from a JSON map. Tested headless.</li>
+      <li><b>Model-View Decoupling:</b> pure GDScript puzzle model (<code>PageModel</code>, <code>BeamSolver</code>) separate from rendering; the station (<code>World</code>) and its 15 tasks are data-driven from a JSON map; each mini-game is its own class. Tested headless.</li>
       <li><b>Automated Validation:</b> Built-in BFS/DFS solver (<code>level_check.gd</code>) verifies every level is 100% solvable within 2–8 optimal moves.</li>
-      <li><b>Web Export:</b> game package under 1 MB PCK (build about 38 MB uncompressed, ~8 MB gzip). 2D lights and darkness verified in a browser build with 0 console errors.</li>
+      <li><b>Web Export:</b> game package under 1 MB PCK (build about 38 MB uncompressed, ~8 MB gzip). 2D lights and darkness verified in a browser build.</li>
     </ul>
 
     <h2>8. 100-Hour Development Milestones</h2>
     <table>
       <tr><th style="width:18%">Hours</th><th>Phase & Deliverables</th><th style="width:16%">Current Status</th></tr>
       <tr><td><b>0 – 12</b></td><td>Concept lock, core engine prototype, level format, art research, proposal submission.</td><td><b>COMPLETE</b></td></tr>
-      <tr><td><b>12 – 30</b></td><td>Vertical slice: town, shop and keys, comic UI (HUD, caption, pause), first art pass, CC0 audio, pages 1–6 playable.</td><td><b>IN PROGRESS</b></td></tr>
-      <tr><td><b>30 – 60</b></td><td>Town polish, more props and lights, sound and music integration, difficulty tuning from playtests.</td><td>Planned</td></tr>
+      <tr><td><b>12 – 30</b></td><td>Vertical slice: dark station, tasks and progress bar, comic UI, first art pass, CC0 audio, pages 1–6 playable.</td><td><b>IN PROGRESS</b></td></tr>
+      <tr><td><b>30 – 60</b></td><td>Station polish, more tasks and room props, saboteur twist, sound and music integration, difficulty tuning from playtests.</td><td>Planned</td></tr>
       <tr><td><b>60 – 85</b></td><td>Balancing, narrative comedic timing, web playtests, UI juice (panel shake, onomatopoeia).</td><td>Planned</td></tr>
       <tr><td><b>85 – 100</b></td><td><b>Feature freeze at Hour 85.</b> Web export audit, itch.io upload, README and CREDITS audit.</td><td>Planned</td></tr>
     </table>

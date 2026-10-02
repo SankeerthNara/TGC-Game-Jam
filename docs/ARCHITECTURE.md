@@ -12,7 +12,12 @@ Godot 4.7, GDScript, Compatibility renderer. Godot project root is `new-game-pro
 | Data | `data/levels/*.json`, `data/levels/index.json` | Level files. Add a file name to `index.json` to add a level. |
 | Tools | `scripts/tools/level_solver.gd`, `level_check.gd`, `level_gen.gd` | Headless validators and generator. |
 
-## The town (overworld)
+## The station (default map) and tasks
+`data/world/station.json` (built by a generator script) is the default map: `rows`, `rooms` (name, rect, floor colour), `tasks` (id, tile, type, name, room, param), `intro`. Map characters: `#` wall, `.` floor, `K` task console, `c` crate, `t` table, `p` plant, `b` bookshelf, `@` start.
+Task mini-games live in `scripts/tasks/`: `task_base.gd` (overlay base class: panel, title, success burst, Esc to leave) and one script per type (`wires_task`, `switches_task`, `simon_task`, `charge_task`, `dial_task`, `blots_task`, `swipe_task`) registered in `task_registry.gd`. A `mirror` task launches light-puzzle page level `param`. To add a task: write a `TaskBase` subclass, register it, add a `K` tile and a `tasks` entry.
+`TaskHUD` (progress bar and checklist) and `MiniMap` (M or Tab) are drawn by the World UI layer. Events: `task_started(id)`, `task_completed(id, done, total)`.
+
+## The town (older overworld, still in the code)
 `scripts/world/world.gd` (class `World`) is the seamless top-down town, driven by `data/world/town.json`.
 
 | File | Job |
