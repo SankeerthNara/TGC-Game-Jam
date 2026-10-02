@@ -16,4 +16,4 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | A6 | Antigravity | Web export and Playwright playtest every few hours; report errors and size | todo | C3 | |
 | G1 | ChatGPT | README, CREDITS, AI_USAGE skeletons | done | - | |
 | G2 | ChatGPT | Unit tests for BeamSolver and PageModel (reflection tables, bend rule, swap, status) in `tests/` | done | C1 | Headless script runnable like level_check |
-| G3 | ChatGPT | Per-level optimal move counts from `level_check.gd` into `data/balance/` for a hint system | todo | C1 | |
+| G3 | ChatGPT | Per-level optimal move counts from `level_check.gd` into `data/balance/` for a hint system | doing | C1 | |
