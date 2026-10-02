@@ -70,15 +70,12 @@ func _draw() -> void:
 	for t: Dictionary in world.tasks:
 		var is_done := world.tasks_done.has(t["id"])
 		var c := Color("6c757d") if is_done else INK
-		if t.has("triggers") and not is_done:
-			c = Color("c1121f")
 		draw_rect(Rect2(Vector2(lbox.position.x + 12, y - 13), Vector2(14, 14)), Color(1, 1, 1, 0.8))
 		draw_rect(Rect2(Vector2(lbox.position.x + 12, y - 13), Vector2(14, 14)), INK, false, 2.0)
 		if is_done:
 			draw_line(Vector2(lbox.position.x + 14, y - 6), Vector2(lbox.position.x + 18, y - 1), Color("2dc653"), 3.0)
 			draw_line(Vector2(lbox.position.x + 18, y - 1), Vector2(lbox.position.x + 26, y - 14), Color("2dc653"), 3.0)
-		var tag := "  (RISKY)" if t.has("triggers") and not is_done else ""
-		draw_string(FONT_BODY, Vector2(lbox.position.x + 34, y), "%s: %s%s" % [t["room"], t["name"], tag], HORIZONTAL_ALIGNMENT_LEFT, 310, 15, c)
+		draw_string(FONT_BODY, Vector2(lbox.position.x + 34, y), "%s: %s" % [t["room"], t["name"]], HORIZONTAL_ALIGNMENT_LEFT, 310, 15, c)
 		y += lh
 
 
@@ -122,7 +119,7 @@ func _draw_health_and_sabotage() -> void:
 	draw_polyline(PackedVector2Array([tp + Vector2(0, -22), tp + Vector2(-24, 20), tp + Vector2(24, 20), tp + Vector2(0, -22)]), INK, 3.0)
 	draw_line(tp + Vector2(0, -8), tp + Vector2(0, 6), INK, 4.0)
 	draw_circle(tp + Vector2(0, 13), 2.5, INK)
-	draw_string(FONT_SHOUT, box.position + Vector2(76, 32), "%s!" % def["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("fff3d1"))
+	draw_string(FONT_SHOUT, box.position + Vector2(76, 32), "%s%s!" % ["BIG SABOTAGE: " if def.get("big", false) else "", def["name"]], HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("fff3d1"))
 	draw_string(FONT_BODY, box.position + Vector2(76, 60), "Fix: %s (%s)" % [fix.get("name", "?"), fix.get("room", "?")], HORIZONTAL_ALIGNMENT_LEFT, 360, 18, Color("fff3d1"))
 	var secs := int(ceil(left))
 	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 120, 52), "%d:%02d" % [secs / 60, secs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 48, Color("fff3d1") if left > 10.0 else Color("ffe066"))
@@ -148,6 +145,7 @@ func _draw_timers() -> void:
 	draw_rect(box, Color("18151d"))
 	draw_rect(box, Color("ffd23f"), false, 3.0)
 	draw_string(FONT_SHOUT, box.position + Vector2(12, 24), "LEVEL %d/%d" % [world.level_index + 1, world.level_count], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("ffd23f"))
-	draw_string(FONT_SHOUT, box.position + Vector2(12, 48), "THIS LEVEL  %s" % _fmt(world.level_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("fff3d1"))
-	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 12 - 150, 48), "TOTAL  %s" % _fmt(world.total_time), HORIZONTAL_ALIGNMENT_RIGHT, 150, 22, Color("fff3d1"))
+	var over := world.level_par > 0 and world.level_time > world.level_par
+	draw_string(FONT_SHOUT, box.position + Vector2(12, 48), "THIS LEVEL  %s / PAR %s" % [_fmt(world.level_time), _fmt(world.level_par)], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("ff8b8b") if over else Color("fff3d1"))
+	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 12 - 120, 48), "TOTAL %s" % _fmt(world.total_time), HORIZONTAL_ALIGNMENT_RIGHT, 120, 20, Color("fff3d1"))
 	draw_string(FONT_BODY, box.position + Vector2(box.size.x - 12 - 190, 22), world.level_title, HORIZONTAL_ALIGNMENT_RIGHT, 190, 15, Color("ffffff"))

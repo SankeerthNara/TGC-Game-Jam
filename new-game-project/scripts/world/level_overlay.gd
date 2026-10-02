@@ -15,6 +15,7 @@ var level_time := 0.0
 var total_time := 0.0
 var splits: Array = []
 var next_title := ""
+var par := 0
 var _t := 0.0
 
 
@@ -68,6 +69,10 @@ func _draw() -> void:
 	else:
 		draw_string(FONT_BODY, Vector2(panel.position.x + 40, y), "Level time", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, INK)
 		draw_string(FONT_SHOUT, Vector2(panel.end.x - 240, y), _fmt(level_time), HORIZONTAL_ALIGNMENT_RIGHT, 190, 34, INK)
+		y += 42.0
+		var under := par > 0 and level_time <= par
+		draw_string(FONT_BODY, Vector2(panel.position.x + 40, y), "Par time", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, INK)
+		draw_string(FONT_SHOUT, Vector2(panel.end.x - 240, y), "%s  %s" % [_fmt(par), "UNDER PAR!" if under else "over par"], HORIZONTAL_ALIGNMENT_RIGHT, 190, 28, Color("2d6a4f") if under else Color("c1121f"))
 		y += 42.0
 		draw_string(FONT_BODY, Vector2(panel.position.x + 40, y), "Total time", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, INK)
 		draw_string(FONT_SHOUT, Vector2(panel.end.x - 240, y), _fmt(total_time), HORIZONTAL_ALIGNMENT_RIGHT, 190, 34, INK)

@@ -16,15 +16,21 @@ const ROOM_POOL := [
 	["Print Shop", "e0e7ff"], ["Studio", "ffe8d6"], ["Lecture Hall", "e2ece9"], ["Dorm", "f1e4f3"],
 ]
 
+## par = the target time in seconds (about 2, 3, 4 and 5 minutes). risky = how many hidden sabotage
+## triggers. disrupt = a hidden task that undoes one of your finished tasks. big = long, harsh sabotage.
 const LEVELS := [
-	{"title": "THE STUDIO", "intro": "Level 1: THE STUDIO. Somebody cut the lights! Finish every task to fill the progress bar. Arrow keys move (hold two for diagonals), Z interacts, M opens the map.",
-	 "tasks": ["mirror:0", "wires", "bubbles", "blots", "dial"], "risky": 1},
-	{"title": "THE ARCHIVE WING", "intro": "Level 2: THE ARCHIVE WING. More rooms, more tasks, and more things going wrong. Watch for red RISKY tasks!",
-	 "tasks": ["mirror:1", "sort", "switches", "panels", "swipe", "debug"], "risky": 2},
-	{"title": "THE MACHINE FLOOR", "intro": "Level 3: THE MACHINE FLOOR. The sabotage timers are getting shorter. Plan your route!",
-	 "tasks": ["mirror:3", "logic", "simon", "sfx", "charge", "mirror:4", "dial"], "risky": 3},
-	{"title": "THE FINAL PAGE", "intro": "Level 4: THE FINAL PAGE. Everything at once. Whoever cut the lights is close...",
-	 "tasks": ["mirror:6", "mirror:7", "debug", "logic", "panels", "sort", "charge", "wires"], "risky": 4},
+	{"title": "THE STUDIO", "par": 120, "risky": 1, "disrupt": 0, "big": false,
+	 "intro": "Level 1: THE STUDIO. Somebody cut the lights! Finish every task to fill the progress bar. Arrow keys move (hold two for diagonals), Z interacts, M opens the map.",
+	 "tasks": ["mirror:0", "wires", "bubbles", "dial"]},
+	{"title": "THE ARCHIVE WING", "par": 180, "risky": 2, "disrupt": 0, "big": false,
+	 "intro": "Level 2: THE ARCHIVE WING. More rooms, more tasks, and more things going wrong. You cannot tell which tasks are safe.",
+	 "tasks": ["mirror:1", "sort", "switches", "blots", "swipe", "panels"]},
+	{"title": "THE MACHINE FLOOR", "par": 240, "risky": 2, "disrupt": 0, "big": true,
+	 "intro": "Level 3: THE MACHINE FLOOR. The sabotage is bigger now and the timers are shorter. Plan your route!",
+	 "tasks": ["mirror:3", "logic", "simon", "sfx", "charge", "debug", "wires", "dial"]},
+	{"title": "THE FINAL PAGE", "par": 300, "risky": 2, "disrupt": 1, "big": true,
+	 "intro": "Level 4: THE FINAL PAGE. Everything at once. Big sabotage, and something may undo your finished work. Whoever cut the lights is close...",
+	 "tasks": ["mirror:4", "mirror:6", "mirror:7", "debug", "logic", "panels", "sort", "charge", "simon", "sfx"]},
 ]
 
 const TASK_NAMES := {
@@ -210,9 +216,9 @@ static func _try_generate(level: int, seed_value: int) -> Dictionary:
 		g[spot.y][spot.x] = "F"
 		var fid := "f%02d" % (i + 1)
 		var sid := "s%02d" % (i + 1)
-		fixes.append({"id": fid, "x": spot.x, "y": spot.y, "type": sab["fix_type"], "name": sab["fix_name"], "room": rooms[fix_room]["name"], "param": 0, "sabotage": sid})
+		fixes.append({"id": fid, "x": spot.x, "y": spot.y, "type": sab["fix_type"], "name": sab["fix_name"], "room": rooms[fix_room]["name"], "param": 0, "sabotage": sid, "difficulty_bonus": 1 if def["big"] else 0})
 		t["triggers"] = sid
-		sabotages.append({"id": sid, "name": sab["name"], "seconds": 60, "damage": 1, "fix": fid, "line": sab["line"]})
+		sabotages.append({"id": sid, "name": sab["name"], "seconds": 60, "damage": 2 if def["big"] else 1, "big": def["big"], "fix": fid, "line": sab["line"]})
 	# --- furniture along walls ---
 	_decorate(g, rooms, is_corridor, used, rng)
 	# --- spawn in the first room ---
@@ -239,7 +245,8 @@ static func _try_generate(level: int, seed_value: int) -> Dictionary:
 		var dist := _path_len(g, Vector2i(int(trig["x"]), int(trig["y"]) + 1), Vector2i(int(fix["x"]), int(fix["y"]) + 1), width, height)
 		if dist < 0:
 			return _fail("path")
-		sab["seconds"] = maxi(30, int(round(float(dist) / WALK_TILES_PER_SEC * (2.7 - 0.3 * level) + 15.0)))
+		var secs := maxi(30, int(round(float(dist) / WALK_TILES_PER_SEC * (2.7 - 0.3 * level) + 15.0)))
+		sab["seconds"] = maxi(28, int(secs * 0.85)) if sab["big"] else secs
 	# --- output in the same shape as a station data file ---
 	var rows: Array = []
 	for y in height:
@@ -253,7 +260,7 @@ static func _try_generate(level: int, seed_value: int) -> Dictionary:
 		t.erase("room_index")
 	return {
 		"mode": "station", "rows": rows, "rooms": out_rooms, "tasks": tasks, "fixes": fixes,
-		"sabotages": sabotages, "max_health": 3, "intro": "NARRATOR: " + String(def["intro"]),
+		"sabotages": sabotages, "max_health": 3, "intro": "NARRATOR: " + String(def["intro"]), "par": def["par"],
 		"level": level, "title": def["title"],
 	}
 
@@ -273,6 +280,10 @@ static func _plan_tasks(def: Dictionary, level: int, rng: RandomNumberGenerator)
 	_shuffle(candidates, rng)
 	for i in mini(int(def["risky"]), candidates.size()):
 		candidates[i]["risky"] = true
+	var extra := int(def["risky"])
+	for i in int(def["disrupt"]):
+		if extra + i < candidates.size():
+			candidates[extra + i]["disrupts"] = true
 	_shuffle(out, rng)
 	return {"tasks": out}
 

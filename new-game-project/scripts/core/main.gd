@@ -41,6 +41,9 @@ func _ready() -> void:
 		view.shake(14.0)
 		EventBus.caption_changed.emit("NARRATOR: OUCH! %s hit you. %d heart%s left." % [String(def["name"]).capitalize(), left, "" if left == 1 else "s"]))
 	world.player_died.connect(_on_player_died)
+	world.task_disrupted.connect(func(task_name: String) -> void:
+		view.shake(10.0)
+		EventBus.caption_changed.emit("NARRATOR: Something tampered with \"%s\"! That task is undone. Do it again." % task_name))
 	_task_layer = CanvasLayer.new()
 	_task_layer.layer = 18
 	add_child(_task_layer)
@@ -184,7 +187,7 @@ func _on_task_requested(task_id: String, type: String, param: int) -> void:
 	if game == null:
 		active_task = ""
 		return
-	game.difficulty = level_idx
+	game.difficulty = clampi(level_idx + world.fix_bonus(task_id), 0, 3)
 	_set_state("task")
 	_task_layer.add_child(game)
 	game.finished.connect(func(success: bool) -> void: _on_task_finished(game, success))
@@ -212,7 +215,8 @@ func _back_from_task(success: bool) -> void:
 
 func _on_sabotage_started(def: Dictionary) -> void:
 	var fix := world.active_fix()
-	EventBus.caption_changed.emit("NARRATOR: SABOTAGE! %s! %s Fix it in the %s within %d seconds or lose a heart!" % [def["name"], def["line"], fix.get("room", "station"), int(def["seconds"])])
+	var cost := "%d hearts" % int(def.get("damage", 1)) if int(def.get("damage", 1)) > 1 else "a heart"
+	EventBus.caption_changed.emit("NARRATOR: %s%s! %s Fix it in the %s within %d seconds or lose %s!" % ["BIG SABOTAGE! " if def.get("big", false) else "SABOTAGE! ", def["name"], def["line"], fix.get("room", "station"), int(def["seconds"]), cost])
 
 
 func _on_player_died() -> void:
@@ -240,6 +244,7 @@ func _level_complete() -> void:
 	ov.level_time = level_time
 	ov.total_time = total_time
 	ov.splits = level_splits.duplicate()
+	ov.par = world.level_par
 	ov.final = last
 	if not last:
 		ov.next_title = "Level %d" % (level_idx + 2)

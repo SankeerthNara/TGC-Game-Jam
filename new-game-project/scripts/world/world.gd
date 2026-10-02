@@ -12,6 +12,7 @@ signal task_requested(task_id: String, type: String, param: int)
 signal sabotage_started(def: Dictionary)
 signal sabotage_resolved(def: Dictionary)
 signal sabotage_failed(def: Dictionary, health_left: int)
+signal task_disrupted(task_name: String)
 signal player_died
 
 const TEX_PAPER := preload("res://assets/art/paper_texture.png")
@@ -63,6 +64,8 @@ var level_count := 1
 var level_title := ""
 var level_time := 0.0
 var total_time := 0.0
+var level_par := 0
+var _disrupt_armed := false
 
 var hero := HeroActor.new()
 var tile := Vector2i.ZERO
@@ -160,6 +163,8 @@ func load_data(data: Dictionary) -> void:
 	for sd: Dictionary in data.get("sabotages", []):
 		sabotage_defs[sd["id"]] = sd
 	intro = data.get("intro", "")
+	level_par = int(data.get("par", 0))
+	_disrupt_armed = false
 	rows.clear()
 	for r: String in data["rows"]:
 		rows.append(r)
@@ -338,7 +343,32 @@ func complete_task(task_id: String) -> void:
 	for t: Dictionary in tasks:
 		if t["id"] == task_id and t.has("triggers") and sabotage.is_empty() and not _triggered.has(t["triggers"]):
 			_start_sabotage(String(t["triggers"]))
+		if t["id"] == task_id and t.get("disrupts", false):
+			_disrupt_armed = true
+	if _disrupt_armed:
+		_try_disrupt(task_id)
 	queue_redraw()
+
+
+## A hidden task: when it is finished, the villain undoes one of the OTHER finished tasks.
+func _try_disrupt(source_id: String) -> void:
+	var pool: Array = []
+	for id: String in tasks_done:
+		if id != source_id:
+			pool.append(id)
+	if pool.is_empty():
+		return
+	var pick: String = pool[randi() % pool.size()]
+	tasks_done.erase(pick)
+	_disrupt_armed = false
+	var nm := pick
+	for t: Dictionary in tasks:
+		if t["id"] == pick:
+			nm = String(t["name"])
+	hero.mood = HeroActor.Mood.SCARED
+	_mood_timer = 3.0
+	_flash = 0.6
+	task_disrupted.emit(nm)
 
 
 func _start_sabotage(sab_id: String) -> void:
@@ -379,6 +409,14 @@ func _update_sabotage(delta: float) -> void:
 	if hp <= 0:
 		EventBus.player_died.emit()
 		player_died.emit()
+
+
+## Harder fix mini-games for big sabotages.
+func fix_bonus(task_id: String) -> int:
+	for f: Dictionary in fixes:
+		if f["id"] == task_id:
+			return int(f.get("difficulty_bonus", 0))
+	return 0
 
 
 ## The fix console that currently matters, or an empty dictionary.
@@ -1256,11 +1294,6 @@ func _draw_console(r: Rect2, x: int, y: int) -> void:
 		draw_string(FONT_SHOUT, screen.get_center() + Vector2(-8, 10), "!" if not is_fix else "+", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, INK)
 	for k in 3:
 		draw_circle(body.position + Vector2(14 + k * 16, body.size.y - 12), 4.0, [Color("e63946"), Color("ffd23f"), Color("2dc653")][k])
-	if task.has("triggers") and not is_done:
-		var tp := body.position + Vector2(body.size.x - 12, 6)
-		draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -14), tp + Vector2(-13, 10), tp + Vector2(13, 10)]), Color("e63946"))
-		draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -9), tp + Vector2(-8, 7), tp + Vector2(8, 7)]), Color("ffd23f"))
-		draw_line(tp + Vector2(0, -4), tp + Vector2(0, 2), INK, 2.5)
 	if live_fix:
 		draw_texture_rect(TEX_GLOW, Rect2(r.get_center() - Vector2(TILE, TILE), Vector2(TILE, TILE) * 2.0), false, Color(1, 0.2, 0.2, 0.6 * pulse))
 	var near := hero.pos.distance_to(r.get_center()) < TILE * 2.6

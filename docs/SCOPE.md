@@ -31,10 +31,11 @@ The page is the puzzle piece: panels move, so the emitter, walls and targets mov
 
 ## Story, vampires and the choice (planned)
 - A fixed **Narrator** frames four comic stories. Each level is built for one original comic hero (superhero pulp, noir detective, manga ninja, pop-art space hero) whom you play; the map is themed to that comic.
-- Each level has two **vampires** that flee from torchlight: the hero's **friend** and the comic's **villain**. The villain triggers the sabotage timers. Catch one in the light to choose **REVEAL** or **KILL**.
-  - Reveal friend: he becomes an ally who no longer fears light and helps. Reveal villain: a short fight (torch beam as weapon); win and sabotage stops, plus a heart.
+- Each level has two identical **vampires** that flee from torchlight: the hero's **friend** and the comic's **villain**. They look and behave the same, so which is which is pure chance. Catch one in the light to choose **REVEAL** or **KILL**.
+  - Reveal friend: he becomes an ally who no longer fears light. His help grows each level (task arrow, finishes small tasks, extends sabotage timers, fixes a sabotage and shields you). Reveal villain: a short fight (torch beam as weapon); win and sabotage stops, plus a heart.
   - Kill villain: he dies at once and sabotage stops, no reward. Kill friend: he dies, and the ending and boss fight get harder.
-- Clues make the choice a deduction: the friend quietly finishes a console and leaves notes; the villain is seen near consoles just before a sabotage and leaves ink drips.
+- **Hidden sabotage:** which tasks trigger sabotage is not shown. Level 1: 1 sabotage; level 2: 2; levels 3 and 4: 2 big sabotages (2 hearts, harder fix, shorter timer); level 4 also has a hidden task that undoes one of your finished tasks.
+- **Par times:** about 2, 3, 4 and 5 minutes for levels 1 to 4 (4, 6, 8 and 10 tasks), shown on the HUD.
 - After level 4: the final boss fight against the **Narrator** (three phases, torch and mirrors, surviving allies help, three endings).
 
 ## Content
