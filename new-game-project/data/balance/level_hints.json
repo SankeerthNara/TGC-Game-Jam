@@ -1,0 +1,20 @@
+{
+  "source": "LevelSolver.solve via scripts/tools/level_check.gd",
+  "levels": [
+    {
+      "file": "level_01.json",
+      "optimal_moves": 1,
+      "twist_optimal_moves": null
+    },
+    {
+      "file": "level_02.json",
+      "optimal_moves": 3,
+      "twist_optimal_moves": null
+    },
+    {
+      "file": "level_03.json",
+      "optimal_moves": 1,
+      "twist_optimal_moves": 1
+    }
+  ]
+}
