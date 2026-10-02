@@ -2,6 +2,6 @@
 
 | Date | Tool | What it produced | File(s) |
 |---|---|---|---|
-| 2026-10-02 | Claude Code | No project files recorded yet. | — |
+| 2026-10-02 | Claude Code | Workflow docs and prompts, concepts, scope, architecture, proposal, core game code (page model, beam solver, view, game flow, menu/pause states, UI wiring), level validator and generator, levels 1-3, web export preset. | `AI_WORKFLOW.md`, `AI_PROMPTS.md`, `docs/CONCEPTS.md`, `docs/SCOPE.md`, `docs/ARCHITECTURE.md`, `docs/proposal.html`, `proposal.pdf`, `new-game-project/scripts/`, `new-game-project/data/levels/level_01-03.json`, `new-game-project/export_presets.cfg` |
 | 2026-10-02 | Antigravity | Phase 0 visual references, art directions, asset sources, budget, Comic UI (HUD, caption box, pause modal, main menu), procedural CC0 audio, 2D art textures, Level 4 JSON, Playwright web test runner. | `docs/ART_REFERENCES.md`, `docs/ART_DIRECTIONS.md`, `docs/ASSET_SOURCES.md`, `docs/ASSET_BUDGET.md`, `new-game-project/ui/comic_ui.*`, `new-game-project/ui/main_menu.*`, `new-game-project/assets/art/*`, `new-game-project/assets/audio/*`, `new-game-project/assets/fonts/*`, `new-game-project/data/levels/level_04.json`, `tests/playwright_web_test.py` |
 | 2026-10-02 | ChatGPT/Codex | README, credits, AI usage log, task board skeletons, expanded headless model/beam solver tests, and BFS move-count hint data. | `README.md`, `CREDITS.md`, `docs/AI_USAGE.md`, `docs/TASKS.md`, `new-game-project/tests/model_solver_test.gd`, `new-game-project/data/balance/level_hints.json` |
