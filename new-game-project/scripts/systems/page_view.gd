@@ -8,8 +8,10 @@ signal toggle_requested(cell: Vector2i)
 signal locked_panel_clicked(panel: int)
 
 const GUTTER := 16.0
-const PAPER := Color("f6ecd2")
-const INK := Color("1b1b24")
+const PAPER_NORMAL := Color("f6ecd2")
+const INK_NORMAL := Color("1b1b24")
+const PAPER_TWIST := Color("2b1763") ## negative-print inversion after the narrator's twist
+const INK_TWIST := Color("f1e9ff")
 const BEAM := Color("ffd23f")
 const BEAM_CORE := Color("fffbe6")
 const GOOD := Color("ffb703")
@@ -18,6 +20,8 @@ const MIRROR_COLOR := Color("3a86ff")
 const FIXED_COLOR := Color("6c757d")
 
 var model: PageModel
+var _paper := PAPER_NORMAL
+var _ink := INK_NORMAL
 var trace: Dictionary = {"paths": [], "lit": {}}
 var input_enabled := true
 var cell_size := 64.0
@@ -137,6 +141,8 @@ func _finish_drag(pos: Vector2) -> void:
 func _draw() -> void:
 	if model == null:
 		return
+	_paper = PAPER_TWIST if model.flipped else PAPER_NORMAL
+	_ink = INK_TWIST if model.flipped else INK_NORMAL
 	var off := Vector2(randf_range(-_shake, _shake), randf_range(-_shake, _shake)) if _shake > 0.0 else Vector2.ZERO
 	draw_set_transform(off)
 	for i in model.panel_count():
@@ -152,14 +158,14 @@ func _draw_panel(panel: int, shift: Vector2) -> void:
 	var r := panel_rect(panel)
 	r.position += shift
 	draw_rect(Rect2(r.position + Vector2(6, 6), r.size), Color(0, 0, 0, 0.25)) # drop shadow
-	draw_rect(r, PAPER)
+	draw_rect(r, _paper)
 	var o := model.panel_origin(panel)
 	for ly in model.ph:
 		for lx in model.pw:
 			var i := model.index_of(o + Vector2i(lx, ly))
 			var cr := Rect2(r.position + Vector2(lx, ly) * cell_size, Vector2(cell_size, cell_size))
 			_draw_cell(i, cr)
-	var border := INK if not model.locked.has(panel) else Color("8d0801")
+	var border := _ink if not model.locked.has(panel) else Color("8d0801")
 	draw_rect(r, border, false, 4.0)
 	if model.locked.has(panel):
 		draw_string(ThemeDB.fallback_font, r.position + Vector2(8, 22), "LOCKED", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, border)
@@ -170,18 +176,18 @@ func _draw_cell(i: int, cr: Rect2) -> void:
 	var s := cell_size
 	match model.kind[i]:
 		PageModel.Kind.WALL:
-			draw_rect(cr.grow(-3), INK)
+			draw_rect(cr.grow(-3), _ink)
 			for k in range(1, 4):
-				draw_line(cr.position + Vector2(0, s * k / 4.0), cr.position + Vector2(s * k / 4.0, 0), PAPER, 1.5)
+				draw_line(cr.position + Vector2(0, s * k / 4.0), cr.position + Vector2(s * k / 4.0, 0), _paper, 1.5)
 		PageModel.Kind.MIRROR_SLASH, PageModel.Kind.FIXED_SLASH:
 			_draw_mirror(c, s, true, model.kind[i] == PageModel.Kind.FIXED_SLASH)
 		PageModel.Kind.MIRROR_BACK, PageModel.Kind.FIXED_BACK:
 			_draw_mirror(c, s, false, model.kind[i] == PageModel.Kind.FIXED_BACK)
 		PageModel.Kind.EMITTER:
-			draw_circle(c, s * 0.32, INK)
+			draw_circle(c, s * 0.32, _ink)
 			draw_circle(c, s * 0.24, BEAM)
 			var d := Vector2(PageModel.DIRS[model.dir[i]])
-			draw_line(c, c + d * s * 0.42, INK, 5.0)
+			draw_line(c, c + d * s * 0.42, _ink, 5.0)
 		PageModel.Kind.TARGET_GOOD, PageModel.Kind.TARGET_BAD:
 			_draw_target(i, c, s)
 
@@ -190,7 +196,7 @@ func _draw_mirror(c: Vector2, s: float, slash: bool, fixed: bool) -> void:
 	var h := s * 0.38
 	var a := c + (Vector2(-h, h) if slash else Vector2(-h, -h))
 	var b := c + (Vector2(h, -h) if slash else Vector2(h, h))
-	draw_line(a, b, INK, 9.0)
+	draw_line(a, b, _ink, 9.0)
 	draw_line(a, b, FIXED_COLOR if fixed else MIRROR_COLOR, 5.0)
 
 
@@ -198,16 +204,16 @@ func _draw_target(i: int, c: Vector2, s: float) -> void:
 	var good := model.target_is_good(i)
 	var lit: bool = trace["lit"].has(i)
 	var col := GOOD if good else BAD
-	draw_circle(c, s * 0.34, INK)
-	draw_circle(c, s * 0.27, col if lit else PAPER)
+	draw_circle(c, s * 0.34, _ink)
+	draw_circle(c, s * 0.27, col if lit else _paper)
 	if good:
 		draw_arc(c, s * 0.27, 0, TAU, 24, col, 3.0)
 		if lit:
 			draw_circle(c, s * 0.12, BEAM_CORE)
 	else:
 		var d := s * 0.15
-		draw_line(c + Vector2(-d, -d), c + Vector2(d, d), INK if not lit else PAPER, 4.0)
-		draw_line(c + Vector2(-d, d), c + Vector2(d, -d), INK if not lit else PAPER, 4.0)
+		draw_line(c + Vector2(-d, -d), c + Vector2(d, d), _ink if not lit else _paper, 4.0)
+		draw_line(c + Vector2(-d, d), c + Vector2(d, -d), _ink if not lit else _paper, 4.0)
 
 
 func _draw_beams() -> void:

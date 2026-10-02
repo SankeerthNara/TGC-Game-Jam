@@ -3,10 +3,13 @@ extends Node
 ## Contains a throwaway debug HUD; Antigravity's ui/ HUD replaces it by listening to EventBus.
 
 var model: PageModel
+const UI_SCENE := "res://ui/ui_root.tscn"
+
 var view: PageView
 var level_data: Dictionary
 var undo_stack: Array[Dictionary] = []
 var busy := false
+var state := "menu" ## menu | playing | paused | ended
 
 var _caption: Label
 var _info: Label
@@ -19,9 +22,50 @@ func _ready() -> void:
 	view.swap_requested.connect(_on_swap)
 	view.toggle_requested.connect(_on_toggle)
 	view.locked_panel_clicked.connect(_on_locked)
-	_build_debug_hud()
-	EventBus.caption_changed.connect(func(t: String) -> void: _caption.text = t)
-	start_level(GameState.level_index)
+	EventBus.request_start_game.connect(_start_game)
+	EventBus.request_restart_level.connect(func() -> void: if state == "playing": start_level(GameState.level_index); EventBus.level_restarted.emit())
+	EventBus.request_undo.connect(_undo)
+	EventBus.request_pause.connect(_set_paused)
+	EventBus.request_quit_to_menu.connect(_to_menu)
+	EventBus.request_skip_level.connect(func() -> void: if OS.is_debug_build() and state == "playing": _advance())
+	if ResourceLoader.exists(UI_SCENE):
+		add_child((load(UI_SCENE) as PackedScene).instantiate()) # Antigravity's UI replaces the debug HUD
+		_to_menu()
+	else:
+		_build_debug_hud()
+		EventBus.caption_changed.connect(func(t: String) -> void: _caption.text = t)
+		_start_game()
+
+
+func _set_state(s: String) -> void:
+	state = s
+	view.input_enabled = s == "playing" and not busy
+	EventBus.game_state_changed.emit(s)
+
+
+func _to_menu() -> void:
+	GameState.restart_game()
+	busy = false
+	_set_state("menu")
+
+
+func _start_game() -> void:
+	GameState.restart_game()
+	_set_state("playing")
+	start_level(0)
+
+
+func _set_paused(paused: bool) -> void:
+	if state == "playing" and paused:
+		_set_state("paused")
+	elif state == "paused" and not paused:
+		_set_state("playing")
+
+
+func _undo() -> void:
+	if state == "playing" and not busy and not undo_stack.is_empty():
+		model.restore(undo_stack.pop_back())
+		_refresh()
 
 
 func _build_debug_hud() -> void:
@@ -51,7 +95,7 @@ func start_level(index: int) -> void:
 	model = PageModel.from_data(level_data)
 	undo_stack.clear()
 	busy = false
-	view.input_enabled = true
+	view.input_enabled = state == "playing"
 	view.set_model(model)
 	EventBus.level_loaded.emit(index, level_data)
 	EventBus.caption_changed.emit(level_data.get("caption_intro", ""))
@@ -64,7 +108,7 @@ func _push_undo() -> void:
 
 
 func _on_swap(a: int, b: int) -> void:
-	if busy:
+	if busy or state != "playing":
 		return
 	_push_undo()
 	if model.swap_panels(a, b):
@@ -75,7 +119,7 @@ func _on_swap(a: int, b: int) -> void:
 
 
 func _on_toggle(cell: Vector2i) -> void:
-	if busy:
+	if busy or state != "playing":
 		return
 	_push_undo()
 	if model.toggle_mirror(cell):
@@ -91,14 +135,17 @@ func _on_locked(panel: int) -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if not event.is_pressed() or busy:
+	if not event.is_pressed() or not event is InputEventKey:
 		return
-	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_R):
-		start_level(GameState.level_index)
-	elif event is InputEventKey and event.keycode == KEY_Z and not undo_stack.is_empty():
-		model.restore(undo_stack.pop_back())
-		_refresh()
-	elif OS.is_debug_build() and event is InputEventKey and event.keycode == KEY_N:
+	if event.keycode == KEY_ESCAPE and (state == "playing" or state == "paused"):
+		_set_paused(state == "playing")
+	elif state != "playing" or busy:
+		return
+	elif event.keycode == KEY_R:
+		EventBus.request_restart_level.emit()
+	elif event.keycode == KEY_Z:
+		_undo()
+	elif OS.is_debug_build() and event.keycode == KEY_N:
 		_advance()
 
 
@@ -122,13 +169,14 @@ func _on_solved() -> void:
 		EventBus.twist_triggered.emit("flip")
 		EventBus.caption_changed.emit(level_data.get("caption_twist", "Plot twist!"))
 		busy = false
-		view.input_enabled = true
+		view.input_enabled = state == "playing"
 		_refresh()
 		return
 	EventBus.level_solved.emit(GameState.level_index)
 	EventBus.caption_changed.emit(level_data.get("caption_solved", "Page complete."))
 	await get_tree().create_timer(2.2).timeout
-	_advance()
+	if state == "playing":
+		_advance()
 
 
 func _advance() -> void:
@@ -136,6 +184,9 @@ func _advance() -> void:
 		GameState.advance()
 		start_level(GameState.level_index)
 	else:
+		_set_state("ended")
 		EventBus.game_finished.emit()
-		EventBus.caption_changed.emit("THE END. (Press R to play again)")
-		GameState.restart_game()
+		EventBus.caption_changed.emit("THE END.")
+		if _caption != null: # debug HUD only: loop back to the start
+			await get_tree().create_timer(3.0).timeout
+			_start_game()

@@ -12,3 +12,15 @@ signal caption_changed(text: String) ## narrator caption (comic caption box)
 signal twist_triggered(kind: String) ## "flip"
 signal level_solved(index: int)
 signal game_finished
+
+## --- UI -> game requests (the UI emits these, main.gd acts on them) ---
+signal request_start_game ## main menu "Play"
+signal request_restart_level
+signal request_undo
+signal request_pause(paused: bool)
+signal request_quit_to_menu
+signal request_skip_level ## debug builds only
+
+## --- game -> UI state notifications ---
+signal game_state_changed(state: String) ## "menu", "playing", "paused", "ended"
+signal level_restarted
