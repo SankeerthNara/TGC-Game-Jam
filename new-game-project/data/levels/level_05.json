@@ -1,0 +1,17 @@
+{
+  "name": "Gutter Bend",
+  "panel_size": [3, 3],
+  "layout": [2, 2],
+  "rule": "bend",
+  "twist": "none",
+  "caption_intro": "NARRATOR: The gutters have warped! Every time the beam crosses into another panel, it turns 90 degrees clockwise!",
+  "caption_solved": "NARRATOR: Round and round the panels go! You bent the story to your will.",
+  "cells": [
+    "....#.",
+    "...T..",
+    ".....#",
+    ".....\\",
+    "v...#.",
+    ".../.."
+  ]
+}

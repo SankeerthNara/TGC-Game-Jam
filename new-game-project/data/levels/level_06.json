@@ -1,0 +1,19 @@
+{
+  "name": "The Last Page",
+  "panel_size": [3, 3],
+  "layout": [2, 2],
+  "rule": "bend",
+  "twist": "flip",
+  "locked_panels": [0],
+  "caption_intro": "NARRATOR: The final page! Panel 1 is glued shut! Gutters bend light, and the hero awaits your beam!",
+  "caption_twist": "NARRATOR: ONE FINAL TWIST! The hero vanishes into ink! Light the red mark to close the book forever!",
+  "caption_solved": "NARRATOR: THE END! You mastered the panels and rewrote reality itself! Thank you for reading!",
+  "cells": [
+    "\\..T..",
+    "....#.",
+    "..>...",
+    "..X...",
+    ".../..",
+    "...#.."
+  ]
+}
