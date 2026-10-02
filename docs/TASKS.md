@@ -37,3 +37,4 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C12b | Claude | Cutscene system for detect/reveal/kill; level 1 warm-up (no vampires or sabotage) | done | C11 | `cutscene.gd` |
 | C15 | Claude | Final boss: three relay duels (hero 2, 3, 4) vs the Narrator, level 1 capture, sunlight and lava ending cutscenes | todo | C12b | at least 3 minutes in all |
 | C16 | Claude | Hero special powers for the final duels (Deduction, Light Dash, Prism Cannon / Solar Flare); scripted knock-outs for heroes 2 and 3 | todo | C15 | |
+| C17 | Claude | Opening cutscene (peaceful Earth, four heroes, masked villain covers it in darkness) and mirrored closing cutscene | todo | C12b | |

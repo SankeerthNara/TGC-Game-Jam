@@ -22,7 +22,7 @@ An in-progress game made for the TGC Game Jam.
 
 ## Team
 
-Sankeerth Nara — solo developer
+Sankeerth Nara — solo developer, team "Game it" (IndieConnect: [@sankeerthnara](https://indieconnect.in/@sankeerthnara))
 
 ## License
 

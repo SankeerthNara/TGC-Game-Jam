@@ -29,6 +29,10 @@ The page is the puzzle piece: panels move, so the emitter, walls and targets mov
 - **The hero:** a small caped comic hero with a torch. He walks, thinks (?), cheers (!), looks scared, and turns into the villain after the twist.
 - **The narrator** ("Mr. Caption" in town, caption boxes everywhere) and **Mr. Barter**, the shopkeeper.
 
+## Opening and closing cutscenes (planned)
+- **Opening:** the Earth lived in peace, guarded by four superheroes (the four heroes of the four levels). A masked villain covers it in darkness.
+- **Closing:** a mirrored cutscene: sunlight returns and the four heroes guard the Earth again (win), or the darkness stays (lose).
+
 ## Story, vampires and the choice (planned)
 - A fixed **Narrator** frames four comic stories. Each level is built for one original comic hero (superhero pulp, noir detective, manga ninja, pop-art space hero) whom you play; the map is themed to that comic.
 - Each level has two identical **vampires** that flee from torchlight: the hero's **friend** and the comic's **villain**. They look and behave the same, so which is which is pure chance. Catch one in the light to choose **REVEAL** or **KILL**.
