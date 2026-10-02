@@ -26,6 +26,21 @@ Godot 4.7, GDScript, Compatibility renderer. Godot project root is `new-game-pro
 | `level_solved(index)` | Level finished. |
 | `game_finished` | Last level done. |
 
+UI -> game requests (UI emits, `main.gd` acts):
+
+| Signal | Effect |
+|---|---|
+| `request_start_game` | Start from level 1 (state becomes `playing`) |
+| `request_restart_level` | Reload the current level |
+| `request_undo` | Undo the last move |
+| `request_pause(paused)` | Pause or resume (also Esc key) |
+| `request_quit_to_menu` | Back to the menu |
+| `request_skip_level` | Debug builds only |
+
+Game -> UI: `game_state_changed(state)` with `"menu"`, `"playing"`, `"paused"` or `"ended"`, and `level_restarted`.
+
+**UI hook:** if `res://ui/ui_root.tscn` exists, `main.gd` instantiates it and starts in the `menu` state (the UI must emit `request_start_game`). Without it, a debug HUD is used and the game auto-starts. The UI scene should use a `CanvasLayer`, so it draws over the page.
+
 UI/VFX/audio use only these signals and never read the model directly.
 
 ## Level JSON format
