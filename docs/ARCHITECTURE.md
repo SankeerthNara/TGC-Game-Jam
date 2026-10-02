@@ -12,6 +12,23 @@ Godot 4.7, GDScript, Compatibility renderer. Godot project root is `new-game-pro
 | Data | `data/levels/*.json`, `data/levels/index.json` | Level files. Add a file name to `index.json` to add a level. |
 | Tools | `scripts/tools/level_solver.gd`, `level_check.gd`, `level_gen.gd` | Headless validators and generator. |
 
+## The town (overworld)
+`scripts/world/world.gd` (class `World`) is the seamless top-down town, driven by `data/world/town.json`.
+
+| File | Job |
+|---|---|
+| `world.gd` | Grid walking (arrow keys), camera, collisions, items, keys, doors, gates, torch and lights, drawing |
+| `shop_ui.gd` | The trade shop menu (Up/Down, Z to trade, X to leave) |
+| `inventory_hud.gd` | Bottom-left strip with items and keys |
+| `key_symbols.gd` | Vector icons for keys, keyholes and items (no image assets) |
+| `glint_layer.gd` | Item glints and fireflies drawn above the darkness |
+| `hero_actor.gd` (in `scripts/systems/`) | The hero: walking, moods, torch |
+
+`town.json` keys: `rows` (ASCII map), `doors` (page index -> label and key shape), `keys` (shop stock, costs, blurbs, district), `items` (hidden item positions), `gates` (pages needed per ink-gate), `decoys` (page indexes that are wrong-comic pages), `signs`, `npc_lines`.
+Map characters: `.` path, `,` hedge (solid), `T` tree (solid), `#` building, `1`-`8` page doors (door n opens puzzle level n-1), `S` shop door, `G` `H` `I` ink-gates, `N` narrator, `s` sign, `l` lamp, `o` brazier, `@` start.
+
+Game states: `menu`, `world` (the town), `playing` (a page puzzle), `paused`, `ended`. A door only opens with the matching key; decoy keys open decoy pages, which never count toward progress.
+
 ## EventBus signals (the contract)
 | Signal | When |
 |---|---|
@@ -25,6 +42,8 @@ Godot 4.7, GDScript, Compatibility renderer. Godot project root is `new-game-pro
 | `twist_triggered(kind)` | Narrator twist happens: `"flip"` (goal swap) or `"wrong_page"` (decoy reveal). Play the big dramatic effect. |
 | `level_solved(index)` | Level finished. |
 | `game_finished` | Last level done. |
+
+Town events (audio and effects can listen): `item_collected(type)`, `trade_made(key_id)`, `door_unlocked(puzzle_index)`.
 
 UI -> game requests (UI emits, `main.gd` acts):
 

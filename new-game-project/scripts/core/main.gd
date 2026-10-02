@@ -7,12 +7,13 @@ const UI_SCENE := "res://ui/comic_ui.tscn"
 const MENU_SCENE := "res://ui/main_menu.tscn"
 
 var view: PageView
+var world: World
 var level_data: Dictionary
 var undo_stack: Array[Dictionary] = []
 var busy := false
 var run_id := 0 ## bumps on every level start so stale timers do nothing
 var decoy_revealed := false
-var state := "menu" ## menu | playing | paused | ended
+var state := "menu" ## menu | world | playing (a page puzzle) | paused | ended
 
 var _caption: Label
 var _info: Label
@@ -20,6 +21,12 @@ var _info: Label
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("23232e"))
+	world = World.new()
+	add_child(world)
+	world.door_entered.connect(_enter_puzzle)
+	world.message.connect(func(t: String) -> void: EventBus.caption_changed.emit(t))
+	world.gate_opened.connect(func(_g: String) -> void:
+		EventBus.caption_changed.emit("NARRATOR: The ink-gate dissolves into light! New streets are open."))
 	view = PageView.new()
 	add_child(view)
 	view.swap_requested.connect(_on_swap)
@@ -30,7 +37,7 @@ func _ready() -> void:
 	EventBus.request_undo.connect(_undo)
 	EventBus.request_pause.connect(_set_paused)
 	EventBus.request_quit_to_menu.connect(_to_menu)
-	EventBus.request_skip_level.connect(func() -> void: if OS.is_debug_build() and state == "playing": _advance())
+	EventBus.request_skip_level.connect(func() -> void: if OS.is_debug_build() and state == "playing": _finish_puzzle())
 	if ResourceLoader.exists(UI_SCENE):
 		add_child((load(UI_SCENE) as PackedScene).instantiate()) # Antigravity's comic UI replaces the debug HUD
 		_to_menu()
@@ -42,7 +49,10 @@ func _ready() -> void:
 
 func _set_state(s: String) -> void:
 	state = s
+	var in_puzzle := s == "playing" or s == "paused"
+	view.visible = in_puzzle
 	view.input_enabled = s == "playing" and not busy
+	world.set_active(s == "world")
 	EventBus.game_state_changed.emit(s)
 
 
@@ -60,8 +70,48 @@ func _to_menu() -> void:
 
 func _start_game() -> void:
 	GameState.restart_game()
+	world.reset()
+	_enter_world()
+	EventBus.caption_changed.emit("NARRATOR: Gutter Town has gone dark! Walk with the ARROW KEYS, press Z or SPACE to talk. Find hidden items, trade them for keys at the shop, and open the PAGE doors.")
+
+
+func _enter_world() -> void:
+	busy = false
+	_set_state("world")
+
+
+## The hero walked through a page door: switch from the town to that page's puzzle.
+func _enter_puzzle(index: int) -> void:
+	if state != "world":
+		return
 	_set_state("playing")
-	start_level(0)
+	start_level(index)
+
+
+## Back to the town after finishing a page (or giving up on it with M).
+func _finish_puzzle(solved := true) -> void:
+	var idx := GameState.level_index
+	if solved:
+		world.mark_done(idx)
+	else:
+		world.leave_door(idx)
+	if world.real_done() >= world.real_total():
+		_set_state("ended")
+		EventBus.game_finished.emit()
+		EventBus.caption_changed.emit("THE END.")
+		return
+	_enter_world()
+	if solved and not GameState.levels[idx].get("type", "puzzle") == "decoy":
+		EventBus.caption_changed.emit("NARRATOR: The lights flicker back on! %d of %d real pages read." % [world.real_done(), world.real_total()])
+	elif solved:
+		EventBus.caption_changed.emit("NARRATOR: Wrong key, wrong door, wrong comic. Back to Gutter Town. The real page is still waiting; check the keyhole next time!")
+	else:
+		EventBus.caption_changed.emit("NARRATOR: Giving up on that page? It will wait for you.")
+
+
+func _wait_playing() -> void:
+	while state == "paused":
+		await get_tree().process_frame
 
 
 func _set_paused(paused: bool) -> void:
@@ -107,6 +157,7 @@ func start_level(index: int) -> void:
 	decoy_revealed = false
 	busy = false
 	view.input_enabled = state == "playing"
+	view.visible = true
 	view.set_model(model)
 	EventBus.level_loaded.emit(index, level_data)
 	EventBus.caption_changed.emit(level_data.get("caption_intro", ""))
@@ -152,12 +203,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_set_paused(state == "playing")
 	elif state != "playing" or busy:
 		return
+	elif event.keycode == KEY_M:
+		_finish_puzzle(false)
 	elif event.keycode == KEY_R:
 		EventBus.request_restart_level.emit()
 	elif event.keycode == KEY_Z:
 		_undo()
 	elif OS.is_debug_build() and event.keycode == KEY_N:
-		_advance()
+		_finish_puzzle()
 
 
 func _refresh() -> void:
@@ -182,14 +235,16 @@ func _reveal_decoy() -> void:
 	view.input_enabled = false
 	var id := run_id
 	await get_tree().create_timer(0.7).timeout
+	await _wait_playing()
 	if id != run_id or state != "playing":
 		return
 	view.shake(16.0)
 	EventBus.twist_triggered.emit("wrong_page")
 	EventBus.caption_changed.emit(level_data.get("caption_twist", "NARRATOR: Wrong page! Oops."))
 	await get_tree().create_timer(4.0).timeout
+	await _wait_playing()
 	if id == run_id and state == "playing":
-		_advance()
+		_finish_puzzle()
 
 
 func _on_solved() -> void:
@@ -211,18 +266,6 @@ func _on_solved() -> void:
 	EventBus.level_solved.emit(GameState.level_index)
 	EventBus.caption_changed.emit(level_data.get("caption_solved", "Page complete."))
 	await get_tree().create_timer(2.2).timeout
+	await _wait_playing()
 	if id == run_id and state == "playing":
-		_advance()
-
-
-func _advance() -> void:
-	if GameState.has_next():
-		GameState.advance()
-		start_level(GameState.level_index)
-	else:
-		_set_state("ended")
-		EventBus.game_finished.emit()
-		EventBus.caption_changed.emit("THE END.")
-		if _caption != null: # debug HUD only: loop back to the start
-			await get_tree().create_timer(3.0).timeout
-			_start_game()
+		_finish_puzzle()

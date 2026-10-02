@@ -25,6 +25,8 @@ var _caption_box: PanelContainer
 var _banner_rect: TextureRect
 var _pause_modal: Control
 var _hud_root: Control
+var _info_box: Control
+var _action_bar: Control
 var _end_modal: Control
 
 var _audio_players: Dictionary = {}
@@ -153,6 +155,7 @@ func _build_ui() -> void:
 
 	# --- TOP RIGHT: Level Info Card ---
 	var info_box := PanelContainer.new()
+	_info_box = info_box
 	info_box.position = Vector2(910, 20)
 	info_box.custom_minimum_size = Vector2(340, 95)
 	var info_style := StyleBoxFlat.new()
@@ -202,12 +205,13 @@ func _build_ui() -> void:
 
 	# --- BOTTOM ACTION BAR ---
 	var bar := HBoxContainer.new()
+	_action_bar = bar
 	bar.position = Vector2(30, 665)
 	bar.custom_minimum_size = Vector2(1220, 45)
 	root.add_child(bar)
 
 	var hint := Label.new()
-	hint.text = "💡 DRAG PANELS TO SWAP  •  CLICK MIRRORS TO FLIP"
+	hint.text = "💡 DRAG PANELS TO SWAP  •  CLICK MIRRORS TO FLIP  •  M: BACK TO MAP"
 	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint.add_theme_font_override("font", FONT_BODY)
 	hint.add_theme_font_size_override("font_size", 16)
@@ -411,6 +415,9 @@ func _on_reset_pressed() -> void:
 
 func _on_game_state_changed(state: String) -> void:
 	_hud_root.visible = state != "menu"
+	var in_puzzle := state == "playing" or state == "paused"
+	_info_box.visible = in_puzzle
+	_action_bar.visible = in_puzzle
 	_pause_modal.visible = state == "paused"
 	_end_modal.visible = state == "ended"
 
@@ -423,7 +430,7 @@ func _on_level_loaded(index: int, data: Dictionary) -> void:
 	var total_levels: int = _get_game_state().levels.size() if _get_game_state() else 4
 	_level_label.text = "PAGE %d/%d: %s" % [index + 1, total_levels, _current_level_name.to_upper()]
 	_moves_label.text = "MOVES: 0"
-	_status_label.text = "STARS: 0"
+	_status_label.text = "GOALS: 0"
 	_banner_rect.visible = false
 
 
@@ -437,9 +444,9 @@ func _on_move_count_changed(moves: int) -> void:
 
 func _on_beam_updated(good_lit: int, good_total: int, bad_lit: int) -> void:
 	if bad_lit > 0:
-		_status_label.text = "STARS: %d/%d  ⚠️ HAZARD: %d" % [good_lit, good_total, bad_lit]
+		_status_label.text = "GOALS: %d/%d  ⚠ DO NOT LIGHT: %d" % [good_lit, good_total, bad_lit]
 	else:
-		_status_label.text = "STARS: %d/%d" % [good_lit, good_total]
+		_status_label.text = "GOALS: %d/%d" % [good_lit, good_total]
 
 
 func _on_panel_swapped(_a: int, _b: int) -> void:

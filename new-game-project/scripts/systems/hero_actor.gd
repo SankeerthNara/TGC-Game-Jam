@@ -10,6 +10,8 @@ var target := Vector2.ZERO
 var gaze := Vector2.ZERO
 var mood: Mood = Mood.THINK
 var villain := false
+var torch := true ## carries a flickering torch in the right hand
+var glow: Texture2D
 
 var _placed := false
 var _t := 0.0
@@ -22,6 +24,19 @@ func reset() -> void:
 	_placed = false
 	mood = Mood.THINK
 	villain = false
+
+
+func is_moving() -> bool:
+	return _moving
+
+
+## Teleports the hero (no walking animation).
+func snap(stand: Vector2, look_at: Vector2) -> void:
+	pos = stand
+	target = stand
+	gaze = look_at
+	_placed = true
+	_moving = false
 
 
 func set_target(stand: Vector2, look_at: Vector2) -> void:
@@ -105,11 +120,16 @@ func draw(c: CanvasItem, s: float, ink: Color, paper: Color, font: Font, base: V
 		hand_l = shoulder_l + Vector2(-0.06 * s, -0.12 * s)
 	elif mood == Mood.THINK and not _moving:
 		hand_r = o + Vector2(0.05 * s * f, -0.1 * s) # hand on chin
+	if torch:
+		hand_r = shoulder_r + Vector2(0.1 * s, -0.05 * s)
 	for pair in [[shoulder_l, hand_l], [shoulder_r, hand_r]]:
 		c.draw_line(pair[0], pair[1], ink, s * 0.095)
 		c.draw_line(pair[0], pair[1], suit, s * 0.05)
 		c.draw_circle(pair[1], s * 0.05, skin)
 		c.draw_arc(pair[1], s * 0.05, 0.0, TAU, 12, ink, 1.6)
+
+	if torch:
+		_draw_torch(c, s, hand_r, ink, base)
 
 	# head
 	var h := o + Vector2(0, -0.2 * s)
@@ -168,3 +188,21 @@ func draw(c: CanvasItem, s: float, ink: Color, paper: Color, font: Font, base: V
 	var fs := int(s * 0.34)
 	var sz := font.get_string_size(symbol, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
 	c.draw_string(font, bub + Vector2(-sz.x * 0.5, fs * 0.34), symbol, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color("18151d"))
+
+
+## Offset from the hero's position to the torch flame (so the world can put a light there).
+func torch_offset(s: float) -> Vector2:
+	return Vector2(0.22 * s, -0.42 * s)
+
+
+func _draw_torch(c: CanvasItem, s: float, hand: Vector2, ink: Color, base: Vector2) -> void:
+	var top := hand + Vector2(0.0, -0.24 * s)
+	c.draw_line(hand + Vector2(0, 0.03 * s), top, ink, s * 0.075)
+	c.draw_line(hand + Vector2(0, 0.03 * s), top, Color("a0522d"), s * 0.045)
+	var flick := sin(_t * 17.0) * 0.1 + sin(_t * 29.0) * 0.06
+	var tip := top + Vector2(flick * s * 0.2, -s * (0.3 + flick * 0.5))
+	if glow != null:
+		c.draw_texture_rect(glow, Rect2(top - Vector2(0.55, 0.62) * s, Vector2(1.1, 1.1) * s), false, Color(1.0, 0.75, 0.3, 0.55))
+	c.draw_colored_polygon(PackedVector2Array([top + Vector2(-0.075 * s, 0), tip, top + Vector2(0.075 * s, 0)]), ink)
+	c.draw_colored_polygon(PackedVector2Array([top + Vector2(-0.058 * s, -0.005 * s), tip + Vector2(0, s * 0.02), top + Vector2(0.058 * s, -0.005 * s)]), Color("ff8c1a"))
+	c.draw_colored_polygon(PackedVector2Array([top + Vector2(-0.03 * s, -0.01 * s), top + Vector2(0, -0.12 * s), top + Vector2(0.03 * s, -0.01 * s)]), Color("ffe066"))

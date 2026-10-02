@@ -1,39 +1,47 @@
 # Scope - "Mirror Page" (DRAFT for the Hour 12 submission)
 
-**One line:** a light-routing puzzle game where the level is a comic page. You drag whole comic panels to rearrange the page and flip mirrors to steer a beam of light, while an unreliable narrator rewrites the rules mid-game.
+**One line:** a comic-book adventure where you walk a dark town with a torch, hunt hidden items, trade them for keys, and open "page doors" that lead to light-routing puzzles, while an unreliable narrator breaks the rules and lets you walk through the wrong door.
 
 ## Themes
-- **Comic:** each level is a comic page of swappable panels. Gutters change how light behaves, narrator captions drive the story, panels shake with comic impact effects.
-- **Light:** the beam is the only mechanic. You route it across panels with mirrors, walls and targets.
-- **Twist:** the narrator literally breaks the rules. Two kinds:
-  1. **Goal twist:** after you solve a level, the caption "flips" it and the hero you were lighting becomes the villain. Good and bad targets swap and you must re-solve the same page.
-  2. **Rule twists:** from level 4 on the narrator rewrites how light works (see below).
+- **Comic:** the town is a comic page world: inked outlines, halftone paper, narrator caption boxes, comic sound words (WHOOSH!, ZAP!, PLOT TWIST!), and every puzzle is a comic page made of swappable panels.
+- **Light:** the whole town is dark. Your torch, street lamps and braziers push the darkness back, solved pages switch their district's lights on, and every puzzle is about steering a beam of light with mirrors.
+- **Twist:** the narrator twists the game three ways:
+  1. **Goal twist:** after you solve a page, the hero turns out to be the villain: good and bad targets swap and you re-solve the same page.
+  2. **Rule twists:** later pages change how light works (lying mirrors, light that bends at panel borders).
+  3. **Wrong key, wrong door:** the shop sells cheap lookalike keys. If you trade for the wrong key and open the wrong door, you stumble into a page from some other comic (romance, cooking), and the narrator has to admit it was the wrong page.
+
+## Game flow (about 15 minutes)
+1. **Explore** the seamless town (Pokemon-style walking with the arrow keys, no screen segmentation).
+2. **Collect** hidden items (ink drops, gears, star shards). They glint in the dark.
+3. **Trade** them at the Trade Shop for keys. Each key has a shape; each page door has a keyhole with the same shape.
+4. **Open a door** with the right key to enter a light puzzle page. Solve it to light up that part of town and open the next ink-gate.
+5. Repeat through four districts until all six real pages are read.
 
 ## Unique hook (what makes it ours)
-The *page itself* is the puzzle piece: panels move, so the emitter, walls and targets move with them. Light crosses gutters between panels, and rule twists change what happens at the gutter.
+The page is the puzzle piece: panels move, so the emitter, walls and targets move with them. The town around it is the same comic world, so light is both how you explore (torch, lamps) and how you solve (beams). Wrong keys make mistakes part of the story rather than a failure state.
 
-## Characters and surprises
-- **The hero:** a small caped comic hero walks the page toward wherever the light ends, looks at it, and reacts: thinking when the beam hits nothing, scared when it hits a hazard, cheering when a star is lit. After the narrator's twist he turns into the villain.
-- **Decoy pages:** twice, the player is dropped into a page from some other comic (a romance comic, a cooking comic). It looks like a normal puzzle until the narrator admits "this is the wrong page" and sends the player back. These are the second kind of twist.
+## Characters
+- **The hero:** a small caped comic hero with a torch. He walks, thinks (?), cheers (!), looks scared, and turns into the villain after the twist.
+- **The narrator** ("Mr. Caption" in town, caption boxes everywhere) and **Mr. Barter**, the shopkeeper.
 
-## Core loop (15 minutes)
-Read the caption -> drag panels / flip mirrors -> beam lights all stars -> narrator reacts -> next page.
-
-## Content (6 levels, about 2-3 minutes each)
-| # | Name | Teaches | Rule |
+## Content
+| Page | District | Teaches | Rule |
 |---|---|---|---|
-| 1 | Page One | Panel swapping | normal |
-| 2 | Looking Glass | Mirrors + panels | normal |
-| 3 | The Twist | Goal twist (stars become villains) | normal + flip |
-| 4 | Liar, Liar | Mirrors reflect the opposite way | lying |
-| 5 | Gutter Bend | Beam turns 90 degrees clockwise every time it crosses into another panel | bend |
-| 6 | The Last Page | Combines everything, locked panels, final flip | bend + flip |
+| 1 | Start plaza | Panel swapping | normal |
+| 2 | Start plaza | Mirrors + panels | normal |
+| 3 | East streets | The goal twist (hero becomes villain) | normal + flip |
+| 4 | North-east | Mirrors lie | lying |
+| 5 | North-west | Light bends at panel borders | bend |
+| 6 | North-west | Everything, with a locked panel and a final flip | bend + flip |
+| Decoy A, B | East and north-east | Wrong-key wrong-door pages (romance comic, cooking comic) | normal |
+
+Also in the game: 37 hidden items, 8 keys (6 real, 2 lookalike decoys), 4 ink-gates that need 2, 3 and 4 finished pages, 12 street lamps and 16 braziers that light up as districts open.
 
 ## In scope
-Drag-swap panels, mirror flipping, undo/reset, locked panels, 3 rules, goal flip twist, narrator captions, 6 levels, menu, pause, end screen, sound and music, comic-style art, itch.io web build.
+Walkable town with torch and lighting, hidden items, trade shop, keys and locked doors, wrong-key decoy pages, six puzzle pages with the panel-swap/mirror mechanic, three rule types, the goal-flip twist, narrator captions, menu, pause, end screen, sound and music, comic-style art, itch.io web build.
 
 ## Out of scope (cut first if time runs short)
-Level editor, save system, more than 6 levels, controller support, mobile touch polish.
+Level editor, save system, controller support, mobile touch, more than six real pages, NPC side quests.
 
 ## Success criteria
-A new player finishes all 6 levels in 15-20 minutes with no instructions beyond the captions, and the web build runs in the browser without errors.
+A new player can finish the game in 15 to 20 minutes with no instructions beyond the in-game captions and signs, and the web build runs in a browser without errors.

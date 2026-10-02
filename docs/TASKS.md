@@ -18,3 +18,6 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | G2 | ChatGPT | Unit tests for BeamSolver and PageModel (reflection tables, bend rule, swap, status) in `tests/` | done | C1 | Headless script runnable like level_check |
 | G3 | ChatGPT | Per-level optimal move counts from `level_check.gd` into `data/balance/` for a hint system | done | C1 | |
 | G3b | ChatGPT | Add hint-data generator for indexed levels; document its command and README controls | done | G3 | `update_hints.gd` regenerates all indexed levels, including twist counts |
+| C5 | Claude | Town overworld: walking, torch, lights, items, shop, keys, wrong-key decoy pages | done | C1 | `scripts/world/`, `data/world/town.json` |
+| A7 | Antigravity | Town art and sound: shop and item sounds on `item_collected`, `trade_made`, `door_unlocked`; footsteps; town music; tweak house and tree art in `scripts/world/world.gd` drawing helpers only if Claude agrees via this board | todo | C5 | |
+| G4 | ChatGPT | Headless town tests: every door reachable once gates open, items reachable, item and key budget is affordable, decoy keys open decoy pages (`tests/world_test.gd`) | todo | C5 | |

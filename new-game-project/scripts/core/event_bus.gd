@@ -24,3 +24,8 @@ signal request_skip_level ## debug builds only
 ## --- game -> UI state notifications ---
 signal game_state_changed(state: String) ## "menu", "playing", "paused", "ended"
 signal level_restarted
+
+## --- town events (for audio and effects) ---
+signal item_collected(type: String) ## "ink", "gear" or "shard"
+signal trade_made(key_id: String)
+signal door_unlocked(puzzle_index: int)

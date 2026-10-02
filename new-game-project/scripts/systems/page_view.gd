@@ -62,6 +62,7 @@ var _confused := false
 
 
 func _ready() -> void:
+	_hero.glow = TEX_GLOW
 	get_viewport().size_changed.connect(func() -> void:
 		_layout()
 		queue_redraw())

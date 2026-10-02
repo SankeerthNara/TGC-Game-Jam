@@ -1,0 +1,361 @@
+{
+ "rows": [
+  "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+  "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+  "TT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,TT",
+  "TT,..#####...#####..,,,..................,TT",
+  "TT,T.#####...#####..,,,T................T,TT",
+  "TT,.o##7##o.o##8##o.,,,........s.........,TT",
+  "TT,.................,,,l................l,TT",
+  "TT,..................I...................,TT",
+  "TT,..................I...................,TT",
+  "TT,.......s.........,,,..................,TT",
+  "TT,l...............l,,,..#####.....#####.,TT",
+  "TT,.................,,,..#####.....#####T,TT",
+  "TT,T...............T,,,.o##5##o...o##6##o,TT",
+  "TT,.................,,,..................,TT",
+  "TT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,..,,,,,,,,,TT",
+  "TT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,HH,,,,,,,,,TT",
+  "TT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,..,,,,,,,,,TT",
+  "TT,..#####...#####..,,,.#####......#####.,TT",
+  "TT,..#####...#####..,,,.#####......#####.,TT",
+  "TT,To##1##o.o##2##oT,,,T##3##o....o##4##T,TT",
+  "TT,.......l.........,,,...............s..,TT",
+  "TT,..................,,........l.........,TT",
+  "TT,s..........#####..G...................,TT",
+  "TT,...........#####..G...................,TT",
+  "TT,......N.s.o##S##o,,,.l..............l.,TT",
+  "TT,.l.....@.......l.,,,..................,TT",
+  "TT,T...............T,,,T................T,TT",
+  "TT,.................,,,..................,TT",
+  "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+  "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+ ],
+ "decoys": [
+  2,
+  5
+ ],
+ "gates": {
+  "G": 2,
+  "H": 3,
+  "I": 4
+ },
+ "npc_lines": [
+  "NARRATOR: Gutter Town has gone dark! Walk with the ARROW KEYS and carry your torch. Press Z or SPACE to talk to things.",
+  "NARRATOR: Hunt for INK DROPS, GEARS and STAR SHARDS hidden around town. Glints in the dark give them away.",
+  "NARRATOR: Trade them at the SHOP for a KEY. Each PAGE door has a keyhole with a shape. Match the shape!",
+  "NARRATOR: Careful, cheap lookalike keys exist. A wrong key opens a wrong door, and I will not be held responsible."
+ ],
+ "signs": {
+  "11,24": "SIGN: 'Trade shop is the building on the right. Bring items, get keys.'",
+  "3,22": "SIGN: 'The gate east needs 2 finished pages.'",
+  "38,20": "SIGN: 'PAGE 3 is the BOLT keyhole. The one with ONE zig, not the zig-zag-zig.'",
+  "31,5": "SIGN: 'PAGE 4 has a SUN keyhole: rays, never petals.'",
+  "10,9": "SIGN: 'The last pages. You can see the whole story from here!'"
+ },
+ "items": [
+  {
+   "x": 16,
+   "y": 27,
+   "type": "ink"
+  },
+  {
+   "x": 12,
+   "y": 17,
+   "type": "ink"
+  },
+  {
+   "x": 6,
+   "y": 27,
+   "type": "ink"
+  },
+  {
+   "x": 3,
+   "y": 27,
+   "type": "ink"
+  },
+  {
+   "x": 13,
+   "y": 27,
+   "type": "gear"
+  },
+  {
+   "x": 11,
+   "y": 19,
+   "type": "gear"
+  },
+  {
+   "x": 19,
+   "y": 27,
+   "type": "gear"
+  },
+  {
+   "x": 4,
+   "y": 26,
+   "type": "shard"
+  },
+  {
+   "x": 10,
+   "y": 17,
+   "type": "shard"
+  },
+  {
+   "x": 3,
+   "y": 25,
+   "type": "shard"
+  },
+  {
+   "x": 30,
+   "y": 27,
+   "type": "ink"
+  },
+  {
+   "x": 24,
+   "y": 26,
+   "type": "ink"
+  },
+  {
+   "x": 38,
+   "y": 27,
+   "type": "ink"
+  },
+  {
+   "x": 26,
+   "y": 27,
+   "type": "gear"
+  },
+  {
+   "x": 40,
+   "y": 25,
+   "type": "gear"
+  },
+  {
+   "x": 30,
+   "y": 19,
+   "type": "gear"
+  },
+  {
+   "x": 35,
+   "y": 27,
+   "type": "shard"
+  },
+  {
+   "x": 33,
+   "y": 19,
+   "type": "shard"
+  },
+  {
+   "x": 32,
+   "y": 27,
+   "type": "shard"
+  },
+  {
+   "x": 40,
+   "y": 9,
+   "type": "ink"
+  },
+  {
+   "x": 33,
+   "y": 12,
+   "type": "ink"
+  },
+  {
+   "x": 23,
+   "y": 3,
+   "type": "ink"
+  },
+  {
+   "x": 24,
+   "y": 10,
+   "type": "gear"
+  },
+  {
+   "x": 40,
+   "y": 3,
+   "type": "gear"
+  },
+  {
+   "x": 36,
+   "y": 3,
+   "type": "gear"
+  },
+  {
+   "x": 23,
+   "y": 12,
+   "type": "shard"
+  },
+  {
+   "x": 29,
+   "y": 9,
+   "type": "shard"
+  },
+  {
+   "x": 26,
+   "y": 9,
+   "type": "shard"
+  },
+  {
+   "x": 3,
+   "y": 6,
+   "type": "ink"
+  },
+  {
+   "x": 3,
+   "y": 11,
+   "type": "ink"
+  },
+  {
+   "x": 18,
+   "y": 3,
+   "type": "ink"
+  },
+  {
+   "x": 7,
+   "y": 13,
+   "type": "gear"
+  },
+  {
+   "x": 19,
+   "y": 11,
+   "type": "gear"
+  },
+  {
+   "x": 10,
+   "y": 3,
+   "type": "gear"
+  },
+  {
+   "x": 10,
+   "y": 13,
+   "type": "shard"
+  },
+  {
+   "x": 16,
+   "y": 13,
+   "type": "shard"
+  },
+  {
+   "x": 11,
+   "y": 5,
+   "type": "shard"
+  }
+ ],
+ "doors": {
+  "0": {
+   "label": "PAGE 1",
+   "key": "star"
+  },
+  "1": {
+   "label": "PAGE 2",
+   "key": "moon"
+  },
+  "2": {
+   "label": "PAGE 3",
+   "key": "zigzag"
+  },
+  "3": {
+   "label": "PAGE 3",
+   "key": "bolt"
+  },
+  "4": {
+   "label": "PAGE 4",
+   "key": "sun"
+  },
+  "5": {
+   "label": "PAGE 4",
+   "key": "flower"
+  },
+  "6": {
+   "label": "PAGE 5",
+   "key": "gear"
+  },
+  "7": {
+   "label": "PAGE 6",
+   "key": "crown"
+  }
+ },
+ "keys": [
+  {
+   "id": "star",
+   "name": "STAR KEY",
+   "cost": {
+    "ink": 1,
+    "gear": 1
+   },
+   "zone": 0,
+   "blurb": "A classic. Opens the first page."
+  },
+  {
+   "id": "moon",
+   "name": "MOON KEY",
+   "cost": {
+    "ink": 2,
+    "shard": 1
+   },
+   "zone": 0,
+   "blurb": "Quiet, curved, and a little sleepy."
+  },
+  {
+   "id": "zigzag",
+   "name": "ZIGZAG KEY",
+   "cost": {
+    "ink": 1,
+    "gear": 1
+   },
+   "zone": 1,
+   "blurb": "On sale! It looks just like the bolt key. Honest."
+  },
+  {
+   "id": "bolt",
+   "name": "BOLT KEY",
+   "cost": {
+    "gear": 2,
+    "shard": 1
+   },
+   "zone": 1,
+   "blurb": "One clean zig. Not the zig-zag-zig."
+  },
+  {
+   "id": "flower",
+   "name": "FLOWER KEY",
+   "cost": {
+    "ink": 1,
+    "shard": 1
+   },
+   "zone": 2,
+   "blurb": "Bargain! Sun-shaped. Mostly."
+  },
+  {
+   "id": "sun",
+   "name": "SUN KEY",
+   "cost": {
+    "ink": 2,
+    "gear": 1,
+    "shard": 1
+   },
+   "zone": 2,
+   "blurb": "Rays, not petals. Check the keyhole."
+  },
+  {
+   "id": "gear",
+   "name": "GEAR KEY",
+   "cost": {
+    "gear": 2,
+    "shard": 2
+   },
+   "zone": 3,
+   "blurb": "Turns. Heavy."
+  },
+  {
+   "id": "crown",
+   "name": "CROWN KEY",
+   "cost": {
+    "ink": 2,
+    "gear": 2,
+    "shard": 2
+   },
+   "zone": 3,
+   "blurb": "For the final page. Very fancy."
+  }
+ ]
+}
