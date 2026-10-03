@@ -4,7 +4,7 @@ extends TaskBase
 ## how many are in the right place.
 
 const DIGITS := 3
-var MAX_TRIES := 8
+const SHOWN := 8
 
 var _code: Array[int] = []
 var _guess: Array[int] = [0, 0, 0]
@@ -12,9 +12,8 @@ var _history: Array[Dictionary] = []
 
 
 func _begin() -> void:
-	MAX_TRIES = 8 - difficulty / 2
 	title = "CRACK THE SAFE"
-	hint = "Set the digits (click arrows, or Up/Down and Left/Right) and press TRY or Enter."
+	hint = "3 different digits. Click arrows or use Up/Down + Left/Right, then TRY or Enter."
 	var pool := range(10)
 	pool.shuffle()
 	for i in DIGITS:
@@ -26,15 +25,15 @@ var _sel := 0
 
 
 func _up(i: int) -> Rect2:
-	return Rect2(Vector2(panel.position.x + 90 + i * 110, panel.position.y + 120), Vector2(80, 40))
+	return Rect2(Vector2(panel.position.x + 70 + i * 110, panel.position.y + 130), Vector2(80, 40))
 
 
 func _down(i: int) -> Rect2:
-	return Rect2(Vector2(panel.position.x + 90 + i * 110, panel.position.y + 250), Vector2(80, 40))
+	return Rect2(Vector2(panel.position.x + 70 + i * 110, panel.position.y + 270), Vector2(80, 40))
 
 
 func _try_btn() -> Rect2:
-	return Rect2(Vector2(panel.position.x + 90, panel.position.y + 310), Vector2(300, 60))
+	return Rect2(Vector2(panel.position.x + 70, panel.position.y + 380), Vector2(300, 64))
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -69,27 +68,30 @@ func _unhandled_input(event: InputEvent) -> void:
 func _submit() -> void:
 	var exact := 0
 	var misplaced := 0
+	var left_code: Array[int] = []
+	var left_guess: Array[int] = []
 	for i in DIGITS:
 		if _guess[i] == _code[i]:
 			exact += 1
-		elif _code.has(_guess[i]):
+		else:
+			left_code.append(_code[i])
+			left_guess.append(_guess[i])
+	for g in left_guess:
+		if left_code.has(g):
 			misplaced += 1
+			left_code.erase(g)
 	_history.append({"g": _guess.duplicate(), "exact": exact, "misplaced": misplaced})
 	if exact == DIGITS:
 		succeed()
-	elif _history.size() >= MAX_TRIES:
-		_history.clear()
-		var pool := range(10)
-		pool.shuffle()
-		for i in DIGITS:
-			_code[i] = int(pool[i])
-		flash("OUT OF TRIES! NEW CODE", 8.0)
+	elif exact == 0 and misplaced == 0:
+		flash("NONE OF THOSE DIGITS", 3.0)
 
 
 func _draw_task() -> void:
-	_text("TRIES %d / %d" % [_history.size(), MAX_TRIES], panel.position + Vector2(30, 112), 26, INK, FONT_SHOUT)
-	draw_rect(Rect2(panel.position + Vector2(70, 115), Vector2(340, 190)), Color("8d99ae"))
-	draw_rect(Rect2(panel.position + Vector2(70, 115), Vector2(340, 190)), INK, false, 5.0)
+	_text("TRIES: %d" % _history.size(), panel.position + Vector2(70, 100), 26, INK, FONT_SHOUT)
+	var plate := Rect2(panel.position + Vector2(50, 118), Vector2(340, 235))
+	draw_rect(plate, Color("8d99ae"))
+	draw_rect(plate, INK, false, 5.0)
 	for i in DIGITS:
 		var u := _up(i)
 		var d := _down(i)
@@ -102,12 +104,27 @@ func _draw_task() -> void:
 	var b := _try_btn()
 	draw_rect(b, GOLD)
 	draw_rect(b, INK, false, 4.0)
-	_text("TRY", b.position + Vector2(0, 44), 40, INK, FONT_SHOUT, HORIZONTAL_ALIGNMENT_CENTER, b.size.x)
-	_text("HISTORY", Vector2(panel.end.x - 300, panel.position.y + 132), 26, INK, FONT_SHOUT)
-	for k in _history.size():
+	_text("TRY", b.position + Vector2(0, 48), 40, INK, FONT_SHOUT, HORIZONTAL_ALIGNMENT_CENTER, b.size.x)
+	# history: newest first, a coloured dot per digit (green = right place, gold = wrong place)
+	var hx := panel.position.x + 440.0
+	_text("HISTORY", Vector2(hx, panel.position.y + 100), 26, INK, FONT_SHOUT)
+	draw_circle(Vector2(hx + 6, panel.position.y + 128), 7, GREEN)
+	_text("right place", Vector2(hx + 20, panel.position.y + 134), 17, Color("5c5470"), FONT_BODY)
+	draw_circle(Vector2(hx + 130, panel.position.y + 128), 7, GOLD)
+	draw_circle(Vector2(hx + 130, panel.position.y + 128), 7, INK, false, 2.0)
+	_text("wrong place", Vector2(hx + 144, panel.position.y + 134), 17, Color("5c5470"), FONT_BODY)
+	for k in mini(_history.size(), SHOWN):
 		var h: Dictionary = _history[_history.size() - 1 - k]
-		if k > 6:
-			break
 		var g: Array = h["g"]
-		_text("%d %d %d" % [g[0], g[1], g[2]], Vector2(panel.end.x - 300, panel.position.y + 170 + k * 36), 28, INK, FONT_SHOUT)
-		_text("%d right place, %d wrong place" % [h["exact"], h["misplaced"]], Vector2(panel.end.x - 210, panel.position.y + 168 + k * 36), 17, Color("5c5470"), FONT_BODY)
+		var y := panel.position.y + 170.0 + k * 38.0
+		_text("%d %d %d" % [g[0], g[1], g[2]], Vector2(hx, y + 26), 30, INK, FONT_SHOUT)
+		var n := 0
+		for j in int(h["exact"]):
+			draw_circle(Vector2(hx + 130 + n * 26, y + 14), 10, GREEN)
+			n += 1
+		for j in int(h["misplaced"]):
+			draw_circle(Vector2(hx + 130 + n * 26, y + 14), 10, GOLD)
+			draw_circle(Vector2(hx + 130 + n * 26, y + 14), 10, INK, false, 2.0)
+			n += 1
+		if n == 0:
+			_text("none", Vector2(hx + 130, y + 22), 18, Color("5c5470"), FONT_BODY)
