@@ -96,3 +96,9 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   been about 10-15 fps during cutscenes. The halftone is now a tiled dot texture on a few soft-faded
   quads: same look, **28 draw calls, 180 fps**. It speeds up every screen that uses halftone (cutscenes,
   score cards, menus, the code-drawn stages).
+- Performance inside the real game scene (`scripts/tools/perf_probe2.tscn`): main menu 180 fps (241 draw
+  calls), book 180 fps (29), 144p level 1 180 fps (227 / 126 after walking). Web build re-exported
+  (index.pck 20.9 MB, wasm 39.5 MB) and loaded in the browser with no console errors.
+- The in-game Credits now disclose the AI art and the AI tools used (Claude Code, Antigravity,
+  ChatGPT/Codex) and point to CREDITS.md and docs/AI_USAGE.md (jam rule: AI use must be disclosed).
+  Checked that the longer text still fits the panel (`scripts/tools/menu_shot.tscn`).
