@@ -39,3 +39,8 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 3. Still missing art (code fallbacks are used, nothing is broken): book panels, comms portraits, 720p
    pixel sprites for the goons and the Twins.
 4. Feature freeze Tuesday 12 pm; web build `build/web/` exports cleanly (20 MB pck).
+- Merged Antigravity's next delivery: book panels (7), comms portraits (5), 720p pixel sprites (hero,
+  thug, gunner, both Twins), key art. They replace the drawn placeholders automatically.
+- Wired for the coming art (falls back if missing): pixel hero frames `px_hero_run1/run2/punch/kick/roll/hurt`
+  in the brawler; pixel comms portraits `px_narrator_friendly/evil` in the 720p comms box.
+- Pixel sprites drawn a bit bigger (hero 180 px, goons 170, Twins 230). Flow test 0 fails.

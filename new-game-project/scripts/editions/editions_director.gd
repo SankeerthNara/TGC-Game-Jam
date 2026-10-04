@@ -14,6 +14,7 @@ var act := ""
 
 func setup(m: Node) -> void:
 	main = m
+	add_to_group("editions_director")
 	fx = EditionFX.new()
 	main.add_child(fx)
 	comms = CommsBox.new()

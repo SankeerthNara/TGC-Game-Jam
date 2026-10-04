@@ -31,7 +31,7 @@ func _ready() -> void:
 	_draw_node.size = Vector2(1280, 720)
 	_draw_node.draw.connect(_draw_box)
 	add_child(_draw_node)
-	for key in ["narrator_friendly", "narrator_evil", "hero", "ink_baron", "static_twins"]:
+	for key in ["narrator_friendly", "narrator_evil", "hero", "ink_baron", "static_twins", "px_narrator_friendly", "px_narrator_evil"]:
 		var p: String = PORTRAITS + key + ".png"
 		if ResourceLoader.exists(p):
 			_tex[key] = load(p)
@@ -115,6 +115,10 @@ func _draw_box() -> void:
 	ci.draw_circle(pc, 44.0, INK)
 	ci.draw_circle(pc, 40.0, Color("2d1f3d") if not evil else Color("4a0d1a"))
 	var key := "narrator_friendly" if who == "narrator" else who
+	# the pixel edition uses pixel portraits when they exist
+	var d: Node = get_tree().get_first_node_in_group("editions_director")
+	if d != null and d.act == "720p" and _tex.has("px_" + key):
+		key = "px_" + key
 	if _tex.has(key):
 		ci.draw_texture_rect(_tex[key], Rect2(pc - Vector2(40, 40), Vector2(80, 80)), false)
 	elif who in ["narrator", "narrator_evil"]:

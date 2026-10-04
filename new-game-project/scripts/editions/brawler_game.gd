@@ -572,11 +572,26 @@ func _draw_hero() -> void:
 	if _inv > 0.0 and _roll_t <= 0.0 and int(_t * 18.0) % 2 == 0:
 		return
 	# a pixel sprite if there is one; else the painted hero frames, which the 720p filter turns into pixel art
-	if not Sprites.draw(self, "px_hero", p + Vector2(0, 4), 150.0, _face, Color.WHITE, 1.0 + (sin(_t * 3.0) * 0.015 if pose == "idle" else 0.0), 0.18 * _face if pose == "dash" else 0.0):
+	if not Sprites.draw(self, _px_frame(pose), p + Vector2(0, 4), 180.0, _face, Color.WHITE, 1.0 + (sin(_t * 3.0) * 0.015 if pose == "idle" else 0.0), 0.18 * _face if pose == "dash" and _px_frame(pose) == "px_hero" else 0.0):
 		ArenaArt.hero(self, 0, p, _face, pose, _t, 0.0, 1.25)
 	draw_set_transform(Vector2.ZERO)
 	if _atk_t > 0.12:
 		ArenaArt.slash(self, p + Vector2(_face * 56.0, -70), Vector2(_face, -0.1 if _combo < 3 else -0.6).normalized(), 1.0 - (_atk_t - 0.12) / 0.2, _combo == 3)
+
+
+## The pixel hero frame for a pose (falls back to px_hero when a frame is missing).
+func _px_frame(pose: String) -> String:
+	var key := "px_hero"
+	match pose:
+		"run":
+			key = "px_hero_run1" if int(_t * 9.0) % 2 == 0 else "px_hero_run2"
+		"attack":
+			key = "px_hero_kick" if _combo == 3 else "px_hero_punch"
+		"dash":
+			key = "px_hero_roll"
+		"hurt":
+			key = "px_hero_hurt"
+	return key if Sprites.has(key) else "px_hero"
 
 
 func _draw_hud() -> void:

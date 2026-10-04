@@ -171,7 +171,7 @@ func draw(ci: CanvasItem, cam: float) -> void:
 	var p := pos - Vector2(cam, 0)
 	var key := "px_thug" if kind == "thug" else ("px_gunner" if kind == "gunner" else "px_" + kind)
 	if Sprites.has(key):
-		var h := 140.0 if not twin() else 190.0
+		var h := 170.0 if not twin() else 230.0
 		var lean := 0.0
 		if state == "windup":
 			lean = -0.12 * dir
