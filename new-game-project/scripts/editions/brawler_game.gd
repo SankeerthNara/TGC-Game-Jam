@@ -411,6 +411,7 @@ func _try_counter() -> void:
 	_flash = 0.4
 	_hit_fx(best.center(), 2.0)
 	_fx.append({"kind": "word", "text": "COUNTER!", "pos": best.center() + Vector2(0, -80), "t": 0.0, "life": 0.9})
+	_fx.append({"kind": "burst", "pos": best.center(), "t": 0.0, "life": 0.35})
 	EventBus.sound_requested.emit("counter_hit")
 
 
@@ -492,6 +493,12 @@ func _draw() -> void:
 				ArenaArt.hit_spark(self, fp, k, float(f["size"]))
 			"px":
 				draw_rect(Rect2(fp, Vector2(6, 6)), Color(0.4, 1.0, 1.0, 1.0 - k))
+			"burst":
+				# speed lines bursting out of a counter
+				for i in 16:
+					var ang := i * TAU / 16.0
+					var r0 := 40.0 + 220.0 * k
+					draw_line(fp + Vector2.from_angle(ang) * r0, fp + Vector2.from_angle(ang) * (r0 + 70.0), Color(1, 0.95, 0.8, 1.0 - k), 4.0)
 			"dust":
 				draw_rect(Rect2(fp - Vector2(4, 4), Vector2(8, 8)), Color(0.75, 0.7, 0.75, 0.5 * (1.0 - k)))
 			"word":

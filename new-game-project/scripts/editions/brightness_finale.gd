@@ -13,6 +13,8 @@ var _value := 0.2
 var _t := 0.0
 var _done := false
 var _drag := false
+var _said := 0 ## the Narrator begs as the light rises
+const BEGS := [[0.45, "No... put that down, reader."], [0.7, "STOP! This is not how my story ends!"], [0.9, "Please... just one more page..."]]
 var _node: Control
 
 
@@ -51,6 +53,12 @@ func _process(delta: float) -> void:
 	_t += delta
 	if not _done and _t > 1.5 and (Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D)):
 		_value = minf(1.0, _value + delta * 0.35)
+	if _said < BEGS.size() and _value >= float(BEGS[_said][0]):
+		var c: Node = get_tree().get_first_node_in_group("comms")
+		if c != null:
+			c.dead = false # his own voice breaks through the dead comms
+			c.say(String(BEGS[_said][1]), "narrator_evil", 1.0)
+		_said += 1
 	if not _done and _value >= 0.999:
 		_done = true
 		_t = 0.0
