@@ -25,6 +25,7 @@ var level_scores: Array = []
 var level_ranks: Array = []
 var overall_rank := "C"
 var easier_next := false
+var won := true ## the final screen: which ending
 var to_bomb_room := false ## the last level: Z opens the bomb room
 var keys_found := 0
 var key_total := 4
@@ -73,9 +74,9 @@ func _draw() -> void:
 	draw_rect(Rect2(panel.position + Vector2(8, 8), panel.size), Color(0, 0, 0, 0.5))
 	draw_rect(panel, Color("fff3d1"))
 	draw_rect(panel, INK, false, 6.0)
-	draw_rect(Rect2(panel.position, Vector2(panel.size.x, 72)), Color("2dc653") if not final else GOLD)
+	draw_rect(Rect2(panel.position, Vector2(panel.size.x, 72)), Color("2dc653") if not final else (GOLD if won else Color("9d4edd")))
 	draw_rect(Rect2(panel.position, Vector2(panel.size.x, 72)), INK, false, 6.0)
-	var head := "LEVEL COMPLETE!" if not final else "THE BOMB ROOM IS OPEN!"
+	var head := "LEVEL COMPLETE!" if not final else ("YOU SAVED THE EARTH!" if won else "THE NARRATOR WINS!")
 	var hs := FONT_SHOUT.get_string_size(head, HORIZONTAL_ALIGNMENT_LEFT, -1, 50)
 	draw_string(FONT_SHOUT, panel.position + Vector2((panel.size.x - hs.x) * 0.5, 54), head, HORIZONTAL_ALIGNMENT_LEFT, -1, 50, INK)
 	var y := panel.position.y + 108.0
@@ -95,7 +96,7 @@ func _draw() -> void:
 		draw_string(FONT_SHOUT, Vector2(right - 200, y + 22), "%d" % total_score, HORIZONTAL_ALIGNMENT_RIGHT, 140, 40, Color("c1121f"))
 		_rank_badge(Vector2(right - 20, y + 10), 26.0, overall_rank)
 		draw_string(FONT_BODY, Vector2(left + 10, y + 56), "Total time %s    Bomb time left %s" % [_fmt(total_time), _fmt(bomb_left)], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, INK)
-		draw_string(FONT_BODY, Vector2(left + 10, y + 84), "Next: the boss fight against the Narrator (coming soon).", HORIZONTAL_ALIGNMENT_LEFT, 640, 18, Color("5c5470"))
+		draw_string(FONT_BODY, Vector2(left + 10, y + 84), "Thanks for playing Mirror Page!" if won else "Play again and save the first hero.", HORIZONTAL_ALIGNMENT_LEFT, 640, 18, Color("5c5470"))
 	else:
 		for ln in lines:
 			var pts: int = ln[1]

@@ -12,6 +12,13 @@ const LAYERS := {
 	"danger": preload("res://assets/audio/music_danger.wav"),
 }
 const CHASE := preload("res://assets/audio/music_chase.wav")
+## The final battle's comic opera, four layers that build with the fight.
+const OPERA := {
+	"strings": preload("res://assets/audio/music_opera_strings.wav"),
+	"choir": preload("res://assets/audio/music_opera_choir.wav"),
+	"brass": preload("res://assets/audio/music_opera_brass.wav"),
+	"frenzy": preload("res://assets/audio/music_opera_frenzy.wav"),
+}
 const STING_WIN := preload("res://assets/audio/sting_win.wav")
 const STING_FAIL := preload("res://assets/audio/sting_fail.wav")
 const BASE_DB := -8.0
@@ -24,6 +31,8 @@ var _level := {} ## current volume 0..1 per layer
 var _chase: AudioStreamPlayer
 var _chase_level := 0.0
 var _sting: AudioStreamPlayer
+var _opera := {}
+var _opera_level := {}
 var _last_state := ""
 
 
@@ -41,6 +50,13 @@ func _ready() -> void:
 	_chase.stream = CHASE
 	_chase.volume_db = -80.0
 	add_child(_chase)
+	for key: String in OPERA:
+		var op := AudioStreamPlayer.new()
+		op.stream = OPERA[key]
+		op.volume_db = -80.0
+		add_child(op)
+		_opera[key] = op
+		_opera_level[key] = 0.0
 	_sting = AudioStreamPlayer.new()
 	_sting.volume_db = BASE_DB + 2.0
 	add_child(_sting)
@@ -69,6 +85,8 @@ func _targets() -> Dictionary:
 				t["tension"] = 0.8
 		"parkour":
 			t["chase"] = 1.0
+		"boss":
+			pass # the opera plays instead (see _opera_targets)
 		"choice":
 			t["pad"] = 0.5
 			t["tension"] = 1.0
@@ -119,6 +137,24 @@ func _nearest_vampire(world: World) -> float:
 	return best
 
 
+## The battle opera: more layers as the fight heats up (BossFight.intensity 0..3).
+func _opera_targets() -> Dictionary:
+	var t := {"strings": 0.0, "choir": 0.0, "brass": 0.0, "frenzy": 0.0}
+	if main == null or main.state != "boss":
+		return t
+	var level := 0
+	if main._overlay is BossFight:
+		level = main._overlay.intensity
+	t["strings"] = 0.9
+	t["choir"] = 0.45 if level == 0 else 0.85
+	t["brass"] = 0.9 if level >= 2 else (0.5 if level == 1 else 0.0)
+	t["frenzy"] = 0.9 if level >= 3 else 0.0
+	if main.paused:
+		for k in t:
+			t[k] *= 0.35
+	return t
+
+
 func _process(delta: float) -> void:
 	var state: String = main.state if main != null else "menu"
 	if state != _last_state:
@@ -128,6 +164,18 @@ func _process(delta: float) -> void:
 	for key: String in _players:
 		_level[key] = move_toward(_level[key], t[key], FADE * delta)
 		_players[key].volume_db = _db(_level[key])
+	var ot := _opera_targets()
+	var opera_on := false
+	for key: String in _opera:
+		_opera_level[key] = move_toward(_opera_level[key], ot[key], FADE * delta)
+		_opera[key].volume_db = _db(_opera_level[key])
+		opera_on = opera_on or _opera_level[key] > 0.0
+	if opera_on and not _opera["strings"].playing:
+		for key: String in _opera:
+			_opera[key].play() # together, so the layers stay in sync
+	elif not opera_on and _opera["strings"].playing:
+		for key: String in _opera:
+			_opera[key].stop()
 	_chase_level = move_toward(_chase_level, t["chase"], FADE * 2.0 * delta)
 	_chase.volume_db = _db(_chase_level)
 	if _chase_level > 0.0 and not _chase.playing:

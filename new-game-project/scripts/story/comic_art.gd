@@ -258,7 +258,9 @@ static func narrator(ci: CanvasItem, c: Vector2, s: float, mask_off := 1.0, mood
 		ci.draw_line(c + Vector2(hr * 0.55, -hr * 0.05), c + Vector2(hr * 0.7, hr * 0.7), GOLD, 2.0 * s)
 		for side in [-1.0, 1.0]:
 			ci.draw_polyline(PackedVector2Array([c + Vector2(0, hr * 0.28), c + Vector2(side * hr * 0.4, hr * 0.3), c + Vector2(side * hr * 0.62, hr * 0.12), c + Vector2(side * hr * 0.55, hr * 0.02)]), INK, hr * 0.08, true)
-		if mood == "grin":
+		if mood == "shock":
+			ellipse(ci, c + Vector2(0, hr * 0.55), hr * 0.2, hr * 0.26, Color("6a040f"), 3.0 * s)
+		elif mood == "grin":
 			poly(ci, PackedVector2Array([c + Vector2(-hr * 0.5, hr * 0.45), c + Vector2(hr * 0.5, hr * 0.45), c + Vector2(hr * 0.3, hr * 0.72), c + Vector2(-hr * 0.3, hr * 0.72)]), Color("6a040f"), 3.0 * s)
 			for k in 5:
 				var x := -hr * 0.4 + k * hr * 0.2

@@ -12,6 +12,10 @@ static func pages(kind: String) -> Array:
 			return _bomb_room()
 		"earth_blast":
 			return _earth_blast()
+		"ending_sun":
+			return _ending_sun()
+		"ending_lava":
+			return _ending_lava()
 	return []
 
 
@@ -125,4 +129,48 @@ static func _earth_blast() -> Array:
 		 "text": [_cap("...but they were too late. The Earth is gone.", 0, 2.4, "bl", 460.0)],
 		 "sfx": [_sfx("KA-BOOOOM!", 0, 0.35, Vector2(0.5, 0.35), 140, Color("ffb703"), -0.06)],
 		 "hold": 2.5},
+	]
+
+
+static func _ending_sun() -> Array:
+	return [
+		{"panels": [
+			_p("solar_flare", 0, 0, 0.55, 1, 0.0, "left"),
+			_p("narrator_melt", 0.55, 0, 0.45, 1, 1.4, "right")],
+		 "text": [
+			_say("This is MY story!", 1, 1.8, Vector2(0.5, 0.14), Vector2(0.5, 0.32), "narrator", 230.0),
+			_cap("The space hero's Solar Flare filled the bomb room with sunlight.", 0, 0.3, "tl", 380.0),
+			_cap("...and the Narrator evaporated like ink in the sun.", 1, 3.4, "bl", 300.0)],
+		 "sfx": [
+			_sfx("FWOOOSH!", 0, 0.8, Vector2(0.55, 0.8), 70, Color("ffb703"), -0.1),
+			_sfx("TSSSS...", 1, 2.6, Vector2(0.5, 0.62), 52, Color("c77dff"), 0.08)],
+		 "hold": 1.6},
+		{"panels": [
+			_p("hero_freed", 0, 0, 0.42, 1, 0.0, "left"),
+			_p("earth_sunlit", 0.42, 0, 0.58, 1, 1.4, "fade")],
+		 "text": [
+			_say("You came back for me!", 0, 0.4, Vector2(0.5, 0.14), Vector2(0.5, 0.3), "hero", 220.0),
+			_cap("The bomb went quiet. The four heroes stood together again...", 1, 1.8, "tl", 380.0),
+			_cap("...and the Earth saw the sun once more.", 1, 3.4, "br", 360.0)],
+		 "sfx": [_sfx("THE END", 1, 4.6, Vector2(0.5, 0.5), 96, Color("ffd23f"), -0.04)],
+		 "hold": 3.0},
+	]
+
+
+static func _ending_lava() -> Array:
+	return [
+		{"panels": [
+			_p("narrator_reveal", 0, 0, 1, 0.48, 0.0, "pop"),
+			_p("lava_drop", 0, 0.48, 1, 0.52, 1.8, "up")],
+		 "text": [
+			_say("Every story needs an ending. I choose THIS one.", 0, 0.4, Vector2(0.8, 0.3), Vector2(0.6, 0.45), "narrator", 300.0),
+			_say("NOOO!", 1, 2.6, Vector2(0.85, 0.2), Vector2(0.66, 0.42), "hero", 140.0, true)],
+		 "sfx": [_sfx("SPLOOSH!", 1, 3.2, Vector2(0.62, 0.82), 70, Color("ff7b00"), 0.08)],
+		 "hold": 1.6},
+		{"panels": [_p("earth_dark", 0, 0, 1, 1, 0.0, "fade")],
+		 "text": [
+			_cap("The first hero fell into the lava, and the darkness stayed.", 0, 0.4, "tl", 420.0),
+			_say("Turn the page, reader. Try again... if you dare.", 0, 2.2, Vector2(0.78, 0.75), Vector2(0.95, 0.95), "narrator", 300.0)],
+		 "sfx": [_sfx("THE END?", 0, 3.6, Vector2(0.5, 0.45), 96, Color("c77dff"), -0.04)],
+		 "hold": 3.0},
 	]

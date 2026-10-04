@@ -15,6 +15,8 @@ var run_id := 0 ## bumps on every level start so stale timers do nothing
 var decoy_revealed := false
 var state := "menu" ## menu | cutscene | world | task | playing (a page puzzle) | choice | parkour | paused | levelend | ended | dead
 var friends_killed := 0
+var friends_revealed := 0
+const BOSS_MIN_TIME := 180.0 ## the bomb has at least this much left when the boss fight starts
 var active_task := ""
 var run_seed := 0
 var level_idx := 0
@@ -27,9 +29,9 @@ var score := ScoreKeeper.new()
 var level_ease: Array[int] = [0, 0, 0, 0]
 var _task_layer: CanvasLayer
 var paused := false ## the whole game is frozen (P / Esc); the UI keeps running
-const PAUSABLE_STATES := ["world", "task", "parkour", "playing"]
+const PAUSABLE_STATES := ["world", "task", "parkour", "playing", "boss"]
 const BOMB_SECONDS := 17 * 60.0 ## the masked villain's bomb: find the 4 keys and open the bomb room in time
-const TICKING := ["world", "task", "playing", "parkour"] ## the bomb clock pauses in cutscenes, menus and score screens
+const TICKING := ["world", "task", "playing", "parkour", "boss"] ## the bomb clock pauses in cutscenes, menus and score screens
 var bomb_left := BOMB_SECONDS
 var keys_found := 0
 
@@ -130,6 +132,7 @@ func _start_game() -> void:
 	total_time = 0.0
 	score.new_run()
 	friends_killed = 0
+	friends_revealed = 0
 	bomb_left = BOMB_SECONDS
 	keys_found = 0
 	world.bomb_left = bomb_left
@@ -174,6 +177,8 @@ func _process(delta: float) -> void:
 		if bomb_left <= 0.0:
 			_bomb_exploded()
 	world.bomb_left = bomb_left
+	if _overlay is BossFight:
+		_overlay.bomb_left = bomb_left
 
 
 ## The 17 minutes ran out before the bomb room was opened: the Earth is blasted.
@@ -319,6 +324,7 @@ func _apply_vampire_choice(i: int, reveal: bool) -> void:
 func _after_vampire_choice(i: int, reveal: bool, role: String) -> void:
 	if reveal and role == "friend":
 		world.vampires.reveal_friend(i)
+		friends_revealed += 1
 		world.on_ally_revealed()
 		score.on_friend_revealed()
 		_enter_world()
@@ -450,26 +456,51 @@ func _level_complete() -> void:
 func _open_bomb_room() -> void:
 	_set_state("cutscene")
 	_play_cutscene("bomb_room", func() -> void:
-		_set_state("ended")
-		EventBus.caption_changed.emit("NARRATOR: Yes, it was me all along. Now, heroes... come and get your friend. The bomb is still ticking.")
-		var ov := LevelOverlay.new()
-		ov.final = true
-		ov.title = "The bomb room is open"
-		ov.total_time = total_time
-		ov.splits = level_splits.duplicate()
-		ov.total_score = score.total
-		ov.level_scores = score.level_totals.duplicate()
-		ov.level_ranks = score.level_ranks.duplicate()
-		ov.overall_rank = score.overall_rank()
-		ov.keys_found = keys_found
-		ov.key_total = LevelGenerator.level_count()
-		ov.bomb_left = bomb_left
-		_overlay = ov
-		_task_layer.add_child(ov)
-		ov.continue_pressed.connect(func() -> void:
-			_clear_overlay()
-			EventBus.game_finished.emit()
-			EventBus.request_quit_to_menu.emit()))
+		bomb_left = maxf(bomb_left, BOSS_MIN_TIME)
+		_start_boss())
+
+
+## The final boss: three relay duels against the Narrator, the bomb still ticking.
+func _start_boss() -> void:
+	_set_state("boss")
+	EventBus.caption_changed.emit("NARRATOR: Three heroes left? I already wrote how this ends.")
+	var boss := BossFight.new()
+	boss.friends_revealed = friends_revealed
+	boss.friends_killed = friends_killed
+	boss.bomb_left = bomb_left
+	_overlay = boss
+	_task_layer.add_child(boss)
+	boss.finished.connect(func(result: String) -> void:
+		boss.queue_free()
+		_overlay = null
+		var won := result == "win"
+		_set_state("cutscene")
+		_play_cutscene("ending_sun" if won else "ending_lava", func() -> void: _final_screen(won)))
+
+
+## The last score screen after either ending.
+func _final_screen(won: bool) -> void:
+	_set_state("ended")
+	EventBus.caption_changed.emit("NARRATOR: The end. For now." if won else "NARRATOR: My story, my ending. Again?")
+	var ov := LevelOverlay.new()
+	ov.final = true
+	ov.won = won
+	ov.title = "The Earth is saved!" if won else "The Narrator wins..."
+	ov.total_time = total_time
+	ov.splits = level_splits.duplicate()
+	ov.total_score = score.total
+	ov.level_scores = score.level_totals.duplicate()
+	ov.level_ranks = score.level_ranks.duplicate()
+	ov.overall_rank = score.overall_rank()
+	ov.keys_found = keys_found
+	ov.key_total = LevelGenerator.level_count()
+	ov.bomb_left = bomb_left
+	_overlay = ov
+	_task_layer.add_child(ov)
+	ov.continue_pressed.connect(func() -> void:
+		_clear_overlay()
+		EventBus.game_finished.emit()
+		EventBus.request_quit_to_menu.emit())
 
 
 func _wait_playing() -> void:

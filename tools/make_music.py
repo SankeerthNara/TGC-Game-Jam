@@ -196,6 +196,110 @@ def chase():
     return tr.finish(0.7)
 
 
+# ---------------------------------------------------------------- the final battle: a comic opera
+# 3/4 at 138 BPM, 16 bars, D minor. Four layers that build with the fight:
+# 1 strings and pizzicato, 2 the ink choir and timpani, 3 brass and snare, 4 the frenzy (the Narrator).
+OPERA_BARS = 16
+OPERA_PROG = [(38, [50, 53, 57]), (38, [50, 53, 57]), (34, [46, 50, 53]), (34, [46, 50, 53]),
+              (36, [48, 52, 55]), (36, [48, 52, 55]), (33, [45, 49, 52]), (33, [45, 49, 52]),
+              (38, [50, 53, 57]), (41, [53, 57, 60]), (34, [46, 50, 53]), (31, [43, 46, 50]),
+              (33, [45, 49, 52]), (33, [45, 49, 52]), (38, [50, 53, 57]), (33, [45, 49, 52])]
+
+
+class Track3(Track):
+    def __init__(self, bpm, bars):
+        super().__init__(bpm, bars)
+        self.length = int(bars * 3 * self.beat * SR)
+        self.buf = np.zeros(self.length + SR * 3)
+
+
+def vowel(freq, dur, attack=0.25, release=0.5):
+    """A sung 'aah': harmonics shaped by two formants, with vibrato."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    vib = 1 + 0.006 * np.sin(2 * np.pi * 5.2 * t)
+    out = np.zeros(n)
+    for k in range(1, 16):
+        f = freq * k
+        if f > SR / 2.2:
+            break
+        amp = np.exp(-((f - 750) / 260) ** 2) + 0.6 * np.exp(-((f - 1150) / 300) ** 2) + 0.15 / k
+        out += amp * np.sin(2 * np.pi * f * np.cumsum(vib) / SR)
+    return out * env(n, attack, release, n)
+
+
+def timpani(note, strength=1.0):
+    n = int(0.9 * SR)
+    t = np.arange(n) / SR
+    f = midi(note) * (1 + 0.04 * np.exp(-t * 20))
+    s = np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.3 * np.sin(2 * np.pi * np.cumsum(f * 1.5) / SR)
+    return strength * s * np.exp(-t * 4.5)
+
+
+def cymbal(strength=1.0, length=1.2):
+    n = int(length * SR)
+    t = np.arange(n) / SR
+    noise = np.diff(rng.uniform(-1, 1, n + 1))
+    return strength * noise * np.exp(-t * 3.0) * 0.5
+
+
+def opera_strings():
+    tr = Track3(138, OPERA_BARS)
+    for bar, (root, ch) in enumerate(OPERA_PROG):
+        b0 = bar * 3
+        # oom-pah-pah: low pizzicato root, then two chord stabs
+        tr.add(additive(midi(root), tr.beat * 0.5, SAW, decay=0.12, attack=0.003, release=0.05), b0, 0.7)
+        for k in (1, 2):
+            for n in ch:
+                tr.add(additive(midi(n + 12), tr.beat * 0.35, SOFT_SAW, decay=0.1, attack=0.004, release=0.04), b0 + k, 0.22)
+        for n in ch:
+            tr.add(additive(midi(n), 3 * tr.beat + 0.3, SOFT_SAW, attack=0.3, release=0.4, vib=0.004), b0, 0.12)
+    return tr.finish(0.6)
+
+
+def opera_choir():
+    tr = Track3(138, OPERA_BARS)
+    for bar, (root, ch) in enumerate(OPERA_PROG):
+        if bar % 2 == 0:
+            for n in ch + [ch[0] + 12]:
+                tr.add(vowel(midi(n + 12), 6 * tr.beat + 0.3), bar * 3, 0.16)
+        tr.add(timpani(root + 12, 0.8), bar * 3)
+        if bar % 4 == 3:
+            for k in range(6):
+                tr.add(timpani(root + 12, 0.25 + 0.1 * k), bar * 3 + 1.5 + k * 0.25)
+    return tr.finish(0.6)
+
+
+def opera_brass():
+    tr = Track3(138, OPERA_BARS)
+    motif = [74, 72, 69, 70, 69, 67, 65, 64]
+    for bar, (root, ch) in enumerate(OPERA_PROG):
+        b0 = bar * 3
+        n = motif[bar % len(motif)] - (0 if bar < 8 else 12)
+        tr.add(additive(midi(n), tr.beat * 2.2, SAW, decay=0.9, attack=0.03, release=0.15, vib=0.005), b0, 0.42)
+        tr.add(additive(midi(n - 7), tr.beat * 0.6, SAW, decay=0.2, attack=0.01, release=0.05), b0 + 2.5, 0.3)
+        tr.add(snare(0.45), b0 + 1)
+        tr.add(snare(0.45), b0 + 2)
+        tr.add(kick(0.8), b0)
+    return tr.finish(0.6)
+
+
+def opera_frenzy():
+    tr = Track3(138, OPERA_BARS)
+    for bar, (root, ch) in enumerate(OPERA_PROG):
+        b0 = bar * 3
+        tones = [n + 24 for n in ch] + [ch[1] + 12]
+        for s in range(12):
+            tr.add(additive(midi(tones[s % len(tones)]), tr.beat * 0.22, SQUARE, decay=0.06, attack=0.002, release=0.02), b0 + s * 0.25, 0.22)
+        for b in range(3):
+            tr.add(kick(0.9), b0 + b)
+        if bar % 2 == 0:
+            tr.add(cymbal(0.7), b0)
+        for n in ch:
+            tr.add(vowel(midi(n + 24), 3 * tr.beat, attack=0.1, release=0.3), b0, 0.08)
+    return tr.finish(0.6)
+
+
 def sting(notes, step, last_len, wave_shape=SQUARE):
     total = int((len(notes) * step + last_len + 0.5) * SR)
     buf = np.zeros(total)
@@ -224,5 +328,9 @@ if __name__ == "__main__":
     write("music_tension.wav", layer_tension())
     write("music_danger.wav", layer_danger())
     write("music_chase.wav", chase())
+    write("music_opera_strings.wav", opera_strings())
+    write("music_opera_choir.wav", opera_choir())
+    write("music_opera_brass.wav", opera_brass())
+    write("music_opera_frenzy.wav", opera_frenzy())
     write("sting_win.wav", sting([62, 66, 69, 74], 0.11, 0.9))
     write("sting_fail.wav", sting([62, 61, 60, 55], 0.16, 1.0, SAW))

@@ -128,5 +128,59 @@ static func draw(ci: CanvasItem, key: String, sz: Vector2, t: float, params: Dic
 			var white := clampf(1.0 - p / 0.5, 0.0, 1.0)
 			if white > 0.0:
 				ci.draw_rect(Rect2(Vector2.ZERO, sz), Color(1, 1, 1, white))
+		"solar_flare":
+			A.burst(ci, sz, Vector2(sz.x * 0.75, sz.y * 0.3), Color("ffd23f"), Color("fff3b0"), 24, t * 0.5)
+			var glow := clampf(t / 1.2, 0.0, 1.0)
+			ci.draw_circle(Vector2(sz.x * 0.75, sz.y * 0.3), sz.y * (0.15 + 0.5 * glow), Color(1, 1, 0.85, 0.6))
+			A.hero_bust(ci, 3, Vector2(sz.x * 0.35, sz.y * 0.45), sz.y / 330.0, "determined", t)
+			for k in 3:
+				var d := Vector2.from_angle(-0.5 + (k - 1) * 0.12)
+				ci.draw_line(Vector2(sz.x * 0.45, sz.y * 0.5), Vector2(sz.x * 0.45, sz.y * 0.5) + d * sz.x, Color(1, 1, 0.9, 0.8), 14.0 - k * 3.0)
+		"narrator_melt":
+			A.fill_bg(ci, sz, Color("fff3b0"), Color("ffd23f"))
+			A.halftone(ci, sz, Color(1, 0.6, 0.0, 0.25), 14.0, 5.0, Vector2(0.5, 1))
+			var melt := clampf((t - 0.6) / 2.4, 0.0, 1.0)
+			var col := Color(1, 1, 1, 1.0 - melt)
+			ci.draw_set_transform(Vector2(sz.x * 0.5, sz.y * (0.42 + 0.25 * melt)), 0.0, Vector2(1.0 + melt * 0.3, 1.0 - melt * 0.7))
+			A.narrator(ci, Vector2.ZERO, sz.y / 330.0, 1.0, "shock", t)
+			ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			ci.draw_rect(Rect2(Vector2.ZERO, sz), Color(1, 0.95, 0.7, melt * 0.8))
+			for k in 24:
+				var px := sz.x * (0.25 + 0.5 * fposmod(k * 0.37, 1.0))
+				var py := sz.y * (0.75 - fposmod(t * 0.25 + k * 0.13, 0.7))
+				ci.draw_circle(Vector2(px, py), 4.0 + (k % 3) * 2.0, Color(0.48, 0.17, 0.75, 0.6 * (1.0 - melt * 0.5)))
+		"hero_freed":
+			A.burst(ci, sz, Vector2(sz.x * 0.5, sz.y * 0.45), Color("8ecae6"), Color("bde0fe"), 18, t * 0.3)
+			A.hero_bust(ci, 0, Vector2(sz.x * 0.5, sz.y * 0.42), sz.y / 340.0, "calm", t)
+			# the broken cage lies open
+			for b in 4:
+				ci.draw_line(Vector2(sz.x * (0.1 + b * 0.06), sz.y * 0.95), Vector2(sz.x * (0.05 + b * 0.07), sz.y * 0.7), A.INK, 7.0)
+		"earth_sunlit":
+			A.fill_bg(ci, sz, Color("4cc9f0"), Color("1b4f9c"))
+			ci.draw_circle(Vector2(sz.x * 0.85, sz.y * 0.18), sz.y * 0.12, Color("ffd23f"))
+			for k in 12:
+				var a := k * TAU / 12.0 + t * 0.2
+				ci.draw_line(Vector2(sz.x * 0.85, sz.y * 0.18) + Vector2.from_angle(a) * sz.y * 0.15, Vector2(sz.x * 0.85, sz.y * 0.18) + Vector2.from_angle(a) * sz.y * 0.24, Color("ffd23f"), 6.0)
+			var eo := Vector2(sz.x * 0.45, sz.y * 0.58)
+			A.earth(ci, eo, sz.y * 0.28, 0.0, t)
+			for i in 4:
+				var a2 := t * 0.6 + i * TAU / 4.0
+				A.hero_tiny(ci, i, eo + Vector2(cos(a2) * sz.y * 0.48, sin(a2) * sz.y * 0.16), 1.0, Vector2(-sin(a2), cos(a2) * 0.35).normalized())
+		"lava_drop":
+			A.fill_bg(ci, sz, Color("3a0008"), Color("ff5400"))
+			var drop := clampf((t - 0.6) / 1.6, 0.0, 1.0)
+			for k in 8:
+				var x := sz.x * (k / 7.0)
+				ci.draw_circle(Vector2(x, sz.y * 0.95 + sin(t * 3.0 + k) * 8.0), sz.y * 0.16, Color("ff7b00"))
+			ci.draw_rect(Rect2(0, sz.y * 0.88, sz.x, sz.y * 0.2), Color("ff9e00"))
+			var cage_c := Vector2(sz.x * 0.62, sz.y * (0.3 + 0.55 * drop * drop))
+			ci.draw_line(Vector2(sz.x * 0.62, 0), cage_c + Vector2(0, -sz.y * 0.2), A.INK, 5.0 if drop < 0.3 else 0.0)
+			A.hero_bust(ci, 0, cage_c + Vector2(0, -10), sz.y / 700.0, "scared", t)
+			A.cage(ci, cage_c, sz.y / 600.0)
+			A.narrator(ci, Vector2(sz.x * 0.2, sz.y * 0.35), sz.y / 520.0, 1.0, "grin", t)
+		"earth_dark":
+			A.fill_bg(ci, sz, Color("07030c"), Color("1a0b2e"))
+			A.stars(ci, sz, t, 9, 40)
+			A.earth(ci, Vector2(sz.x * 0.5, sz.y * 0.52), sz.y * 0.3, 1.0, t)
 		_:
 			ci.draw_rect(Rect2(Vector2.ZERO, sz), Color("ff00ff"))

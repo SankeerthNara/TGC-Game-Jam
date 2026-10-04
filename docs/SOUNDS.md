@@ -37,6 +37,26 @@ Style: comic and punchy, short (most under 0.4 s), no harsh high frequencies, al
 | `web_shoot` | web shot fired | short "pew" |
 | `web_hit` | web shot hits an enemy | splat |
 
+### Final battle (scripts/boss/)
+
+| Name | When | Feel |
+|---|---|---|
+| `slash` | hero swings | sharp whoosh |
+| `hit` | a slash connects | meaty thwack |
+| `kill` | an enemy is destroyed | burst + paper rustle |
+| `hero_hurt` | the hero is hit | painful crunch |
+| `hero_jump` | jump | light hop |
+| `dash` | dash | air rush |
+| `heal` | healing finishes | warm chime |
+| `power_deduction`, `power_dash`, `power_prism`, `power_solar` | hero powers | magic swells (solar: huge) |
+| `wave_start` | the Narrator raises his baton for a new wave | baton taps + choir "ah" |
+| `enemy_spawn` | an enemy drops onto the stage | ink splash |
+| `enemy_windup` | an enemy telegraphs an attack | short rising hiss |
+| `shockwave` | a hammer / slam shockwave | heavy thud + rumble |
+| `bomb_fuse` | an ink bomb starts fizzing | fizz |
+| `narrator_attack` | the Narrator attacks / writes THE END | evil laugh sting |
+| `hero_ko` | a hero is knocked out (rounds 1 and 2) | dramatic low hit |
+
 ## From existing EventBus signals
 
 | Signal | Sound name to use |

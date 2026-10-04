@@ -71,8 +71,18 @@ func _ready() -> void:
 		if lv < 3:
 			check(main.level_idx == lv + 1, "level %d loaded" % (lv + 2))
 	check(main.state == "cutscene" and main._overlay is ComicCutscene and main._overlay.kind == "bomb_room", "bomb room cutscene after level 4")
+	main.bomb_left = 100.0 # arrive late: the boss still gets at least 3:00
 	await skip_overlay(main)
-	check(main._overlay is LevelOverlay and main._overlay.final, "final screen after the bomb room")
+	check(main.state == "boss" and main._overlay is BossFight, "boss fight after the bomb room (state=%s)" % main.state)
+	check(main.bomb_left >= 179.0, "at least 3:00 on the bomb for the boss (%.0f)" % main.bomb_left)
+	var bt: float = main.bomb_left
+	await frames(30)
+	check(main.bomb_left < bt, "the bomb keeps ticking during the boss")
+	main._overlay.finished.emit("win")
+	await frames(3)
+	check(main._overlay is ComicCutscene and main._overlay.kind == "ending_sun", "winning plays the sunlight ending")
+	await skip_overlay(main)
+	check(main._overlay is LevelOverlay and main._overlay.final and main._overlay.won, "final screen after the ending")
 	await skip_overlay(main)
 	await frames(5)
 	check(main.state == "menu", "back to the menu (state=%s)" % main.state)
