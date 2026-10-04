@@ -182,5 +182,44 @@ static func draw(ci: CanvasItem, key: String, sz: Vector2, t: float, params: Dic
 			A.fill_bg(ci, sz, Color("07030c"), Color("1a0b2e"))
 			A.stars(ci, sz, t, 9, 40)
 			A.earth(ci, Vector2(sz.x * 0.5, sz.y * 0.52), sz.y * 0.3, 1.0, t)
+		"book_cover":
+			A.fill_bg(ci, sz, Color("1a120c"), Color("0a0705"))
+			ci.draw_circle(Vector2(sz.x * 0.75, sz.y * 0.1), sz.y * 0.6, Color(1, 0.75, 0.4, 0.12))
+			var bk := Rect2(sz * Vector2(0.28, 0.12), sz * Vector2(0.44, 0.78))
+			ci.draw_rect(Rect2(bk.position + Vector2(14, 14), bk.size), Color(0, 0, 0, 0.5))
+			A.poly(ci, PackedVector2Array([bk.position, Vector2(bk.end.x, bk.position.y), bk.end, Vector2(bk.position.x, bk.end.y)]), Color("6a1b1b"), 6.0)
+			ci.draw_rect(Rect2(bk.position + Vector2(18, 18), bk.size - Vector2(36, 36)), Color("ffd23f"), false, 3.0)
+			A.halftone(ci, sz, Color(1, 0.8, 0.5, 0.06), 16.0, 4.0, Vector2(0.75, 0.1))
+		"op_peace":
+			draw(ci, "earth_peace", sz, t, params)
+		"op_heroes":
+			A.burst(ci, sz, Vector2(sz.x * 0.5, sz.y * 0.5), Color("ffd23f"), Color("ffe58f"), 18, t * 0.2)
+			for i in 4:
+				var order: int = [1, 0, 2, 3][i]
+				var big := order == 0
+				A.hero_bust(ci, order, Vector2(sz.x * (0.14 + i * 0.24), sz.y * (0.42 if big else 0.5)), sz.y / (330.0 if big else 450.0), "determined", t)
+		"op_villain":
+			draw(ci, "villain_rise", sz, t, params)
+		"op_capture":
+			A.fill_bg(ci, sz, Color("10002b"), Color("3c096c"))
+			for i in 3:
+				var cc := Vector2(sz.x * (0.2 + i * 0.3), sz.y * (0.45 + (i % 2) * 0.1) + sin(t * 2.0 + i) * 6.0)
+				ci.draw_line(Vector2(cc.x, 0), cc + Vector2(0, -sz.y * 0.22), A.INK, 5.0)
+				A.hero_bust(ci, i + 1, cc + Vector2(0, -6), sz.y / 760.0, "scared", t)
+				A.cage(ci, cc, sz.y / 640.0)
+		"op_escape":
+			A.burst(ci, sz, Vector2(sz.x * 0.7, sz.y * 0.3), Color("0d1b2a"), Color("1b263b"), 16, t * 0.3)
+			ci.draw_colored_polygon(PackedVector2Array([Vector2(sz.x * 0.62, 0), Vector2(sz.x * 0.78, 0), Vector2(sz.x * 0.55, sz.y), Vector2(sz.x * 0.4, sz.y)]), Color(1, 0.95, 0.75, 0.5))
+			A.speed_lines(ci, sz, Vector2(sz.x * 0.5, sz.y * 0.5), t, Color(1, 1, 1, 0.12))
+			A.hero_bust(ci, 0, Vector2(sz.x * 0.48, sz.y * 0.42), sz.y / 330.0, "determined", t)
+		"op_comms":
+			A.fill_bg(ci, sz, Color("0b0f14"), Color("1b2a33"))
+			A.hero_bust(ci, 0, Vector2(sz.x * 0.4, sz.y * 0.5), sz.y / 360.0, "determined", t)
+			var dev := Rect2(Vector2(sz.x * 0.6, sz.y * 0.62), Vector2(sz.x * 0.18, sz.y * 0.24))
+			ci.draw_rect(dev, Color("2b2d42"))
+			ci.draw_rect(dev, A.INK, false, 4.0)
+			ci.draw_rect(dev.grow(-10.0), Color(0.3, 0.9, 1.0, 0.35 + 0.2 * sin(t * 6.0)))
+			for k in 3:
+				ci.draw_arc(dev.get_center(), 30.0 + k * 22.0 + fposmod(t * 40.0, 22.0), -0.8, 0.8, 10, Color(0.3, 0.9, 1.0, 0.5 - k * 0.12), 3.0)
 		_:
 			ci.draw_rect(Rect2(Vector2.ZERO, sz), Color("ff00ff"))

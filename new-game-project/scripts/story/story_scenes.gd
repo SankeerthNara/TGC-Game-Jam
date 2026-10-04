@@ -14,6 +14,8 @@ static func pages(kind: String) -> Array:
 			return _earth_blast()
 		"ending_sun":
 			return _ending_sun()
+		"book":
+			return _book()
 		"ending_lava":
 			return _ending_lava()
 	return []
@@ -173,4 +175,37 @@ static func _ending_lava() -> Array:
 			_say("Turn the page, reader. Try again... if you dare.", 0, 2.2, Vector2(0.78, 0.75), Vector2(0.95, 0.95), "narrator", 300.0)],
 		 "sfx": [_sfx("THE END?", 0, 3.6, Vector2(0.5, 0.45), 96, Color("c77dff"), -0.04)],
 		 "hold": 3.0},
+	]
+
+
+## The editions opening: a comic book is opened and read; the story glitches into the game.
+static func _book() -> Array:
+	return [
+		{"panels": [_p("book_cover", 0, 0, 1, 1, 0.0, "fade")],
+		 "text": [_cap("Every story has a narrator. This one has a secret.", 0, 1.2, "bl", 420.0)],
+		 "sfx": [_sfx("MIRROR PAGE", 0, 0.3, Vector2(0.5, 0.42), 110, Color("ffd23f"), -0.03)],
+		 "hold": 1.4},
+		{"panels": [
+			_p("op_peace", 0, 0, 0.58, 1, 0.0, "left"),
+			_p("op_heroes", 0.58, 0, 0.42, 1, 1.6, "right")],
+		 "text": [
+			_cap("Once, the Earth shone with light...", 0, 0.3, "tl", 340.0),
+			_cap("...guarded by four heroes.", 1, 2.0, "bl", 300.0)],
+		 "hold": 1.6},
+		{"panels": [
+			_p("op_villain", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("op_capture", 0.5, 0, 0.5, 1, 2.0, "right")],
+		 "text": [
+			_cap("Then a masked villain drank the light from the sky. Without light, the world began to lose its detail.", 0, 0.3, "tl", 360.0),
+			_cap("He took three of the heroes.", 1, 2.4, "bl", 300.0)],
+		 "sfx": [_sfx("HA HA HA!", 0, 1.2, Vector2(0.5, 0.82), 60, Color("c77dff"), -0.1)],
+		 "hold": 1.6},
+		{"panels": [
+			_p("op_escape", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("op_comms", 0.5, 0, 0.5, 1, 1.8, "right")],
+		 "text": [
+			_cap("One hero escaped.", 0, 0.3, "tl", 260.0),
+			_say("Can you hear me, hero? I'm the Narrator. I'll guide you. Let's bring your friends home.", 1, 2.4, Vector2(0.5, 0.2), Vector2(0.62, 0.42), "narrator", 320.0)],
+		 "sfx": [_sfx("BZZT!", 1, 2.0, Vector2(0.8, 0.7), 46, Color("4cc9f0"), 0.1)],
+		 "hold": 2.2},
 	]

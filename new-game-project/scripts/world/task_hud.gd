@@ -92,7 +92,13 @@ func _draw_top_bar() -> void:
 	for i in world.max_health:
 		_heart(Vector2(hp_start_x + i * 26, 30), 10.0, i < world.hp)
 
-	# 2. Bomb & Keys
+	# 2. Bomb & Keys (not in the editions: bomb_left < 0)
+	if world.bomb_left >= 0.0:
+		_draw_bomb_keys(hp_start_x)
+	_draw_rest()
+
+
+func _draw_bomb_keys(hp_start_x: float) -> void:
 	var bomb_x := hp_start_x + world.max_health * 26 + 18.0
 	var left := world.bomb_left
 	var urgent := left < 60.0
@@ -117,6 +123,9 @@ func _draw_top_bar() -> void:
 		draw_line(k + Vector2(0, 0), k + Vector2(0, 10), col, 2.5)
 		draw_line(k + Vector2(0, 7), k + Vector2(4, 7), col, 2.5)
 
+
+
+func _draw_rest() -> void:
 	# 3. Level Name & Par / Time
 	var lvl_title := "LVL %d: %s" % [world.level_index + 1, world.level_title.to_upper()]
 	draw_string(FONT_SHOUT, Vector2(610, 36), lvl_title, HORIZONTAL_ALIGNMENT_LEFT, 230, 18, PAPER)

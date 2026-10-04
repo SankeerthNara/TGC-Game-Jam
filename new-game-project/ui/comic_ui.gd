@@ -574,6 +574,8 @@ func _on_level_loaded(index: int, data: Dictionary) -> void:
 
 
 func _on_caption_changed(text: String) -> void:
+	if get_tree().get_first_node_in_group("comms") != null and text.begins_with("NARRATOR:"):
+		return # the editions show the Narrator on the comms box instead
 	var clean := text.strip_edges()
 	if clean.is_empty():
 		_caption_box.visible = false

@@ -29,6 +29,9 @@ var score := ScoreKeeper.new()
 var level_ease: Array[int] = [0, 0, 0, 0]
 var _task_layer: CanvasLayer
 var paused := false ## the whole game is frozen (P / Esc); the UI keeps running
+## "Mirror Page: The Editions" (144p -> 720p -> 2k). false = the classic game (roll back here).
+const EDITIONS := true
+var director: EditionsDirector = null
 const PAUSABLE_STATES := ["world", "task", "parkour", "playing", "boss"]
 const BOMB_SECONDS := 17 * 60.0 ## the masked villain's bomb: find the 4 keys and open the bomb room in time
 const TICKING := ["world", "task", "playing", "parkour", "boss"] ## the bomb clock pauses in cutscenes, menus and score screens
@@ -70,6 +73,10 @@ func _ready() -> void:
 	var music := MusicDirector.new()
 	music.main = self
 	add_child(music)
+	if EDITIONS:
+		director = EditionsDirector.new()
+		add_child(director)
+		director.setup(self)
 	var sfx := SfxPlayer.new() # Codex's sound effects (listens to EventBus)
 	sfx.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(sfx)
@@ -96,6 +103,10 @@ func _ready() -> void:
 	if ResourceLoader.exists(UI_SCENE):
 		add_child((load(UI_SCENE) as PackedScene).instantiate()) # Antigravity's comic UI replaces the debug HUD
 		_to_menu()
+	else:
+		_build_debug_hud()
+		EventBus.caption_changed.connect(func(t: String) -> void: _caption.text = t)
+		_start_game()
 	if "boss" in OS.get_cmdline_user_args():
 		# testing shortcut: `godot --path . -- boss` starts straight in the final battle
 		EventBus.request_start_game.emit()
@@ -104,10 +115,6 @@ func _ready() -> void:
 			c.queue_free()
 		bomb_left = 300.0
 		_start_boss.call_deferred()
-	else:
-		_build_debug_hud()
-		EventBus.caption_changed.connect(func(t: String) -> void: _caption.text = t)
-		_start_game()
 
 
 func _set_state(s: String) -> void:
@@ -151,6 +158,11 @@ func _start_game() -> void:
 	for i in level_ease.size():
 		level_ease[i] = 0
 	_clear_overlay()
+	if EDITIONS:
+		bomb_left = -1.0 # no bomb clock in the editions
+		world.bomb_left = -1.0
+		director.start()
+		return
 	_set_state("cutscene")
 	EventBus.caption_changed.emit("NARRATOR: Once upon a time...")
 	_play_cutscene("opening", func() -> void: _load_level(0))
@@ -171,7 +183,7 @@ func _load_level(i: int) -> void:
 	world.load_data(data)
 	EventBus.level_started.emit(i, world.level_title)
 	_enter_world()
-	EventBus.caption_changed.emit(world.intro)
+	EventBus.caption_changed.emit(director.level_intro(i) if EDITIONS else world.intro)
 
 
 func _process(delta: float) -> void:
@@ -183,7 +195,7 @@ func _process(delta: float) -> void:
 	world.level_time = level_time
 	world.total_time = total_time
 	world.score_total = score.live(level_idx, world.tasks_done.size())
-	if state in TICKING and bomb_left > 0.0:
+	if not EDITIONS and state in TICKING and bomb_left > 0.0:
 		bomb_left = maxf(0.0, bomb_left - delta)
 		if bomb_left <= 0.0:
 			_bomb_exploded()
@@ -414,12 +426,13 @@ func _on_player_died() -> void:
 func _level_complete() -> void:
 	level_splits.append(level_time)
 	EventBus.level_completed.emit(level_idx, level_time)
-	var last := level_idx >= LevelGenerator.level_count() - 1
+	var last := level_idx >= (1 if EDITIONS else LevelGenerator.level_count() - 1)
 	var big_flags: Array = []
 	for sab in world.sabotage_defs.values():
 		big_flags.append(sab.get("big", false))
-	keys_found = mini(keys_found + 1, LevelGenerator.level_count())
-	EventBus.sound_requested.emit("key_get")
+	if not EDITIONS:
+		keys_found = mini(keys_found + 1, LevelGenerator.level_count())
+		EventBus.sound_requested.emit("key_get")
 	world.keys_found = keys_found
 	var result := score.finish_level(level_idx, world.tasks.size(), level_time, world.level_par, world.hp, world.max_health, big_flags)
 	# the next level is kinder if this one took longer than par (the run should stay about the same length)
@@ -433,9 +446,9 @@ func _level_complete() -> void:
 	ov.total_time = total_time
 	ov.splits = level_splits.duplicate()
 	ov.par = world.level_par
-	ov.to_bomb_room = last
+	ov.to_bomb_room = last and not EDITIONS
 	ov.keys_found = keys_found
-	ov.key_total = LevelGenerator.level_count()
+	ov.key_total = 0 if EDITIONS else LevelGenerator.level_count()
 	ov.bomb_left = bomb_left
 	ov.lines = result["lines"]
 	ov.score = result["score"]
@@ -451,11 +464,15 @@ func _level_complete() -> void:
 	_task_layer.add_child(ov)
 	ov.continue_pressed.connect(func() -> void:
 		_clear_overlay()
-		if last:
+		if last and EDITIONS:
+			director.after_144_levels()
+		elif last:
 			_open_bomb_room()
 		else:
 			_load_level(level_idx + 1))
-	if last:
+	if EDITIONS:
+		EventBus.caption_changed.emit("NARRATOR: Brilliant work, hero! Rank %s. On to the next one." % result["rank"])
+	elif last:
 		EventBus.caption_changed.emit("NARRATOR: All four keys! The bomb room... wait. Don't open that door.")
 	else:
 		EventBus.caption_changed.emit("NARRATOR: Level complete! Key %d of %d to the bomb room. Rank %s." % [keys_found, LevelGenerator.level_count(), result["rank"]])

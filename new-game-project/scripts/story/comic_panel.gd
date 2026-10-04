@@ -14,9 +14,10 @@ var _tex: Texture2D
 func _ready() -> void:
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var path := ART_DIR + key + ".png"
-	if ResourceLoader.exists(path):
-		_tex = load(path)
+	for path in [ART_DIR + key + ".png", "res://assets/editions/book/" + key + ".png"]:
+		if ResourceLoader.exists(path):
+			_tex = load(path)
+			break
 
 
 func _process(_delta: float) -> void:

@@ -15,6 +15,7 @@ const STATS := {
 	"bomb": {"hp": 1.0, "r": 20.0, "h": 40.0, "s": 1.3},
 	"brute": {"hp": 18.0, "r": 70.0, "h": 150.0, "s": 1.15},
 	"narrator": {"hp": 60.0, "r": 60.0, "h": 170.0, "s": 1.0},
+	"baron": {"hp": 40.0, "r": 62.0, "h": 170.0, "s": 1.0},
 }
 
 var kind := "lancer"
@@ -118,6 +119,8 @@ func update(dt: float, fight: Node) -> void:
 			_brute(dt, hero, fight)
 		"narrator":
 			_narrator(dt, hero, hc, fight)
+		"baron":
+			_baron(dt, hero, fight)
 
 
 func _ground(dt: float) -> void:
@@ -239,6 +242,50 @@ func _brute(dt: float, hero: Vector2, fight: Node) -> void:
 	pos.y = FLOOR_Y
 
 
+## The Ink Baron (144p boss): a hulking ringmaster of ink. Cane sweeps send shockwaves, he lobs ink
+## from the sky and whistles for his choristers.
+func _baron(dt: float, hero: Vector2, fight: Node) -> void:
+	var dx := hero.x - pos.x
+	var sp: float = fight.enemy_speed()
+	match state:
+		"idle":
+			dir = signf(dx) if dx != 0.0 else dir
+			vel.x = dir * 80.0 * sp
+			cd -= dt
+			if cd <= 0.0:
+				var picks := ["sweep", "sweep", "lob", "summon"] if hp < max_hp * 0.6 else ["sweep", "lob", "sweep"]
+				state = picks[randi() % picks.size()]
+				st = 0.0
+				vel.x = 0.0
+				EventBus.sound_requested.emit("enemy_windup")
+		"sweep":
+			if st > 0.75 / sp and st - dt <= 0.75 / sp:
+				fight.shockwave(pos + Vector2(dir * 60.0, 0), 1.0)
+				fight.shockwave(pos + Vector2(dir * 60.0, 0), -1.0)
+				fight.shake(10.0)
+			if st > 1.4:
+				_baron_rest()
+		"lob":
+			if st > 0.5 and st - dt <= 0.5:
+				fight.ink_rain(5)
+			if st > 1.3:
+				_baron_rest()
+		"summon":
+			if st > 0.6 and st - dt <= 0.6:
+				fight.spawn("lancer", Vector2(clampf(pos.x - 220.0, 200.0, 1080.0), FLOOR_Y))
+				fight.spawn("lancer", Vector2(clampf(pos.x + 220.0, 200.0, 1080.0), FLOOR_Y))
+			if st > 1.2:
+				_baron_rest()
+	pos.x = clampf(pos.x + vel.x * dt, 140.0, 1140.0)
+	pos.y = FLOOR_Y
+
+
+func _baron_rest() -> void:
+	state = "idle"
+	st = 0.0
+	cd = randf_range(1.0, 1.8)
+
+
 func _narrator(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
 	phase2 = hp < max_hp * 0.5
 	var sp: float = fight.enemy_speed() * (1.25 if phase2 else 1.0)
@@ -315,6 +362,8 @@ func draw(ci: CanvasItem, time: float) -> void:
 			_draw_brute(ci, white, a)
 		"narrator":
 			_draw_narrator(ci, white, a, time)
+		"baron":
+			_draw_baron(ci, white, a)
 	if state in ["windup", "charge_wind", "fuse"]:
 		var c := center() + Vector2(0, -float(STATS[kind]["h"]) * 0.7)
 		ComicArt.shout(ci, "!", c, 40, Color("ffd23f"), 8)
@@ -411,6 +460,49 @@ func _draw_brute(ci: CanvasItem, white: float, a: float) -> void:
 	ci.draw_line(hand, head, _col(Color("6b4226"), white, a), 4.0)
 	ci.draw_set_transform(pos + head * Vector2(dir, 1.0) * _sc(), swing * dir, Vector2(dir * _sc(), _sc()))
 	ArenaArt.poly(ci, PackedVector2Array([Vector2(-14, -22), Vector2(14, -22), Vector2(14, 22), Vector2(-14, 22)]), _col(Color("c9a227"), white, a), 3.0)
+	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _draw_baron(ci: CanvasItem, white: float, a: float) -> void:
+	ci.draw_set_transform(pos, 0.0, Vector2(dir, 1.0))
+	var wind := state in ["sweep", "lob", "summon"] and st < 0.75
+	var bob := sin(t * 4.0) * 3.0
+	# coat tails and legs
+	ArenaArt.poly(ci, PackedVector2Array([Vector2(-60, -70), Vector2(-74, -6), Vector2(-40, -18), Vector2(-20, -60)]), _col(Color("9b1d20"), white, a), 3.0)
+	for k in 2:
+		ci.draw_line(Vector2(-18 + k * 36, -40), Vector2(-22 + k * 40, 0), _col(INK, 0.0, a), 14.0)
+	# the hulking ink body
+	var body := PackedVector2Array()
+	for k in 20:
+		var ang := k * TAU / 20.0
+		body.append(Vector2(cos(ang) * 62.0, -96.0 + bob + sin(ang) * 66.0 + (sin(t * 6.0 + k) * 2.0)))
+	ArenaArt.poly(ci, body, _col(Color("1e1530"), white, a), 4.0)
+	# ringmaster coat front, gold buttons
+	ArenaArt.poly(ci, PackedVector2Array([Vector2(-40, -140 + bob), Vector2(40, -140 + bob), Vector2(48, -40), Vector2(-48, -40)]), _col(Color("b5172a"), white, a), 3.0)
+	for k in 3:
+		ci.draw_circle(Vector2(0, -122 + k * 24 + bob), 5.0, _col(Color("ffd23f"), white, a))
+	# pale mask face with a stitched grin
+	var h := Vector2(6, -168 + bob)
+	ci.draw_circle(h, 30.0, _col(INK, 0.0, a))
+	ci.draw_circle(h, 27.0, _col(Color("efe4d2"), white, a))
+	ci.draw_colored_polygon(PackedVector2Array([h + Vector2(-14, -8), h + Vector2(-2, -4), h + Vector2(-12, 0)]), _col(INK, 0.0, a))
+	ci.draw_colored_polygon(PackedVector2Array([h + Vector2(16, -8), h + Vector2(4, -4), h + Vector2(14, 0)]), _col(INK, 0.0, a))
+	ci.draw_arc(h + Vector2(2, 6), 14.0, 0.2, PI - 0.2, 10, _col(INK, 0.0, a), 3.0)
+	for k in 5:
+		var sx := -10.0 + k * 5.0
+		ci.draw_line(h + Vector2(sx + 2, 14), h + Vector2(sx + 2, 22), _col(INK, 0.0, a), 2.0)
+	# crooked top hat
+	ci.draw_set_transform(pos + Vector2(dir * 10.0, -200 + bob), -0.2 * dir, Vector2(dir, 1.0))
+	ArenaArt.poly(ci, PackedVector2Array([Vector2(-34, 0), Vector2(34, 0), Vector2(34, -8), Vector2(-34, -8)]), _col(INK, 0.0, a), 2.0)
+	ArenaArt.poly(ci, PackedVector2Array([Vector2(-20, -8), Vector2(20, -8), Vector2(18, -54), Vector2(-18, -54)]), _col(Color("1b1b22"), white, a), 3.0)
+	ci.draw_rect(Rect2(Vector2(-20, -20), Vector2(40, 7)), _col(Color("b5172a"), white, a))
+	# the cane
+	ci.draw_set_transform(pos, 0.0, Vector2(dir, 1.0))
+	var hand := Vector2(56, -110 + bob)
+	var tip := hand + (Vector2(10, -90) if wind else Vector2(30, 104))
+	ci.draw_line(hand, tip, _col(INK, 0.0, a), 9.0)
+	ci.draw_line(hand, tip, _col(Color("2b1d14"), white, a), 5.0)
+	ci.draw_circle(hand + (tip - hand).normalized() * -6.0, 9.0, _col(Color("ffd23f"), white, a))
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 

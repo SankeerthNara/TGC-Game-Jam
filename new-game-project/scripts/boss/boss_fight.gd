@@ -41,6 +41,17 @@ const WAVES := [
 	 [["narrator", "BALCONY", 0.0]]],
 ]
 
+## Configuration (the editions reuse this arena): which waves, which heroes, relay or not.
+var waves: Array = WAVES
+var heroes: Array = HEROES
+var relay := true ## rounds before the last end in the scripted THE END
+var intro_lines: Array = [] ## replaces the round card text when set
+var win_text := "SOLAR FLARE!"
+var boss_name := "THE NARRATOR"
+var boss_hp_scale := 1.0
+const POWER_BY_KIND := {0: "LIGHT BLADE", 1: "DEDUCTION", 2: "LIGHT DASH", 3: "PRISM CANNON"}
+const POWER_TEXT_BY_KIND := {0: "a huge arc of light that cuts everything in front of you", 1: "slows every enemy for 4 seconds", 2: "a dash that cuts through every enemy in the way", 3: "a beam of light across the whole stage"}
+
 var friends_revealed := 0
 var friends_killed := 0
 var bomb_left := 180.0 ## set by main every frame
@@ -100,6 +111,25 @@ func _ready() -> void:
 
 
 # --- API used by the enemies -------------------------------------------------------------
+
+func _hero_kind() -> int:
+	return int(heroes[mini(_round, heroes.size() - 1)])
+
+
+func _relay_round() -> bool:
+	return relay and _round < waves.size() - 1
+
+
+func _last_wave() -> bool:
+	return _round == waves.size() - 1 and _wave == waves[_round].size() - 1
+
+
+func _total_waves() -> int:
+	var n := 0
+	for r: Array in waves:
+		n += r.size()
+	return n
+
 
 func hero_center() -> Vector2:
 	return hero_pos + Vector2(0, -46)
@@ -172,7 +202,7 @@ func _begin_wave() -> void:
 func _start_spawns() -> void:
 	_phase = "wave"
 	_pt = 0.0
-	var wave: Array = WAVES[_round][_wave]
+	var wave: Array = waves[_round][_wave]
 	for s: Array in wave:
 		var kind: String = s[0]
 		var where: String = s[1]
@@ -193,16 +223,16 @@ func _start_spawns() -> void:
 			"BALCONY":
 				p = Vector2(640, 150)
 		_pending.append({"kind": kind, "pos": p, "delay": float(s[2]), "mark": 0.7})
-	intensity = 3 if _round == 2 and _wave == 1 else (2 if _round >= 1 else 1)
+	intensity = 3 if _last_wave() else (2 if _round >= 1 or _wave >= 1 else 1)
 
 
 func _wave_done() -> void:
-	if _round < 2:
+	if _relay_round():
 		_cleared += 1
 	_wave += 1
-	if _wave < WAVES[_round].size():
+	if _wave < waves[_round].size():
 		_begin_wave()
-	elif _round < 2:
+	elif _relay_round():
 		# the story: the Narrator writes THE END on this hero
 		_phase = "the_end"
 		_pt = 0.0
@@ -216,13 +246,16 @@ func _win() -> void:
 	_phase = "won"
 	_pt = 0.0
 	_white = 1.0
-	_say("SOLAR FLARE!", Vector2(640, 300), GOLD, 80)
+	_say(win_text, Vector2(640, 300), GOLD, 80)
 	EventBus.sound_requested.emit("power_solar")
 
 
 ## How much the first two heroes cracked his shield (0..1).
 func crack_share() -> float:
-	return clampf(_cleared / 4.0, 0.0, 1.0)
+	var relay_waves := 0
+	for r in waves.size() - 1:
+		relay_waves += waves[r].size()
+	return clampf(_cleared / float(maxi(relay_waves, 1)), 0.0, 1.0) if relay else 1.0
 
 
 func _narrator_hp() -> float:
@@ -413,7 +446,7 @@ func _hurt(from_x: float) -> void:
 	_vel = Vector2(away * 380.0, -420.0)
 	EventBus.sound_requested.emit("hero_hurt")
 	if _hp <= 0:
-		if _round < 2:
+		if _relay_round():
 			_phase = "the_end"
 			_pt = 0.0
 		else:
@@ -471,7 +504,19 @@ func _power() -> void:
 		_say("NEED 3 INK", hero_center() + Vector2(0, -70), Color("8d99ae"), 30)
 		return
 	_ink -= 3
-	match _round:
+	match _hero_kind() - 1:
+		-1:
+			# LIGHT BLADE: one huge arc of light in front of the pulp hero
+			_atk_dir = "side"
+			_atk_t = 0.22
+			_fx.append({"kind": "bigslash", "pos": hero_center(), "dir": _face, "t": 0.0, "life": 0.35})
+			var reach := Rect2(hero_center() + Vector2(0.0 if _face > 0.0 else -260.0, -110.0), Vector2(260, 190))
+			for e in _enemies:
+				if e.state != "enter" and e.hurt_box().intersects(reach):
+					_hit_enemy(e, 4.0, false)
+			shake(9.0)
+			_say("LIGHT BLADE!", hero_center() + Vector2(0, -80), GOLD, 46)
+			EventBus.sound_requested.emit("power_prism")
 		0:
 			_slow = 4.0
 			_say("DEDUCTION!", hero_center() + Vector2(0, -70), Color("c2a878"), 46)
@@ -511,11 +556,15 @@ func _update_world(delta: float) -> void:
 		_pending.erase(p)
 		var e := ArenaEnemy.new(String(p["kind"]), p["pos"])
 		if e.kind == "narrator":
-			e.hp = _narrator_hp()
+			e.hp = _narrator_hp() * boss_hp_scale
 			e.max_hp = e.hp
 			e.state = "hover"
 			_narrator = e
 			_say("ENOUGH! I'LL END THIS MYSELF!", Vector2(640, 220), Color("c77dff"), 40)
+		elif e.kind in ["baron", "twin"]:
+			e.hp *= boss_hp_scale
+			e.max_hp = e.hp
+			_narrator = e
 		elif not e.flying():
 			e.pos.y = FLOOR_Y - 260.0 # drops onto the stage
 		_enemies.append(e)
@@ -530,9 +579,10 @@ func _update_world(delta: float) -> void:
 			dead.append(e)
 	for e in dead:
 		_enemies.erase(e)
-		if e.kind == "narrator":
+		if e == _narrator:
 			_narrator = null
 			_enemies.clear()
+			_pending.clear()
 			_win()
 	for w in _waves:
 		w["x"] = float(w["x"]) + float(w["dir"]) * 470.0 * et
@@ -646,7 +696,7 @@ func _draw() -> void:
 			_draw_ko()
 		"won":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(1, 0.96, 0.75, clampf(_pt * 0.6, 0.0, 1.0)))
-			ComicArt.shout(self, "SOLAR FLARE!", Vector2(640, 330), 96, GOLD, 14, -0.04)
+			ComicArt.shout(self, win_text, Vector2(640, 330), 96, GOLD, 14, -0.04)
 		"lost":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0.3, 0.02, 0.05, clampf(_pt * 0.5, 0.0, 0.85)))
 
@@ -654,7 +704,7 @@ func _draw() -> void:
 func _global_wave() -> int:
 	var n := 0
 	for r in _round:
-		n += WAVES[r].size()
+		n += waves[r].size()
 	return n + _wave + 1
 
 
@@ -663,7 +713,7 @@ func _draw_balcony() -> void:
 	var b := Vector2(640, 150)
 	ArenaArt.poly(self, PackedVector2Array([b + Vector2(-110, 40), b + Vector2(110, 40), b + Vector2(90, 90), b + Vector2(-90, 90)]), Color("2a1a2e"), 4.0)
 	draw_line(b + Vector2(-110, 40), b + Vector2(110, 40), GOLD, 3.0)
-	if _narrator != null or (_round == 2 and _wave == 1 and _phase == "wave"):
+	if (_narrator != null and _narrator.kind == "narrator") or (_last_wave() and _phase == "wave" and boss_name == "THE NARRATOR"):
 		return
 	var beat := sin(_t * (5.0 if _phase == "wave" else 2.5))
 	ComicArt.narrator(self, b + Vector2(0, -18), 0.42, 1.0, "grin", _t)
@@ -706,7 +756,7 @@ func _draw_corpse(c: Dictionary, off: Vector2) -> void:
 func _draw_hero(off: Vector2) -> void:
 	if _phase == "ko":
 		return
-	var kind: int = HEROES[_round]
+	var kind: int = _hero_kind()
 	var pose := "idle"
 	if _heal_t >= 0.0:
 		pose = "heal"
@@ -755,13 +805,16 @@ func _draw_fx(f: Dictionary, off: Vector2) -> void:
 			var r := float(f["r"]) * (0.4 + 0.8 * k)
 			draw_circle(f["pos"], r, Color(1, 0.6, 0.2, 0.6 * (1.0 - k)))
 			draw_circle(f["pos"], r * 0.6, Color(1, 0.95, 0.7, 0.8 * (1.0 - k)))
+		"bigslash":
+			ArenaArt.slash(self, (f["pos"] as Vector2) + Vector2(float(f["dir"]) * 60.0, 0), Vector2(float(f["dir"]), 0), k, true)
+			ArenaArt.slash(self, (f["pos"] as Vector2) + Vector2(float(f["dir"]) * 110.0, -10), Vector2(float(f["dir"]), -0.2).normalized(), k, true)
 		"word":
 			var s := 1.0 + 0.4 * (1.0 - minf(float(f["t"]) * 6.0, 1.0))
 			ComicArt.shout(self, String(f["text"]), (f["pos"] as Vector2) + off + Vector2(0, -30.0 * k), int(f["fs"]), Color(f["col"]), 10, -0.05, s)
 
 
 func _draw_hud() -> void:
-	var kind: int = HEROES[_round]
+	var kind: int = _hero_kind()
 	# portrait medallion, masks and the ink meter (top left)
 	var pc := Vector2(70, 72)
 	draw_circle(pc, 44.0, INK)
@@ -780,16 +833,17 @@ func _draw_hud() -> void:
 		var r := Rect2(Vector2(126 + i * 19, 80), Vector2(15, 16))
 		draw_rect(r, INK)
 		draw_rect(r.grow(-2.0), Color("2ec4b6") if i < _ink else Color(0.15, 0.15, 0.2))
-	draw_string(FONT_BODY, Vector2(126, 116), "V %s (3)   F heal (6)" % POWERS[_round], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
+	draw_string(FONT_BODY, Vector2(126, 116), "V %s (3)   F heal (6)" % POWER_BY_KIND[_hero_kind()], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
 	# round, wave, bomb (top right)
 	draw_string(FONT_SHOUT, Vector2(930, 46), "ROUND %d  -  %s" % [_round + 1, ComicArt.HERO_NAMES[kind]], HORIZONTAL_ALIGNMENT_LEFT, 330, 22, GOLD)
-	var bs := int(ceil(bomb_left))
-	draw_string(FONT_SHOUT, Vector2(930, 82), "BOMB %d:%02d" % [bs / 60, bs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 32, RED if bomb_left < 60.0 else PAPER)
-	draw_string(FONT_SHOUT, Vector2(1110, 82), "WAVE %d/6" % mini(_global_wave(), 6), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, PAPER)
+	if bomb_left >= 0.0:
+		var bs := int(ceil(bomb_left))
+		draw_string(FONT_SHOUT, Vector2(930, 82), "BOMB %d:%02d" % [bs / 60, bs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 32, RED if bomb_left < 60.0 else PAPER)
+	draw_string(FONT_SHOUT, Vector2(1110, 82), "WAVE %d/%d" % [mini(_global_wave(), _total_waves()), _total_waves()], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, PAPER)
 	# the Narrator's health (bottom)
 	if _narrator != null:
 		var bar := Rect2(Vector2(340, 660), Vector2(600, 20))
-		draw_string(FONT_SHOUT, Vector2(340, 652), "THE NARRATOR", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("c77dff"))
+		draw_string(FONT_SHOUT, Vector2(340, 652), boss_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("c77dff"))
 		draw_rect(bar, INK)
 		draw_rect(Rect2(bar.position + Vector2(3, 3), Vector2((bar.size.x - 6) * clampf(_narrator.hp / _narrator.max_hp, 0.0, 1.0), bar.size.y - 6)), Color("9d4edd"))
 	elif _phase in ["wave", "wave_intro"] and _wave == 0 and _pt < 8.0:
@@ -810,15 +864,18 @@ func _card(title: String, lines: Array, col: Color) -> void:
 
 
 func _draw_round_card() -> void:
-	var kind: int = HEROES[_round]
+	var kind: int = _hero_kind()
 	var lines: Array = []
-	match _round:
-		0:
-			lines = ["The Narrator locks the stage and conducts his ink choir.", "Power: V DEDUCTION, %s." % POWER_TEXT[0]]
-		1:
-			lines = ["The detective cleared %d of 2 waves. TAG IN, NINJA!" % mini(_cleared, 2), "Power: V LIGHT DASH, %s." % POWER_TEXT[1]]
-		2:
-			lines = ["His shield is cracked %d%%: he is weaker now." % int(crack_share() * 100.0), "Power: V PRISM CANNON, %s." % POWER_TEXT[2]]
+	if not intro_lines.is_empty():
+		lines = intro_lines
+	else:
+		match _round:
+			0:
+				lines = ["The Narrator locks the stage and conducts his ink choir.", "Power: V DEDUCTION, %s." % POWER_TEXT[0]]
+			1:
+				lines = ["The detective cleared %d of 2 waves. TAG IN, NINJA!" % mini(_cleared, 2), "Power: V LIGHT DASH, %s." % POWER_TEXT[1]]
+			2:
+				lines = ["His shield is cracked %d%%: he is weaker now." % int(crack_share() * 100.0), "Power: V PRISM CANNON, %s." % POWER_TEXT[2]]
 	_card("ROUND %d: %s" % [_round + 1, ComicArt.HERO_NAMES[kind]], lines, GOLD)
 	var k := clampf(_pt / 0.4, 0.0, 1.0)
 	ArenaArt.hero(self, kind, Vector2(640 - 120 * (1.0 - k), 440), 1.0, "idle", _t, 0.0, 2.2)
@@ -835,7 +892,7 @@ func _draw_the_end() -> void:
 
 
 func _draw_ko() -> void:
-	var kind: int = HEROES[_round]
+	var kind: int = _hero_kind()
 	var cleared_now := clampi(_cleared - 2 * _round, 0, 2)
 	_card("%s IS DOWN!" % ComicArt.HERO_NAMES[kind], ["...but %d of 2 waves were cleared: the shield cracks!" % cleared_now, "The next hero takes the stage!"], RED)
 	ComicArt.hero_bust(self, kind, Vector2(640, 330), 0.8, "scared", _t)
