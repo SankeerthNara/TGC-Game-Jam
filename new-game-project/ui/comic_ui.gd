@@ -21,6 +21,7 @@ var _level_label: Label
 var _moves_label: Label
 var _status_label: Label
 var _caption_box: PanelContainer
+var _caption_tween: Tween
 var _banner_rect: TextureRect
 var _pause_modal: Control
 var _hud_root: Control
@@ -38,6 +39,7 @@ var _current_level_name := "Page"
 
 func _ready() -> void:
 	layer = 10
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_audio()
 	_build_ui()
 	_connect_event_bus()
@@ -107,43 +109,45 @@ func _build_ui() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 
-	# --- TOP BAR: Caption Box ---
+	# --- CAPTION BOX: Compact comic narration banner at bottom-center ---
 	_caption_box = PanelContainer.new()
-	_caption_box.position = Vector2(30, 20)
-	_caption_box.custom_minimum_size = Vector2(860, 95)
+	_caption_box.position = Vector2((1280 - 640) * 0.5, 650)
+	_caption_box.custom_minimum_size = Vector2(640, 50)
+	_caption_box.visible = false
 	
 	var box_style := StyleBoxFlat.new()
 	box_style.bg_color = Color("fff9e6") # Pale vintage paper
-	box_style.border_width_bottom = 4
-	box_style.border_width_left = 4
-	box_style.border_width_right = 4
-	box_style.border_width_top = 4
+	box_style.border_width_bottom = 3
+	box_style.border_width_left = 3
+	box_style.border_width_right = 3
+	box_style.border_width_top = 3
 	box_style.border_color = Color("18151d") # Ink black
-	box_style.shadow_color = Color(0, 0, 0, 0.4)
-	box_style.shadow_size = 4
-	box_style.shadow_offset = Vector2(4, 4)
-	box_style.content_margin_left = 16
-	box_style.content_margin_right = 16
-	box_style.content_margin_top = 10
-	box_style.content_margin_bottom = 10
+	box_style.shadow_color = Color(0, 0, 0, 0.35)
+	box_style.shadow_size = 3
+	box_style.shadow_offset = Vector2(3, 3)
+	box_style.content_margin_left = 12
+	box_style.content_margin_right = 12
+	box_style.content_margin_top = 4
+	box_style.content_margin_bottom = 4
 	_caption_box.add_theme_stylebox_override("panel", box_style)
 	root.add_child(_caption_box)
 
 	var caption_vbox := VBoxContainer.new()
+	caption_vbox.add_theme_constant_override("separation", 2)
 	_caption_box.add_child(caption_vbox)
 
 	var tag := Label.new()
 	tag.text = "✦ NARRATION ✦"
 	tag.add_theme_font_override("font", FONT_TITLE)
-	tag.add_theme_font_size_override("font_size", 14)
-	tag.add_theme_color_override("font_color", Color("e63946")) # Punch red tag
+	tag.add_theme_font_size_override("font_size", 12)
+	tag.add_theme_color_override("font_color", Color("e63946"))
 	caption_vbox.add_child(tag)
 
 	_caption_label = Label.new()
-	_caption_label.text = "Loading comic issue..."
+	_caption_label.text = ""
 	_caption_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_caption_label.add_theme_font_override("font", FONT_BODY)
-	_caption_label.add_theme_font_size_override("font_size", 18)
+	_caption_label.add_theme_font_size_override("font_size", 15)
 	_caption_label.add_theme_color_override("font_color", Color("18151d"))
 	caption_vbox.add_child(_caption_label)
 
@@ -429,7 +433,20 @@ func _on_level_loaded(index: int, data: Dictionary) -> void:
 
 
 func _on_caption_changed(text: String) -> void:
-	_caption_label.text = text
+	var clean := text.strip_edges()
+	if clean.is_empty():
+		_caption_box.visible = false
+		return
+	_caption_label.text = clean
+	_caption_box.visible = true
+	_caption_box.modulate = Color(1, 1, 1, 1)
+	if _caption_tween and _caption_tween.is_valid():
+		_caption_tween.kill()
+	var duration := clampf(3.5 + clean.length() * 0.03, 3.5, 7.0)
+	_caption_tween = create_tween()
+	_caption_tween.tween_interval(duration)
+	_caption_tween.tween_property(_caption_box, "modulate:a", 0.0, 0.4)
+	_caption_tween.tween_callback(func() -> void: _caption_box.visible = false)
 
 
 func _on_move_count_changed(moves: int) -> void:
