@@ -90,3 +90,9 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   about 4 dB while the Narrator speaks on the comms and comes back when he stops.
 - Tests: the friend-task test now waits for the Editions' first level before running (it was finishing
   level 1 before the book's glitch had loaded it, so the level reloaded mid-test). It passes again.
+- Performance (`scripts/tools/perf_probe.tscn`, desktop, real renderer): every fight and the brawler ran
+  at the 180 fps cap, but the story pages only managed **33 fps with 2,723 draw calls**: every halftone
+  dot was drawn one by one, every frame. In a browser (GDScript and WebGL are slower) that would have
+  been about 10-15 fps during cutscenes. The halftone is now a tiled dot texture on a few soft-faded
+  quads: same look, **28 draw calls, 180 fps**. It speeds up every screen that uses halftone (cutscenes,
+  score cards, menus, the code-drawn stages).
