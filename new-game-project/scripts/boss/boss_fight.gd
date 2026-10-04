@@ -1066,8 +1066,8 @@ func _draw_hud() -> void:
 	draw_string(FONT_SHOUT, Vector2(1110, 82), "WAVE %d/%d" % [mini(_global_wave(), _total_waves()), _total_waves()], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, PAPER)
 	# the Narrator's health (bottom)
 	if _narrator != null:
-		var bar := Rect2(Vector2(340, 660), Vector2(600, 20))
-		draw_string(FONT_SHOUT, Vector2(340, 652), boss_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("c77dff"))
+		var bar := Rect2(Vector2(668, 660), Vector2(580, 20))
+		draw_string(FONT_SHOUT, Vector2(668, 652), boss_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("c77dff"))
 		draw_rect(bar, INK)
 		draw_rect(Rect2(bar.position + Vector2(3, 3), Vector2((bar.size.x - 6) * clampf(_narrator.hp / _narrator.max_hp, 0.0, 1.0), bar.size.y - 6)), Color("9d4edd"))
 	elif _phase in ["wave", "wave_intro"] and _wave == 0 and _pt < 8.0:

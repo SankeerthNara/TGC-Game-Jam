@@ -165,7 +165,9 @@ func _process(delta: float) -> void:
 		return
 	match _phase:
 		"intro":
-			if _pt > 2.2:
+			if stage == "train":
+				_train_intro(delta)
+			if _pt > _intro_len():
 				_phase = "play"
 				_pt = 0.0
 		"play":
@@ -179,6 +181,54 @@ func _process(delta: float) -> void:
 				set_process(false)
 				finished.emit("win")
 	queue_redraw()
+
+
+func _intro_len() -> float:
+	return 3.2 if stage == "train" else 2.2
+
+
+## The Twins' entrance: the hero lands on the train roof, then the Twins tune in out of static.
+func _train_intro(delta: float) -> void:
+	var before := _pt - delta
+	if before < 0.45 and _pt >= 0.45:
+		_shake = 10.0
+		EventBus.sound_requested.emit("punch_heavy")
+		for i in 10:
+			_fx.append({"kind": "dust", "pos": hero_pos + Vector2(randf_range(-40, 40), -6), "vel": Vector2(randf_range(-260, 260), -randf_range(60, 220)), "t": 0.0, "life": 0.5})
+	if before < 0.75 and _pt >= 0.75:
+		EventBus.sound_requested.emit("static")
+	if before < 1.6 and _pt >= 1.6:
+		_shake = 18.0
+		_flash = 1.0
+		EventBus.sound_requested.emit("counter_flash")
+		EventBus.sound_requested.emit("shockwave")
+		for e in _enemies:
+			for i in 26:
+				_fx.append({"kind": "px", "pos": e.pos + Vector2(randf_range(-50, 50), -randf_range(0, 230)), "vel": Vector2(randf_range(-420, 420), -randf_range(100, 520)), "t": 0.0, "life": 0.7})
+
+
+## The hero is still falling onto the roof at the start of the Twins' fight.
+func _drop() -> float:
+	if stage != "train" or _phase != "intro":
+		return 0.0
+	var k := clampf(_pt / 0.45, 0.0, 1.0)
+	return 560.0 * (1.0 - k * k)
+
+
+## Before they fully tune in, the Twins are only static and flickers.
+func _tuning_in() -> bool:
+	return stage == "train" and _phase == "intro" and _pt < 1.6
+
+
+func _draw_static_twin(e: BrawlEnemy) -> void:
+	var p := e.pos - Vector2(_cam, 0)
+	if _pt > 0.75 and randf() < (_pt - 0.75) / 0.85:
+		e.draw(self, _cam + randf_range(-16, 16))
+		return
+	for k in 9:
+		var y := p.y - randf_range(0, 230)
+		var w := randf_range(30, 110)
+		draw_rect(Rect2(Vector2(p.x - w * 0.5 + randf_range(-20, 20), y), Vector2(w, randf_range(3, 9))), Color(0.3, 1.0, 1.0, 0.55) if k % 2 == 0 else Color(1.0, 0.25, 0.6, 0.5))
 
 
 func _restart_fight() -> void:
@@ -469,7 +519,10 @@ func _draw() -> void:
 		_draw_train()
 	# enemies, shots, beams, hero
 	for e in _enemies:
-		e.draw(self, _cam)
+		if _tuning_in():
+			_draw_static_twin(e)
+		else:
+			e.draw(self, _cam)
 		draw_set_transform(off)
 	for e in _dying:
 		e.draw(self, _cam)
@@ -608,7 +661,7 @@ func _draw_hero() -> void:
 		pose = "jump" if _vel.y < 0.0 else "fall"
 	elif absf(_vel.x) > 30.0:
 		pose = "run"
-	var p := hero_pos - Vector2(_cam, 0)
+	var p := hero_pos - Vector2(_cam, _drop())
 	draw_texture_rect(TEX_GLOW, Rect2(p + Vector2(-90, -170), Vector2(180, 180)), false, Color(0.3, 0.9, 1.0, 0.12))
 	if _inv > 0.0 and _roll_t <= 0.0 and int(_t * 18.0) % 2 == 0:
 		return
@@ -633,6 +686,12 @@ func _px_frame(pose: String) -> String:
 		"hurt":
 			key = "px_hero_hurt"
 	return key if Sprites.has(key) else "px_hero"
+
+
+func _subtitle(text: String, y: float, a: float) -> void:
+	var w := FONT_BODY.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
+	draw_string_outline(FONT_BODY, Vector2(640 - w * 0.5, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, 6, Color(0, 0, 0, a))
+	draw_string(FONT_BODY, Vector2(640 - w * 0.5, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color(1, 0.95, 0.85, a))
 
 
 func _draw_hud() -> void:
@@ -660,8 +719,8 @@ func _draw_hud() -> void:
 		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 70), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("fff3d1"))
 	if stage == "train":
-		var bar := Rect2(Vector2(340, 664), Vector2(600, 16))
-		draw_string(FONT_SHOUT, Vector2(340, 656), "THE STATIC TWINS", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("3ef0ff"))
+		var bar := Rect2(Vector2(668, 664), Vector2(580, 16))
+		draw_string(FONT_SHOUT, Vector2(668, 656), "THE STATIC TWINS", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("3ef0ff"))
 		var hp_sum := 0.0
 		var hp_max := 80.0
 		for e in _enemies:
@@ -671,10 +730,22 @@ func _draw_hud() -> void:
 		draw_rect(Rect2(bar.position + Vector2(2, 2), Vector2((bar.size.x - 4) * hp_sum / hp_max, bar.size.y - 4)), Color("ff2a3a"))
 	match _phase:
 		"intro":
-			var title := "NEON STREET" if stage == "street" else "THE STATIC TWINS"
-			var k := clampf(_pt / 0.3, 0.0, 1.0)
-			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.5 * (1.0 - clampf((_pt - 1.6) / 0.6, 0.0, 1.0))))
-			ComicArt.shout(self, title, Vector2(640, 320), int(84 * k) + 1, Color("ff3a4a"), 12, -0.03)
+			var fade_at := _intro_len() - 0.6
+			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.5 * (1.0 - clampf((_pt - fade_at) / 0.6, 0.0, 1.0))))
+			if stage == "street":
+				var k := clampf(_pt / 0.3, 0.0, 1.0)
+				ComicArt.shout(self, "NEON STREET", Vector2(640, 320), int(84 * k) + 1, Color("ff3a4a"), 12, -0.03)
+				_subtitle("CLEAR THE STREET OF THE VILLAIN'S GOONS", 390.0, k)
+			elif _pt > 1.6:
+				# the title tunes in like a bad TV signal: cyan and magenta ghosts snap together
+				var k2 := clampf((_pt - 1.6) / 0.3, 0.0, 1.0)
+				var split := 14.0 * (1.0 - k2) + (5.0 if int(_t * 24.0) % 9 == 0 else 0.0)
+				var fs := 84
+				var tw := FONT_SHOUT.get_string_size("THE STATIC TWINS", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+				draw_string(FONT_SHOUT, Vector2(640 - tw * 0.5 - split, 348), "THE STATIC TWINS", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.2, 1.0, 1.0, 0.75))
+				draw_string(FONT_SHOUT, Vector2(640 - tw * 0.5 + split, 348), "THE STATIC TWINS", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1.0, 0.2, 0.6, 0.75))
+				ComicArt.shout(self, "THE STATIC TWINS", Vector2(640, 320), fs, Color("3ef0ff"), 12, -0.03)
+				_subtitle("TWO BODIES. ONE SIGNAL.", 390.0, k2)
 		"dead":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0.3, 0.0, 0.05, clampf(_pt, 0.0, 0.7)))
 			ComicArt.shout(self, "KNOCKED OUT", Vector2(640, 330), 80, Color("ff3a4a"), 12, -0.03)

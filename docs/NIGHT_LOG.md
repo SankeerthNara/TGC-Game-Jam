@@ -102,3 +102,28 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - The in-game Credits now disclose the AI art and the AI tools used (Claude Code, Antigravity,
   ChatGPT/Codex) and point to CREDITS.md and docs/AI_USAGE.md (jam rule: AI use must be disclosed).
   Checked that the longer text still fits the panel (`scripts/tools/menu_shot.tscn`).
+
+## Moments, round two
+- **Book opening**: the camera settles on the closed comic (a gleam slides over the cover, dust drifts
+  in the lamp light). On Z or after the hold it pushes in until the cover fills the screen, the cover
+  (drawn with the real cover art) swings open on its spine, two pages flick past and the page fills with
+  light, which fades into the first story page. Replaces the plain ink wipe on that one page.
+- **The unmasking**: the reveal pages now have camera moments: KZZZT! shakes, the RIIIP! hits with a
+  big shake, white flash, zoom punch on the panel and the villain sting; the Narrator's reveal panel
+  lands with a shockwave. His lines type out slowly ("This is the perfect ending...", "You fell into my
+  trap perfectly.") so they land.
+- **The Static Twins**: the hero drops onto the train roof (thud, dust), the Twins tune in out of
+  static (flickering cyan and magenta bars, then a flash, shake and a burst of pixels), and the title
+  snaps together from cyan and magenta ghosts with "TWO BODIES. ONE SIGNAL." Neon Street's card says
+  what to do ("CLEAR THE STREET OF THE VILLAIN'S GOONS"). Bots: street 48 s, Twins 25 s, no deaths.
+- **Solar flare**: the beaten Narrator kneels across the stage as a fading ink figure, shedding ink
+  drops faster as the brightness rises; at 100% sun rays burst out of the hero, a shock ring rolls out,
+  "SOLAR FLARE!", the stage shakes, he bursts into ink and the page burns white into the ending. The
+  beams now meet the hero where the fight ended (they aimed at the screen centre before).
+- Bug fixed: dragging the brightness slider fast queued all three of the Narrator's pleas, and they
+  kept playing over the ending pages. Each plea now cuts off the last, and the comms clear at 100%.
+- **The book closes**: the last page starts zoomed into the comic and pulls back onto the closed book;
+  THE END lands with a thud and a shake.
+- Layout: the boss health bars (Ink Baron, Narrator, Static Twins) moved to the bottom right; the comms
+  box (bottom left) used to cover their names and half the bar whenever the Narrator spoke in a fight.
+- New tool: `scripts/tools/moments_shots.tscn` freezes each of these moments for screenshots.

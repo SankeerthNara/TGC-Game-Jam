@@ -214,14 +214,15 @@ func _final_boss() -> void:
 	comms.say("I wrote every page of you, hero. Even this one.", "narrator_evil", 2.0)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
-		_finale())
+		_finale(b.hero_pos - Vector2(b._cam, 70.0)))
 
 
 ## The player drags the brightness to 100%: sunlight, the ending, the book closes.
-func _finale() -> void:
+func _finale(hero := Vector2(640, 520)) -> void:
 	main._set_state("cutscene")
 	comms.say("Reader... you wouldn't.", "narrator_evil", 1.0)
 	var f := BrightnessFinale.new()
+	f.hero = hero
 	main.add_child(f)
 	f.finished.connect(func() -> void:
 		_free_stale()
