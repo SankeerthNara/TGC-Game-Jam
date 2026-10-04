@@ -409,11 +409,11 @@ func _on_reset_pressed() -> void:
 
 func _on_game_state_changed(state: String) -> void:
 	_hud_root.visible = state != "menu"
-	var in_puzzle := state == "playing" or state == "paused"
+	var in_puzzle := state == "playing"
 	_info_box.visible = in_puzzle
 	_action_bar.visible = in_puzzle
 	_pause_modal.visible = state == "paused"
-	_end_modal.visible = state == "ended"
+	_end_modal.visible = false # the run's end screens are drawn by main (bomb room, Earth blast)
 
 
 # --- EventBus Listeners ---

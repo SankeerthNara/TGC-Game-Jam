@@ -46,6 +46,15 @@ func _ready() -> void:
 	check(main.state == "world" and main.level_idx == 0, "level 1 starts after the opening (state=%s)" % main.state)
 	await frames(60)
 	check(main.bomb_left < b0, "bomb clock ticks in the level (%.2f)" % main.bomb_left)
+	# pause freezes the world and the bomb
+	main._set_paused(true)
+	var bp: float = main.bomb_left
+	var hero_pos: Vector2 = main.world._foot
+	await frames(30)
+	check(main.paused and get_tree().paused and is_equal_approx(main.bomb_left, bp), "pause freezes the bomb clock")
+	EventBus.request_pause.emit(false)
+	await frames(10)
+	check(not main.paused and not get_tree().paused and main.bomb_left < bp, "resume restarts the clock")
 	shot("hud")
 	# finish all four levels by force
 	for lv in 4:

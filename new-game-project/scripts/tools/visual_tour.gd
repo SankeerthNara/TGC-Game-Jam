@@ -21,6 +21,11 @@ func _ready() -> void:
 	EventBus.request_start_game.emit()
 	await frames(5)
 	main._overlay.skip()
+	await frames(20)
+	main._set_paused(true)
+	await frames(5)
+	shot("paused")
+	main._set_paused(false)
 	await frames(5)
 	# walk around level 2 so vampires and more rooms show
 	main._level_complete()

@@ -28,6 +28,7 @@ var _last_state := ""
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("music")
 	for key: String in LAYERS:
 		var p := AudioStreamPlayer.new()
@@ -99,6 +100,9 @@ func _targets() -> Dictionary:
 				# keep it quieter while the player concentrates on a task
 				for k in ["pad", "pulse", "tension", "danger"]:
 					t[k] *= 0.6
+	if main.paused:
+		for k in t:
+			t[k] *= 0.35
 	return t
 
 

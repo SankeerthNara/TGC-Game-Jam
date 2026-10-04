@@ -777,6 +777,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_ESCAPE:
 			_minimap_open = false
 			_minimap.visible = false
+			get_viewport().set_input_as_handled()
 		return
 	if station_mode and event.keycode == KEY_F:
 		_assign_to_friend()

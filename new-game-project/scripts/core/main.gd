@@ -26,6 +26,8 @@ var _retrying := false
 var score := ScoreKeeper.new()
 var level_ease: Array[int] = [0, 0, 0, 0]
 var _task_layer: CanvasLayer
+var paused := false ## the whole game is frozen (P / Esc); the UI keeps running
+const PAUSABLE_STATES := ["world", "task", "parkour", "playing"]
 const BOMB_SECONDS := 17 * 60.0 ## the masked villain's bomb: find the 4 keys and open the bomb room in time
 const TICKING := ["world", "task", "playing", "parkour"] ## the bomb clock pauses in cutscenes, menus and score screens
 var bomb_left := BOMB_SECONDS
@@ -37,7 +39,10 @@ var _info: Label
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("23232e"))
+	# main and the UI keep running while paused; the world, tasks and chases freeze
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	world = World.new()
+	world.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(world)
 	world.door_entered.connect(_enter_puzzle)
 	world.task_requested.connect(_on_task_requested)
@@ -64,19 +69,21 @@ func _ready() -> void:
 	music.main = self
 	add_child(music)
 	_task_layer = CanvasLayer.new()
+	_task_layer.process_mode = Node.PROCESS_MODE_PAUSABLE
 	_task_layer.layer = 18
 	add_child(_task_layer)
 	world.message.connect(func(t: String) -> void: EventBus.caption_changed.emit(t))
 	world.gate_opened.connect(func(_g: String) -> void:
 		EventBus.caption_changed.emit("NARRATOR: The ink-gate dissolves into light! New streets are open."))
 	view = PageView.new()
+	view.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(view)
 	view.swap_requested.connect(_on_swap)
 	view.toggle_requested.connect(_on_toggle)
 	view.locked_panel_clicked.connect(_on_locked)
 	EventBus.request_start_game.connect(_start_game)
 	set_process(true)
-	EventBus.request_restart_level.connect(func() -> void: if state == "playing": start_level(GameState.level_index); EventBus.level_restarted.emit())
+	EventBus.request_restart_level.connect(_restart_level)
 	EventBus.request_undo.connect(_undo)
 	EventBus.request_pause.connect(_set_paused)
 	EventBus.request_quit_to_menu.connect(_to_menu)
@@ -102,6 +109,9 @@ func _set_state(s: String) -> void:
 
 
 func _to_menu() -> void:
+	if paused:
+		paused = false
+		get_tree().paused = false
 	GameState.restart_game()
 	busy = false
 	_set_state("menu")
@@ -151,6 +161,8 @@ func _load_level(i: int) -> void:
 
 
 func _process(delta: float) -> void:
+	if paused:
+		return
 	if world.clock_running and (state == "world" or state == "task" or state == "playing"):
 		level_time += delta
 		total_time += delta
@@ -461,15 +473,34 @@ func _open_bomb_room() -> void:
 
 
 func _wait_playing() -> void:
-	while state == "paused":
+	while paused:
 		await get_tree().process_frame
 
 
-func _set_paused(paused: bool) -> void:
-	if state == "playing" and paused:
-		_set_state("paused")
-	elif state == "paused" and not paused:
-		_set_state("playing")
+## Pause menu "restart": back to the start of this level (the bomb keeps its time).
+func _restart_level() -> void:
+	if not paused and not state in PAUSABLE_STATES:
+		return
+	_set_paused(false)
+	for c in _task_layer.get_children():
+		c.queue_free()
+	_overlay = null
+	active_task = ""
+	_retrying = true
+	_load_level(level_idx)
+	EventBus.level_restarted.emit()
+
+
+## Freezes the game (world, tasks, chases, the bomb clock) and tells the UI to show the pause menu.
+func _set_paused(on: bool) -> void:
+	if on and not paused and state in PAUSABLE_STATES:
+		paused = true
+		get_tree().paused = true
+		EventBus.game_state_changed.emit("paused")
+	elif not on and paused:
+		paused = false
+		get_tree().paused = false
+		EventBus.game_state_changed.emit(state)
 
 
 func _undo() -> void:
@@ -550,9 +581,12 @@ func _on_locked(panel: int) -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event.is_pressed() or not event is InputEventKey:
 		return
-	if event.keycode == KEY_ESCAPE and (state == "playing" or state == "paused"):
-		_set_paused(state == "playing")
-	elif state != "playing" or busy:
+	# P pauses anywhere you play; Esc too, except inside a task (there Esc leaves the task)
+	if event.keycode == KEY_P or (event.keycode == KEY_ESCAPE and (paused or state in ["world", "parkour"])):
+		_set_paused(not paused)
+		get_viewport().set_input_as_handled()
+		return
+	if paused or state != "playing" or busy:
 		return
 	elif event.keycode == KEY_M:
 		_finish_puzzle(false)
