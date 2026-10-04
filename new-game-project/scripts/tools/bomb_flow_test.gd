@@ -18,8 +18,8 @@ func frames(n: int) -> void:
 
 func skip_overlay(main: Node) -> void:
 	var ov: Node = main._overlay
-	if ov is CutScene:
-		ov._t = 99.0
+	if ov is CutScene or ov is ComicCutscene:
+		ov.skip()
 	elif ov is LevelOverlay:
 		ov.continue_pressed.emit()
 	await frames(3)
@@ -61,7 +61,7 @@ func _ready() -> void:
 		await skip_overlay(main)
 		if lv < 3:
 			check(main.level_idx == lv + 1, "level %d loaded" % (lv + 2))
-	check(main.state == "cutscene" and main._overlay is CutScene and main._overlay.kind == "bomb_room", "bomb room cutscene after level 4")
+	check(main.state == "cutscene" and main._overlay is ComicCutscene and main._overlay.kind == "bomb_room", "bomb room cutscene after level 4")
 	await skip_overlay(main)
 	check(main._overlay is LevelOverlay and main._overlay.final, "final screen after the bomb room")
 	await skip_overlay(main)
@@ -73,7 +73,7 @@ func _ready() -> void:
 	await skip_overlay(main)
 	main.bomb_left = 0.05
 	await frames(10)
-	check(main._overlay is CutScene and main._overlay.kind == "earth_blast", "the Earth blasts when the clock hits 0")
+	check(main._overlay is ComicCutscene and main._overlay.kind == "earth_blast", "the Earth blasts when the clock hits 0")
 	await skip_overlay(main)
 	await frames(5)
 	check(main.state == "menu", "menu after the blast (state=%s)" % main.state)

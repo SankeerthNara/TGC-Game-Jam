@@ -20,7 +20,7 @@ func _ready() -> void:
 	shot("menu")
 	EventBus.request_start_game.emit()
 	await frames(5)
-	main._overlay._t = 99.0
+	main._overlay.skip()
 	await frames(5)
 	# walk around level 2 so vampires and more rooms show
 	main._level_complete()

@@ -31,6 +31,13 @@ func _ready() -> void:
 		_stars.append(Vector2(randf() * 1400.0, randf() * 720.0))
 
 
+## Finishes the cutscene at once (also used by tests).
+func skip() -> void:
+	if not _done:
+		_done = true
+		finished.emit()
+
+
 func _process(delta: float) -> void:
 	_t += delta
 	if _t >= float(DURATIONS.get(kind, 3.0)) and not _done:

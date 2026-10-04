@@ -262,7 +262,7 @@ func _back_from_task(success: bool) -> void:
 
 ## Plays one of the Among Us style cutscenes, then calls `then`.
 func _play_cutscene(kind: String, then: Callable) -> void:
-	var cs := CutScene.new()
+	var cs: Control = ComicCutscene.new() if kind in ComicCutscene.KINDS else CutScene.new()
 	cs.kind = kind
 	cs.bomb_left = bomb_left
 	_overlay = cs
