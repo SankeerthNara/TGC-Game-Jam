@@ -31,6 +31,8 @@ func _gui_input(event: InputEvent) -> void:
 						succeed()
 				elif i > _next:
 					flash("IN ORDER, PLEASE!", 6.0)
+				else:
+					flash("THAT DOT IS ALREADY CONNECTED!")
 				return
 
 

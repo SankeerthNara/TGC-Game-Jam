@@ -22,6 +22,7 @@ var hint := ""
 
 var _t := 0.0
 var _done := false
+var _finished_emitted := false
 var _done_t := 0.0
 var _msg := ""
 var _msg_t := 0.0
@@ -66,6 +67,14 @@ func succeed() -> void:
 		_done_t = 0.0
 
 
+func _finish(success: bool) -> void:
+	if _finished_emitted:
+		return
+	_finished_emitted = true
+	finished.emit(success)
+	set_process(false)
+
+
 func flash(text: String, shake := 0.0) -> void:
 	EventBus.sound_requested.emit("task_mistake")
 	_msg = text
@@ -80,8 +89,7 @@ func _process(delta: float) -> void:
 	if _done:
 		_done_t += delta
 		if _done_t > 1.15:
-			finished.emit(true)
-			set_process(false)
+			_finish(true)
 		queue_redraw()
 		return
 	_update(delta)
@@ -89,10 +97,10 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if _done or not (event is InputEventKey) or not event.pressed or event.echo:
+	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	if event.keycode == KEY_ESCAPE or event.keycode == KEY_X:
-		finished.emit(false)
+		_finish(_done)
 		get_viewport().set_input_as_handled()
 
 
@@ -114,10 +122,16 @@ func _draw() -> void:
 	draw_rect(panel, INK, false, 6.0)
 	draw_rect(Rect2(panel.position, Vector2(panel.size.x, 62)), GOLD)
 	draw_rect(Rect2(panel.position, Vector2(panel.size.x, 62)), INK, false, 6.0)
-	_text(title, panel.position + Vector2(24, 47), 44, INK, FONT_SHOUT)
+	var title_size := 44
+	while title_size > 24 and FONT_SHOUT.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x > panel.size.x - 205.0:
+		title_size -= 1
+	_text(title, panel.position + Vector2(24, 47), title_size, INK, FONT_SHOUT)
 	_text("ESC: leave", Vector2(panel.end.x - 150, panel.position.y + 40), 20, INK)
 	if hint != "":
-		_centered(hint, panel.end.y - 18, 20, Color("5c5470"))
+		var hint_size := 20
+		while hint_size > 12 and FONT_BODY.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, hint_size).x > panel.size.x - 48.0:
+			hint_size -= 1
+		_centered(hint, panel.end.y - 18, hint_size, Color("5c5470"))
 	_draw_task()
 	draw_set_transform(Vector2.ZERO)
 	if _msg_t > 0.0:

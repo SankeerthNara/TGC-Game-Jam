@@ -11,7 +11,7 @@ var _flow: Array[int] = [] ## cells the ink currently reaches
 func _begin() -> void:
 	title = "CONNECT THE INK PIPES"
 	hint = "Click a pipe to rotate it. Connect the left tap to the right drain."
-	_n = 4 if difficulty < 2 else 5
+	_n = 3 + difficulty
 	for i in _n * _n:
 		_type.append("S" if randf() < 0.5 else "C")
 		_rot.append(randi() % 4)
@@ -116,9 +116,10 @@ func _reaches_end() -> bool:
 
 
 func _cell(i: int) -> Rect2:
-	var s := 84.0
+	var available_h := 360.0
+	var s := minf(84.0, available_h / _n)
 	var total := _n * s
-	var o := Vector2(panel.get_center().x - total * 0.5, panel.position.y + 100 + (410.0 - total) * 0.5)
+	var o := Vector2(panel.get_center().x - total * 0.5, panel.position.y + 100 + (available_h - total) * 0.5)
 	return Rect2(o + Vector2((i % _n) * s, (i / _n) * s), Vector2(s, s))
 
 
@@ -128,10 +129,13 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		for i in _n * _n:
 			if _cell(i).has_point(event.position):
+				var old_flow := _flow.size()
 				_rot[i] = (_rot[i] + 1) % 4
 				_recompute()
 				if _reaches_end():
 					succeed()
+				elif _flow.size() < old_flow:
+					flash("THE INK FLOW STOPPED EARLY!", 4.0)
 				return
 
 

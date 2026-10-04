@@ -1,6 +1,6 @@
 class_name BubblesTask
 extends TaskBase
-## Comic lettering: fill the blanks of three speech bubbles with the right word chips.
+## Comic lettering: fill speech bubbles with the word that completes each line.
 
 const BANK := [
 	["DON'T PANIC! I'LL ____ THE LIGHTS ON!", "FLIP"],
@@ -15,32 +15,47 @@ const BANK := [
 
 var _pick: Array = []
 var _chips: Array[String] = []
-var _filled: Array[String] = ["", "", ""]
+var _filled: Array[String] = []
+var _bubble_count := 2
 var _held := -1
 
 
 func _begin() -> void:
 	title = "FILL THE SPEECH BUBBLES"
 	hint = "Click a word, then click the bubble where it belongs."
+	_bubble_count = 2 + difficulty
+	_filled.clear()
+	for _i in _bubble_count:
+		_filled.append("")
 	var bank := BANK.duplicate()
 	bank.shuffle()
-	_pick = bank.slice(0, 3)
-	for p in _pick:
-		_chips.append(p[1])
-	for extra in bank.slice(3, 5):
-		_chips.append(extra[1])
+	_pick = bank.slice(0, _bubble_count)
+	_chips.clear()
+	for pair in _pick:
+		_chips.append(pair[1])
+	# Extra words make the choice harder without making the controls crowded.
+	for pair in bank.slice(_bubble_count, mini(_bubble_count + 2, bank.size())):
+		_chips.append(pair[1])
 	_chips.shuffle()
 
 
 func _bubble(i: int) -> Rect2:
-	return Rect2(Vector2(panel.position.x + 60, panel.position.y + 95 + i * 98), Vector2(panel.size.x - 120, 78))
+	var usable_h := 292.0
+	var pitch := usable_h / _bubble_count
+	var bubble_h := minf(70.0, pitch - 7.0)
+	return Rect2(Vector2(panel.position.x + 48, panel.position.y + 82 + pitch * i), Vector2(panel.size.x - 96, bubble_h))
 
 
 func _chip(i: int) -> Rect2:
-	var w := 140.0
-	var gap := 12.0
-	var total := _chips.size() * w + (_chips.size() - 1) * gap
-	return Rect2(Vector2(panel.get_center().x - total * 0.5 + i * (w + gap), panel.end.y - 112), Vector2(w, 46))
+	var row: int = i / 4
+	var col: int = i % 4
+	var count_in_row := mini(4, _chips.size() - row * 4)
+	var gap := 8.0
+	var w := minf(170.0, (panel.size.x - 80.0 - gap * (count_in_row - 1)) / count_in_row)
+	var total := count_in_row * w + (count_in_row - 1) * gap
+	var x := panel.get_center().x - total * 0.5 + col * (w + gap)
+	var y := panel.end.y - 128.0 + row * 48.0
+	return Rect2(Vector2(x, y), Vector2(w, 38))
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -51,7 +66,7 @@ func _gui_input(event: InputEvent) -> void:
 			if _chip(i).has_point(event.position) and not _filled.has(_chips[i]):
 				_held = i
 				return
-		for b in 3:
+		for b in _bubble_count:
 			if _bubble(b).has_point(event.position) and _held >= 0 and _filled[b] == "":
 				if _chips[_held] == _pick[b][1]:
 					_filled[b] = _chips[_held]
@@ -64,7 +79,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _draw_task() -> void:
-	for b in 3:
+	for b in _bubble_count:
 		var r := _bubble(b)
 		var done := _filled[b] != ""
 		draw_rect(Rect2(r.position + Vector2(5, 6), r.size), Color(0, 0, 0, 0.25))
@@ -75,7 +90,7 @@ func _draw_task() -> void:
 		var text: String = _pick[b][0]
 		if done:
 			text = text.replace("____", _filled[b])
-		_text(text, r.position + Vector2(24, 48), 28, GREEN if done else INK, FONT_SHOUT)
+		_text(text, r.position + Vector2(24, r.size.y * 0.68), 26, GREEN if done else INK, FONT_SHOUT)
 	for i in _chips.size():
 		var c := _chip(i)
 		var used := _filled.has(_chips[i])
@@ -83,4 +98,7 @@ func _draw_task() -> void:
 		draw_rect(Rect2(c.position + Vector2(3, 4), c.size), Color(0, 0, 0, 0.25))
 		draw_rect(c, Color("bdbdbd") if used else (GOLD if sel else Color("fff9e6")))
 		draw_rect(c, INK, false, 3.0)
-		_text(_chips[i], c.position + Vector2(0, 33), 24, INK, FONT_SHOUT, HORIZONTAL_ALIGNMENT_CENTER, c.size.x)
+		var font_size := 22
+		while font_size > 14 and FONT_SHOUT.get_string_size(_chips[i], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > c.size.x - 8.0:
+			font_size -= 1
+		_text(_chips[i], Vector2(c.position.x, c.position.y + 27), font_size, INK, FONT_SHOUT, HORIZONTAL_ALIGNMENT_CENTER, c.size.x)

@@ -4,6 +4,7 @@ extends TaskBase
 
 const ICONS := ["star", "moon", "bolt", "sun", "flower", "crown"]
 
+var _pair_count := 3
 var _cards: Array[String] = []
 var _open: Array[int] = []
 var _matched: Array[bool] = []
@@ -12,8 +13,12 @@ var _wait := 0.0
 
 func _begin() -> void:
 	title = "MATCH THE COMIC STICKERS"
-	hint = "Flip two cards at a time. Find all six pairs!"
-	for id in ICONS:
+	_pair_count = 3 + difficulty
+	hint = "Flip two cards at a time. Find all %d pairs!" % _pair_count
+	_cards.clear()
+	_matched.clear()
+	_open.clear()
+	for id in ICONS.slice(0, _pair_count):
 		_cards.append(id)
 		_cards.append(id)
 	_cards.shuffle()
@@ -53,6 +58,7 @@ func _gui_input(event: InputEvent) -> void:
 							succeed()
 					else:
 						_wait = maxf(0.4, 0.9 - 0.15 * difficulty)
+						flash("NO MATCH! REMEMBER THE CARDS.")
 				return
 
 

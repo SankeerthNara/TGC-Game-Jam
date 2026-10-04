@@ -39,3 +39,4 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C16 | Claude | Hero special powers for the final duels (Deduction, Light Dash, Prism Cannon / Solar Flare); scripted knock-outs for heroes 2 and 3 | todo | C15 | |
 | C17 | Claude | Opening cutscene (peaceful Earth, four heroes, masked villain, bomb) and mirrored closing cutscene | opening done (simple), closing todo | C12b | `cutscene.gd` |
 | C18 | Claude | 17:00 bomb clock for the whole run, one key per level, bomb room cutscene (unmask: it is the Narrator; he captures the level 1 hero), Earth blast ending | done | C12b | `main.gd`, `cutscene.gd`, `task_hud.gd`, `tools/bomb_flow_test.tscn` |
+| C19 | Claude | Instantiate `SfxPlayer` in the main game and verify task, sabotage, damage, death, and requested-sound playback end to end | todo | - | Add `add_child(SfxPlayer.new())` in `main.gd`; implementation and sound files are ready in `scripts/audio/` and `assets/audio/` |

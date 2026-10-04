@@ -13,14 +13,27 @@ var _words: PackedStringArray = []
 var _typos: Array = []
 var _found: Array[int] = []
 var _wrong: Array[int] = []
+var _deck: Array = []
+var _round := 0
+var _rounds := 1
 
 
 func _begin() -> void:
 	title = "PROOFREAD THE PARAGRAPH"
-	hint = "Click the three misspelled words."
-	var t: Dictionary = TEXTS[randi() % TEXTS.size()]
+	hint = "Click the three misspelled words on each page."
+	_rounds = 1 + difficulty
+	_deck = TEXTS.duplicate()
+	_deck.shuffle()
+	_round = 0
+	_load_round()
+
+
+func _load_round() -> void:
+	var t: Dictionary = _deck[_round]
 	_words = String(t["text"]).split(" ")
-	_typos = t["typos"]
+	_typos = t["typos"].duplicate()
+	_found.clear()
+	_wrong.clear()
 
 
 func _word_rect(i: int) -> Rect2:
@@ -49,7 +62,12 @@ func _gui_input(event: InputEvent) -> void:
 					if not _found.has(i):
 						_found.append(i)
 						if _found.size() >= _typos.size():
-							succeed()
+							_round += 1
+							if _round >= _rounds:
+								succeed()
+							else:
+								flash("PAGE %d CLEAR!" % _round)
+								_load_round()
 				else:
 					if not _wrong.has(i):
 						_wrong.append(i)
@@ -58,7 +76,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _draw_task() -> void:
-	_text("FOUND %d / %d" % [_found.size(), _typos.size()], panel.position + Vector2(30, 112), 26, INK, FONT_SHOUT)
+	_text("PAGE %d / %d     FOUND %d / %d" % [mini(_round + 1, _rounds), _rounds, _found.size(), _typos.size()], panel.position + Vector2(30, 112), 26, INK, FONT_SHOUT)
 	draw_rect(Rect2(panel.position + Vector2(30, 124), Vector2(panel.size.x - 60, 280)), Color("fffdf2"))
 	draw_rect(Rect2(panel.position + Vector2(30, 124), Vector2(panel.size.x - 60, 280)), INK, false, 3.0)
 	for i in _words.size():

@@ -8,8 +8,8 @@ var _on: Array[bool] = []
 
 func _begin() -> void:
 	title = "FIX THE FUSE BOX"
-	hint = "Click a switch (or press 1-7). It flips its neighbours too. Light every bulb!"
-	COUNT = 5 + clampi(difficulty - 1, 0, 2)
+	COUNT = 4 + difficulty
+	hint = "Click a switch (or press 1-%d). It flips its neighbours too. Light every bulb!" % COUNT
 	_on.clear()
 	for i in COUNT:
 		_on.append(true)
