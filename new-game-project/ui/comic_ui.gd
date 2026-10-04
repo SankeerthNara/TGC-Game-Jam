@@ -12,7 +12,6 @@ const SFX_MIRROR := preload("res://assets/audio/mirror.wav")
 const SFX_LIT := preload("res://assets/audio/lit.wav")
 const SFX_BUZZ := preload("res://assets/audio/buzz.wav")
 const SFX_TWIST := preload("res://assets/audio/twist.wav")
-const SFX_MUSIC := preload("res://assets/audio/music_loop.wav")
 
 const TEX_BURST_TWIST := preload("res://assets/art/comic_burst_twist.png")
 const TEX_BURST_SOLVED := preload("res://assets/art/comic_burst_solved.png")
@@ -58,12 +57,7 @@ func _setup_audio() -> void:
 	_audio_players["buzz"].stream = SFX_BUZZ
 	_audio_players["twist"].stream = SFX_TWIST
 	
-	_bgm = AudioStreamPlayer.new()
-	_bgm.stream = SFX_MUSIC
-	_bgm.volume_db = -12.0
-	add_child(_bgm)
-	_bgm.finished.connect(func() -> void: _bgm.play())
-	_bgm.play()
+	# the music is played by MusicDirector (adaptive layers, scripts/core/music_director.gd)
 
 
 func play_sfx(key: String) -> void:
@@ -336,7 +330,7 @@ func _build_pause_modal(parent: Control) -> void:
 	btn_mute.custom_minimum_size = Vector2(0, 44)
 	btn_mute.pressed.connect(func() -> void:
 		_audio_muted = not _audio_muted
-		_bgm.volume_db = -80.0 if _audio_muted else -12.0)
+		get_tree().call_group("music", "set_muted", _audio_muted))
 	vbox.add_child(btn_mute)
 
 

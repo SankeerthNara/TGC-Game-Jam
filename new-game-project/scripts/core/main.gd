@@ -60,6 +60,9 @@ func _ready() -> void:
 		score.on_disrupted()
 		view.shake(10.0)
 		EventBus.caption_changed.emit("NARRATOR: Something tampered with \"%s\"! That task is undone. Do it again." % task_name))
+	var music := MusicDirector.new()
+	music.main = self
+	add_child(music)
 	_task_layer = CanvasLayer.new()
 	_task_layer.layer = 18
 	add_child(_task_layer)

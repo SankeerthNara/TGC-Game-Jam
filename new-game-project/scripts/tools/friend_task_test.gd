@@ -71,9 +71,21 @@ func _ready() -> void:
 		if c is ChaseBase:
 			chase = c
 	check(chase is BallChase and main.state == "parkour", "level 2 chase is the rolling ball")
+	var music: MusicDirector = null
+	for c in main.get_children():
+		if c is MusicDirector:
+			music = c
+	check(music != null and music._targets()["chase"] == 1.0 and music._targets()["pulse"] == 0.0, "music switches to the chase track")
 	if chase != null:
 		chase.finished.emit(true)
 	await frames(3)
 	check(main.state == "world" and w.vampires.villain_gone, "catching him ends the sabotage and returns to the level")
+	var calm: float = music._targets()["tension"]
+	w.sabotage = {"def": {"name": "TEST", "fix": "f0"}, "left": 10.0}
+	var t: Dictionary = music._targets()
+	check(t["tension"] == 1.0 and t["danger"] == 1.0 and calm < 1.0, "music: sabotage with 10 s left brings in tension and danger (calm tension %.2f)" % calm)
+	w.sabotage = {}
+	main.bomb_left = 50.0
+	check(music._targets()["danger"] == 1.0, "music: the last minute on the bomb is danger")
 	print("FAILS: %d" % fails)
 	get_tree().quit()

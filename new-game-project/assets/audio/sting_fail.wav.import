@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://cn4tv2et5pqhw"
-path="res://.godot/imported/music_loop.wav-274ec49d6b5e79fcaec3ecc4e72285ce.sample"
+uid="uid://dbnn0gp5x413q"
+path="res://.godot/imported/sting_fail.wav-013302c3d9a6b223a80558a272d5c9f7.sample"
 
 [deps]
 
-source_file="res://assets/audio/music_loop.wav"
-dest_files=["res://.godot/imported/music_loop.wav-274ec49d6b5e79fcaec3ecc4e72285ce.sample"]
+source_file="res://assets/audio/sting_fail.wav"
+dest_files=["res://.godot/imported/sting_fail.wav-013302c3d9a6b223a80558a272d5c9f7.sample"]
 
 [params]
 
