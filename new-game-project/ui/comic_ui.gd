@@ -16,6 +16,7 @@ const SFX_TWIST := preload("res://assets/audio/twist.wav")
 const TEX_BURST_TWIST := preload("res://assets/art/comic_burst_twist.png")
 const TEX_BURST_SOLVED := preload("res://assets/art/comic_burst_solved.png")
 const SHADER_COMIC_SCREEN := preload("res://assets/shaders/comic_screen.gdshader")
+const LEVEL_TRANSITION_SCENE := preload("res://ui/level_transition.gd")
 
 var _caption_label: Label
 var _level_label: Label
@@ -107,6 +108,7 @@ func _connect_event_bus() -> void:
 	eb.game_state_changed.connect(_on_game_state_changed)
 	eb.sabotage_failed.connect(_on_sabotage_failed)
 	eb.player_died.connect(_on_player_died)
+	eb.level_started.connect(_on_level_started)
 
 
 func _build_ui() -> void:
@@ -688,3 +690,9 @@ func _on_sabotage_failed(_name: String, _hp_left: int) -> void:
 
 func _on_player_died() -> void:
 	_screen_flash_and_shake(Color("18151d"), 0.65, 1.8)
+
+func _on_level_started(index: int, title: String) -> void:
+	var trans = LEVEL_TRANSITION_SCENE.new()
+	trans.level_index = index
+	trans.level_title = title
+	add_child(trans)
