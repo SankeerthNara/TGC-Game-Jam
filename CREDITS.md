@@ -10,3 +10,4 @@
 | Adaptive music layers, chase music, stingers | Audio | Synthesised by `tools/make_music.py` (written with Claude Code) | Procedural Code Generation | CC0 1.0 Universal | `assets/audio/music_*.wav`, `assets/audio/sting_*.wav` |
 | Comic Bursts & Textures | 2D Art | Antigravity AI Generator | Procedural PIL Generation | CC0 1.0 Universal | `assets/art/*.png` (Twist burst, Solved burst, Halftone, Paper) |
 | The Editions Background Art | 2D Art | Antigravity AI | AI-generated with Antigravity, logged in docs/AI_USAGE.md | CC0 1.0 Universal | `new-game-project/assets/editions/2k/*`, `new-game-project/assets/editions/720/*` |
+| The Editions Characters, Portraits & Panels | 2D Art | Antigravity AI | AI-generated with Antigravity, logged in docs/AI_USAGE.md | CC0 1.0 Universal | `new-game-project/assets/editions/sprites/*`, `new-game-project/assets/editions/portraits/*`, `new-game-project/assets/editions/book/*`, `new-game-project/assets/editions/hero_key.png` |
