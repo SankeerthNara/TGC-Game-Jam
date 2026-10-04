@@ -16,6 +16,17 @@ const VOLUME_DB := {
 	"web_hit": -4.0, "task_open": -8.0, "sabotage_alarm": -5.0,
 	"sabotage_fixed": -4.0, "heart_lost": -4.0, "death": -4.0,
 	"item_collected": -7.0, "trade_made": -7.0, "door_unlocked": -5.0,
+	"punch": -4.0, "punch_heavy": -2.0, "kick": -4.0,
+	"counter_flash": -6.0, "counter_hit": -2.0, "enemy_grunt": -5.0,
+	"glitch": -7.0, "static": -10.0, "comms_beep": -8.0,
+	"comms_dead": -8.0, "resolution_change": -4.0, "cursor_click": -10.0,
+	"typewriter": -9.0, "credits_whoosh": -8.0, "light_swell": -5.0,
+	"slash": -5.0, "hit": -3.0, "hero_hurt": -3.0,
+	"hero_jump": -8.0, "dash": -6.0, "heal": -7.0,
+	"power_deduction": -6.0, "power_dash": -4.0, "power_prism": -3.0,
+	"power_solar": -2.0, "wave_start": -5.0, "enemy_spawn": -5.0,
+	"enemy_windup": -8.0, "shockwave": -2.0, "bomb_fuse": -10.0,
+	"narrator_attack": -3.0, "hero_ko": -2.0,
 }
 
 var _players: Array[AudioStreamPlayer] = []
