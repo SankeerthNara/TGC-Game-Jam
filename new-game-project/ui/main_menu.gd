@@ -128,12 +128,10 @@ func _draw() -> void:
 	])
 	draw_colored_polygon(sub_pts, RED)
 	draw_polyline(PackedVector2Array([sub_pts[0], sub_pts[1], sub_pts[2], sub_pts[3], sub_pts[0]]), INK, 3.0)
-	draw_string(FONT_TITLE, Vector2(150, 196), "✦ A DARK COMIC RACE AGAINST THE BOMB! ✦", HORIZONTAL_ALIGNMENT_CENTER, 610, 20, PAPER)
+	draw_string(FONT_TITLE, Vector2(150, 196), "✦ THE EDITIONS: ONE STORY, THREE RESOLUTIONS ✦", HORIZONTAL_ALIGNMENT_CENTER, 610, 20, PAPER)
 
-	# 5. Ticking Bomb (Upper-Right) showing 17:00
+	# 5. A "NOW IN 144p" badge (the editions joke, upper right)
 	var bomb_pos := Vector2(1040, 240)
-	var bomb_urgent := (int(_time * 3.0) % 2 == 0)
-	ComicArt.bomb(self, bomb_pos, 54.0, 1020.0, _time, bomb_urgent)
 	
 	# Comic burst tag over bomb
 	var bomb_badge_pos := bomb_pos + Vector2(0, -78)
@@ -145,7 +143,7 @@ func _draw() -> void:
 	b_pts.append(b_pts[0])
 	draw_colored_polygon(b_pts, GOLD)
 	draw_polyline(b_pts, INK, 2.5)
-	draw_string(FONT_TITLE, bomb_badge_pos + Vector2(-60, 6), "17:00 ZERO HOUR!", HORIZONTAL_ALIGNMENT_CENTER, 120, 14, INK)
+	draw_string(FONT_TITLE, bomb_badge_pos + Vector2(-60, 6), "NOW IN 144p!", HORIZONTAL_ALIGNMENT_CENTER, 120, 14, INK)
 
 	# 6. Four Hero Busts (Bottom-Left Spread)
 	var h_panel := Rect2(Vector2(40, 465), Vector2(740, 215))
@@ -252,12 +250,12 @@ func _build_help_modal() -> void:
 	vbox.add_child(title)
 
 	var rules := [
-		"1. THE BOMB: 17 minutes on the clock for the whole run. Finish a level to win a key; 4 keys open the bomb room.",
-		"2. MOVE with arrows / WASD. It is dark: only your torch lights the way. [M] opens the map.",
-		"3. TASKS: walk to a console and press [Z]. Finish every task to fill the progress bar. [ESC] leaves a task.",
-		"4. SABOTAGE: the villain breaks things. Run to the fix console before the timer ends or lose hearts.",
-		"5. VAMPIRES: hold your torch on one, then REVEAL or KILL. One is your friend, one is the villain. Pure chance!",
-		"6. Out of hearts? Back to the start of the level, but the bomb keeps its time.",
+		"1. THE STORY: a masked villain drained the light. Without light, the world loses its detail.",
+		"2. YOUR GUIDE: the Narrator talks to you on your comms machine. Listen to him.",
+		"3. FIRST EDITION: arrows move, your torch lights the dark. [Z] at a console starts a task, [ESC] leaves it. Fix sabotage in time. Vampires: REVEAL or KILL?",
+		"4. LATER EDITIONS: [X] attack, [Z] jump, [C] dash / roll, [V] power or COUNTER when eyes turn red, [F] heal.",
+		"5. [P] pauses. [M] shows the map in the first edition.",
+		"6. Sometimes the story needs YOU, the reader. Keep your mouse close.",
 	]
 
 	for r in rules:

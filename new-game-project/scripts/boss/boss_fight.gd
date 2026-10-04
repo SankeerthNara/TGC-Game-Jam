@@ -848,6 +848,8 @@ func _draw_balcony() -> void:
 	if (_narrator != null and _narrator.kind == "narrator") or (_last_wave() and _phase == "wave" and boss_name == "THE NARRATOR"):
 		return
 	var beat := sin(_t * (5.0 if _phase == "wave" else 2.5))
+	if Sprites.draw(self, "masked_villain", b + Vector2(0, 70), 190.0, -1.0, Color.WHITE, 1.0 + sin(_t * 2.0) * 0.01, beat * 0.03):
+		return # the masked villain conducts his choir (his face stays hidden until the reveal)
 	ComicArt.narrator(self, b + Vector2(0, -18), 0.42, 1.0, "grin", _t)
 	var hand := b + Vector2(30, 20)
 	var tip := hand + Vector2.from_angle(-1.2 + beat * 0.6) * 46.0

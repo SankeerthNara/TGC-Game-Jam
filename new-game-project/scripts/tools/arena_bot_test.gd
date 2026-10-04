@@ -24,10 +24,21 @@ func tap(k: Key) -> void:
 func _ready() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
-	var runs := 1
+	var configs := [
+		{"name": "ink baron as detective", "hero": 1, "stage": "opera", "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]], "scale": 1.0},
+		{"name": "opera (2k)", "stage": "opera", "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.3], ["bat", "AC", 3.0], ["lancer", "C", 6.0]], [["brute", "C", 0.0], ["bat", "AL", 3.0], ["bomb", "AR", 5.0], ["lancer", "L", 7.0], ["lancer", "R", 9.0]]]], "scale": 1.0},
+		{"name": "narrator (2k final)", "stage": "dark", "waves": [[[["narrator", "BALCONY", 0.0]]]], "scale": 1.6},
+	]
+	var runs := configs.size()
 	for run in runs:
 		var b := BossFight.new()
-		b.bomb_left = 900.0
+		b.bomb_left = -1.0
+		var cfgd: Dictionary = configs[run]
+		b.stage = cfgd["stage"]
+		b.heroes = [cfgd.get("hero", 0)]
+		b.relay = false
+		b.waves = cfgd["waves"]
+		b.boss_hp_scale = cfgd["scale"]
 		layer.add_child(b)
 		var result := [""]
 		b.finished.connect(func(r: String) -> void: result[0] = r)
@@ -41,13 +52,12 @@ func _ready() -> void:
 			var ph := "%s r%d w%d" % [b._phase, b._round, b._wave]
 			if ph != log_phase:
 				log_phase = ph
-				print("  t=%5.1f  %s  hp %d  enemies %d" % [b._t, ph, b._hp, b._enemies.size()])
 			if DisplayServer.get_name() != "headless" and frames % 900 == 450 and shots < 8:
 				get_viewport().get_texture().get_image().save_png("user://arena_%d.png" % shots)
 				shots += 1
 		for k in _keys.keys():
 			press(k, false)
-		print("run %d: %s after %.0f s (cracked %.0f%%)" % [run, result[0], b._t, b.crack_share() * 100.0])
+		print("run %d %s: %s after %.0f s, hero hp %d" % [run, configs[run]["name"], result[0], b._t, b._hp])
 		b.queue_free()
 		await get_tree().process_frame
 	get_tree().quit()
