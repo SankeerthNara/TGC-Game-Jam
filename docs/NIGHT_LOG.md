@@ -166,3 +166,17 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   gets new ones: the painted hero's slash gathering the freed heroes' light, the painted Narrator
   fading from the feet up with ink rising off him, the four heroes, and a sunlit Earth.
 - New keys (bk_*), so if painted book panels arrive later as op_*.png they can be compared and swapped.
+
+## Menu, medallions, web size
+- Main menu restaged as a comic cover with the painted art: the masked villain looms in a purple glow
+  behind the logo ("THE LIGHT IS MINE..."), the painted pulp hero stands in the foreground under
+  "THE LAST HERO STANDING!" (the four flat busts and the code-drawn villain face are the fallback if
+  the sprites are missing).
+- The fight HUD medallion and the comms box show the painted portraits, clipped to a disc.
+- Fixed a faint line above sprites: the halftone turns on texture repeat for the canvas item it draws
+  on, so a sprite drawn on the same item had its bottom row (the boots) wrap around to its top edge.
+  Sprites now sample half a texel inside their edges.
+- Web download halved: the 2K background layers are imported as lossy WebP at quality 0.85 (no visible
+  change; 15.4 MB -> 2.7 MB) and Antigravity's reference sheets and preview composites are excluded
+  from the game (`.gdignore` + export filter). index.pck 20.9 MB -> about 10 MB with all the new art.
+  Web build re-exported and loaded in the browser: no console errors.

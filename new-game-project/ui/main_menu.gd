@@ -12,6 +12,7 @@ const PAPER := Color("fff3d1")
 const GOLD := Color("ffd23f")
 const RED := Color("e63946")
 
+const TEX_GLOW := preload("res://assets/art/radial_glow.png")
 var _help_modal: Control
 var _credits_modal: Control
 var _sfx_player: AudioStreamPlayer
@@ -96,23 +97,24 @@ func _draw() -> void:
 	draw_string(FONT_BODY, Vector2(36, 92), "BY THE", HORIZONTAL_ALIGNMENT_CENTER, 48, 10, INK)
 	draw_string(FONT_TITLE, Vector2(36, 112), "COMICS CODE", HORIZONTAL_ALIGNMENT_CENTER, 48, 10, RED)
 
-	# 3. Looming Masked Villain (Center-Top background)
+	# 3. Looming Masked Villain (centre background): the painted villain in a purple glow
 	var villain_y := 275.0 + sin(_time * 1.8) * 6.0
 	var villain_pos := Vector2(680, villain_y)
-	
-	# Ominous aura burst behind villain
-	ComicArt.disc(self, villain_pos, 160.0, Color(0.18, 0.04, 0.22, 0.35), 0.0)
-	# Draw Masked Villain: mask_off = 0.0 (masked!), mood = "grin"
-	ComicArt.narrator(self, villain_pos, 1.75, 0.0, "grin", _time)
+	ComicArt.burst(self, sz, Vector2(700, 330), Color(0.55, 0.3, 0.75, 0.0), Color(0.55, 0.3, 0.75, 0.14), 20, _time * 0.05)
+	draw_texture_rect(TEX_GLOW, Rect2(Vector2(700, 380) - Vector2(330, 330), Vector2(660, 660)), false, Color(0.45, 0.1, 0.6, 0.45))
+	if not Sprites.draw(self, "masked_villain", Vector2(705, 712 + sin(_time * 1.8) * 5.0), 600.0, -1.0, Color(0.92, 0.85, 1.0)):
+		ComicArt.disc(self, villain_pos, 160.0, Color(0.18, 0.04, 0.22, 0.35), 0.0)
+		ComicArt.narrator(self, villain_pos, 1.75, 0.0, "grin", _time)
 
 	# Villain speech / whisper bubble
-	var speech_c := villain_pos + Vector2(170, -70)
+	var speech_c := Vector2(990, 262) + Vector2(0, sin(_time * 1.8) * 5.0)
 	var speech_rect := Rect2(speech_c - Vector2(100, 24), Vector2(200, 48))
 	draw_rect(Rect2(speech_rect.position + Vector2(3, 3), speech_rect.size), Color(0, 0, 0, 0.35))
 	draw_rect(speech_rect, PAPER)
 	draw_rect(speech_rect, INK, false, 2.5)
-	draw_colored_polygon(PackedVector2Array([speech_c + Vector2(-60, 24), speech_c + Vector2(-75, 38), speech_c + Vector2(-45, 24)]), PAPER)
-	draw_polyline(PackedVector2Array([speech_c + Vector2(-60, 24), speech_c + Vector2(-75, 38), speech_c + Vector2(-45, 24)]), INK, 2.5)
+	var tail := PackedVector2Array([speech_c + Vector2(-100, -10), speech_c + Vector2(-136, -16), speech_c + Vector2(-100, 8)])
+	draw_colored_polygon(tail, PAPER)
+	draw_polyline(tail, INK, 2.5)
 	draw_string(FONT_TITLE, speech_c + Vector2(-90, 7), "THE LIGHT IS MINE...", HORIZONTAL_ALIGNMENT_CENTER, 180, 16, RED)
 
 	# 4. Big MIRROR PAGE Logo
@@ -145,33 +147,28 @@ func _draw() -> void:
 	draw_polyline(b_pts, INK, 2.5)
 	draw_string(FONT_TITLE, bomb_badge_pos + Vector2(-60, 6), "NOW IN 144p!", HORIZONTAL_ALIGNMENT_CENTER, 120, 14, INK)
 
-	# 6. Four Hero Busts (Bottom-Left Spread)
+	# 6. The pulp hero in the foreground, light blade ready (the four busts if the art is missing)
+	draw_texture_rect(TEX_GLOW, Rect2(Vector2(250, 520) - Vector2(260, 260), Vector2(520, 520)), false, Color(1, 0.85, 0.45, 0.55))
+	if Sprites.draw(self, "hero_idle", Vector2(250, 716), 470.0, 1.0, Color.WHITE, 1.0 + sin(_time * 2.2) * 0.008):
+		var tag := Rect2(Vector2(96, 252), Vector2(300, 30))
+		draw_rect(Rect2(tag.position + Vector2(3, 3), tag.size), Color(0, 0, 0, 0.3))
+		draw_rect(tag, RED)
+		draw_rect(tag, INK, false, 2.0)
+		draw_string(FONT_TITLE, tag.position + Vector2(0, 21), "THE LAST HERO STANDING!", HORIZONTAL_ALIGNMENT_CENTER, tag.size.x, 18, PAPER)
+		return
 	var h_panel := Rect2(Vector2(40, 465), Vector2(740, 215))
 	draw_rect(Rect2(h_panel.position + Vector2(4, 4), h_panel.size), Color(0, 0, 0, 0.25))
 	draw_rect(h_panel, Color(1, 0.98, 0.93, 0.95))
 	draw_rect(h_panel, INK, false, 4.0)
-
-	# Hero panel banner tag
 	var h_tag := Rect2(h_panel.position + Vector2(16, -15), Vector2(240, 28))
 	draw_rect(h_tag, RED)
 	draw_rect(h_tag, INK, false, 2.0)
 	draw_string(FONT_TITLE, h_tag.position + Vector2(12, 19), "✦ 4 SUPERHEROES MUST UNITE! ✦", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, PAPER)
-
-	var h_start_x := 130.0
-	var h_spacing := 170.0
 	for i in 4:
-		var hc := Vector2(h_start_x + i * h_spacing, 565)
-
-		# Portrait circle framing
-		var circle_r := 52.0
-		ComicArt.disc(self, hc, circle_r + 4.0, INK, 0.0)
-		ComicArt.disc(self, hc, circle_r, Color("ffe680"), 0.0)
-		ComicArt.disc(self, hc, circle_r, Color(0, 0, 0, 0), 3.5)
-
-		# Hero bust
+		var hc := Vector2(130.0 + i * 170.0, 565)
+		ComicArt.disc(self, hc, 56.0, INK, 0.0)
+		ComicArt.disc(self, hc, 52.0, Color("ffe680"), 0.0)
 		ComicArt.hero_bust(self, i, hc, 0.72, "determined", _time)
-
-		# Name label pill
 		var pill_rect := Rect2(Vector2(hc.x - 48, hc.y + 54), Vector2(96, 22))
 		draw_rect(pill_rect, INK)
 		draw_string(FONT_TITLE, Vector2(hc.x - 46, hc.y + 70), HERO_NAMES[i], HORIZONTAL_ALIGNMENT_CENTER, 92, 14, GOLD)

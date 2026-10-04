@@ -47,6 +47,19 @@ static func ellipse(ci: CanvasItem, c: Vector2, rx: float, ry: float, fill: Colo
 	poly(ci, pts, fill, w)
 
 
+## A portrait texture clipped to a disc (medallions): uv_c / uv_r pick the part of the picture shown.
+static func portrait_disc(ci: CanvasItem, tex: Texture2D, c: Vector2, r: float, uv_c := Vector2(0.5, 0.42), uv_r := 0.4, tint := Color.WHITE) -> void:
+	var pts := PackedVector2Array()
+	var uvs := PackedVector2Array()
+	var cols := PackedColorArray()
+	for k in 32:
+		var d := Vector2.from_angle(k * TAU / 32.0)
+		pts.append(c + d * r)
+		uvs.append(uv_c + d * uv_r)
+		cols.append(tint)
+	ci.draw_polygon(pts, cols, uvs, tex)
+
+
 static func shout(ci: CanvasItem, text: String, c: Vector2, size: int, col: Color, outline := 10, rot := 0.0, scale := 1.0) -> void:
 	var sz := FONT_SHOUT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size)
 	ci.draw_set_transform(c, rot, Vector2(scale, scale))

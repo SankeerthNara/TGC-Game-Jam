@@ -29,6 +29,8 @@ static func draw(ci: CanvasItem, key: String, feet: Vector2, height: float, dir 
 	var w := tex.get_width() * sc / squash
 	var h := tex.get_height() * sc * squash
 	ci.draw_set_transform(feet, rot, Vector2(dir, 1.0))
-	ci.draw_texture_rect(tex, Rect2(Vector2(-w * 0.5, -h), Vector2(w, h)), false, tint)
+	# half a texel in from the edges: on a canvas item with texture repeat on (the halftone turns it on),
+	# filtering would otherwise wrap the feet row around to a faint line above the head
+	ci.draw_texture_rect_region(tex, Rect2(Vector2(-w * 0.5, -h), Vector2(w, h)), Rect2(Vector2(0.5, 0.5), tex.get_size() - Vector2.ONE), tint)
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	return true

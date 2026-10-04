@@ -1037,13 +1037,20 @@ func _draw_fx(f: Dictionary, off: Vector2) -> void:
 			ComicArt.shout(self, String(f["text"]), (f["pos"] as Vector2) + off + Vector2(0, -30.0 * k), int(f["fs"]), Color(f["col"]), 10, -0.05, s)
 
 
+## The painted pulp hero portrait for the HUD medallion (the code-drawn bust if it is missing).
+var _portrait: Texture2D = load("res://assets/editions/portraits/hero.png") if ResourceLoader.exists("res://assets/editions/portraits/hero.png") else null
+
+
 func _draw_hud() -> void:
 	var kind: int = _hero_kind()
 	# portrait medallion, masks and the ink meter (top left)
 	var pc := Vector2(70, 72)
 	draw_circle(pc, 44.0, INK)
 	draw_circle(pc, 39.0, Color("2d1420"))
-	ComicArt.hero_bust(self, kind, pc + Vector2(0, -6), 0.32, "determined", _t)
+	if kind == 0 and _portrait != null:
+		ComicArt.portrait_disc(self, _portrait, pc, 39.0)
+	else:
+		ComicArt.hero_bust(self, kind, pc + Vector2(0, -6), 0.32, "determined", _t)
 	draw_arc(pc, 42.0, 0.0, TAU, 32, GOLD, 3.0)
 	for i in max_hp:
 		var m := Vector2(130 + i * 34, 52)

@@ -135,7 +135,10 @@ func _draw_box() -> void:
 	if d != null and d.act == "720p" and _tex.has("px_" + key):
 		key = "px_" + key
 	if _tex.has(key):
-		ci.draw_texture_rect(_tex[key], Rect2(pc - Vector2(40, 40), Vector2(80, 80)), false)
+		if key.begins_with("px_"):
+			ci.draw_texture_rect(_tex[key], Rect2(pc - Vector2(40, 40), Vector2(80, 80)), false)
+		else:
+			ComicArt.portrait_disc(ci, _tex[key], pc, 40.0, Vector2(0.5, 0.37), 0.33)
 	elif who in ["narrator", "narrator_evil"]:
 		ComicArt.narrator(ci, pc + Vector2(0, 2), 0.36, 1.0, "grin" if evil else "calm", _clock)
 	elif who == "hero":

@@ -8,6 +8,7 @@ func _ready() -> void:
 	layer.add_child(m)
 	for i in 10:
 		await get_tree().process_frame
+	get_viewport().get_texture().get_image().save_png("user://menu_plain.png")
 	m._credits_modal.visible = true
 	for i in 5:
 		await get_tree().process_frame
