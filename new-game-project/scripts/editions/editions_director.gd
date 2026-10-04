@@ -101,14 +101,29 @@ func _twist_one() -> void:
 
 func start_720() -> void:
 	act = "720p"
-	main._set_state("cutscene")
-	# the pixel-art brawler is the next milestone; until it lands, a placeholder card
-	var card := EditionCard.new()
-	card.title = "720p EDITION"
-	card.lines = ["The pixel-art brawler and the Static Twins are being built.", "Press Z to continue to the 2k edition."]
-	main._task_layer.add_child(card)
-	card.done.connect(func() -> void:
-		card.queue_free()
+	main._set_state("boss")
+	comms.say("New look, same mission. The Static Twins guard the line to the villain's tower. Their goons are on this street. Watch their eyes: when they glow RED, hit V and turn it around!", "narrator", 2.5)
+	var g := BrawlerGame.new()
+	g.stage = "street"
+	main._overlay = g
+	main._task_layer.add_child(g)
+	g.finished.connect(func(_r: String) -> void:
+		g.queue_free()
+		main._overlay = null
+		comms.say("Nice moves! The Twins are on the train. Hold on tight!", "narrator", 1.5)
+		_later(2.5, _start_twins))
+
+
+func _start_twins() -> void:
+	var g := BrawlerGame.new()
+	g.stage = "train"
+	main._overlay = g
+	main._task_layer.add_child(g)
+	comms.say("Two of them, one of you. They take turns: dodge the eye beams, counter the dashes!", "narrator", 2.0)
+	g.finished.connect(func(_r: String) -> void:
+		g.queue_free()
+		main._overlay = null
+		main._set_state("cutscene")
 		_twist_two())
 
 

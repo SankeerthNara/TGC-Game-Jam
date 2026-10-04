@@ -65,9 +65,10 @@ func _ready() -> void:
 	tw._pick(2)
 	check(await wait_until(func() -> bool: return d.act == "720p"), "720p edition starts")
 	check(await wait_until(func() -> bool: return d.fx.edition == "720p"), "the picture is 720p")
-	var card: EditionCard = find_child_of(main._task_layer, EditionCard)
-	if card != null:
-		card.done.emit()
+	check(await wait_until(func() -> bool: return main._overlay is BrawlerGame), "the 720p brawler starts (neon street)")
+	main._overlay.finished.emit("win")
+	check(await wait_until(func() -> bool: return main._overlay is BrawlerGame and main._overlay.stage == "train"), "then the Static Twins on the train")
+	main._overlay.finished.emit("win")
 	check(await wait_until(func() -> bool: return find_child_of(main, SettingsTwist) != null), "twist 2: the settings window again")
 	tw = find_child_of(main, SettingsTwist)
 	check(tw.mode == "hijack", "the cursor is hijacked")
