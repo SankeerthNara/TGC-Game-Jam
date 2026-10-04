@@ -32,6 +32,8 @@ var _end_modal: Control
 var _audio_players: Dictionary = {}
 var _bgm: AudioStreamPlayer
 var _audio_muted := false
+var _music_muted := false
+var _sfx_muted := false
 
 var _current_level_idx := 0
 var _current_level_name := "Page"
@@ -278,64 +280,193 @@ func _make_comic_button(title: String) -> Button:
 func _build_pause_modal(parent: Control) -> void:
 	_pause_modal = Control.new()
 	_pause_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pause_modal.process_mode = Node.PROCESS_MODE_ALWAYS
 	_pause_modal.visible = false
 	parent.add_child(_pause_modal)
 
 	var dim := ColorRect.new()
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.color = Color(0, 0, 0, 0.65)
+	dim.color = Color(0, 0, 0, 0.7)
 	_pause_modal.add_child(dim)
 
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(400, 320)
-	panel.position = Vector2((1280 - 400) * 0.5, (720 - 320) * 0.5)
-	
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color("fff9e6")
-	sb.border_width_bottom = 5
-	sb.border_width_left = 5
-	sb.border_width_right = 5
-	sb.border_width_top = 5
-	sb.border_color = Color("18151d")
-	sb.shadow_size = 8
-	sb.shadow_offset = Vector2(6, 6)
-	sb.content_margin_left = 30
-	sb.content_margin_right = 30
-	sb.content_margin_top = 25
-	sb.content_margin_bottom = 25
-	panel.add_theme_stylebox_override("panel", sb)
-	_pause_modal.add_child(panel)
+	# Main container: side-by-side menu and controls in comic book spread style
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 24)
+	hbox.position = Vector2((1280 - 780) * 0.5, (720 - 460) * 0.5)
+	hbox.custom_minimum_size = Vector2(780, 460)
+	_pause_modal.add_child(hbox)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 15)
-	panel.add_child(vbox)
+	# --- LEFT PANEL: Menu Buttons ---
+	var menu_panel := PanelContainer.new()
+	menu_panel.custom_minimum_size = Vector2(340, 460)
+	var sb_menu := StyleBoxFlat.new()
+	sb_menu.bg_color = Color("fff9e6")
+	sb_menu.border_width_bottom = 4
+	sb_menu.border_width_left = 4
+	sb_menu.border_width_right = 4
+	sb_menu.border_width_top = 4
+	sb_menu.border_color = Color("18151d")
+	sb_menu.shadow_size = 6
+	sb_menu.shadow_offset = Vector2(5, 5)
+	sb_menu.content_margin_left = 24
+	sb_menu.content_margin_right = 24
+	sb_menu.content_margin_top = 20
+	sb_menu.content_margin_bottom = 20
+	menu_panel.add_theme_stylebox_override("panel", sb_menu)
+	hbox.add_child(menu_panel)
+
+	var menu_vbox := VBoxContainer.new()
+	menu_vbox.add_theme_constant_override("separation", 12)
+	menu_panel.add_child(menu_vbox)
 
 	var title := Label.new()
 	title.text = "PAUSED"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
-	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_font_size_override("font_size", 38)
 	title.add_theme_color_override("font_color", Color("18151d"))
-	vbox.add_child(title)
+	menu_vbox.add_child(title)
+
+	var sub := Label.new()
+	sub.text = "ISSUE FROZEN IN TIME"
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_override("font", FONT_BODY)
+	sub.add_theme_font_size_override("font_size", 13)
+	sub.add_theme_color_override("font_color", Color("6c757d"))
+	menu_vbox.add_child(sub)
 
 	var btn_resume := _make_comic_button("RESUME")
-	btn_resume.custom_minimum_size = Vector2(0, 44)
+	btn_resume.custom_minimum_size = Vector2(0, 42)
 	btn_resume.pressed.connect(func() -> void: _request("request_pause", [false]))
-	vbox.add_child(btn_resume)
+	menu_vbox.add_child(btn_resume)
+
+	var btn_music := _make_comic_button("MUSIC: ON")
+	btn_music.custom_minimum_size = Vector2(0, 42)
+	btn_music.pressed.connect(func() -> void:
+		_music_muted = not _music_muted
+		get_tree().call_group("music", "set_muted", _music_muted)
+		btn_music.text = "MUSIC: %s" % ("OFF" if _music_muted else "ON"))
+	menu_vbox.add_child(btn_music)
+
+	var btn_sfx := _make_comic_button("SFX: ON")
+	btn_sfx.custom_minimum_size = Vector2(0, 42)
+	btn_sfx.pressed.connect(func() -> void:
+		_sfx_muted = not _sfx_muted
+		get_tree().call_group("sfx", "set_muted", _sfx_muted)
+		_audio_muted = _sfx_muted
+		btn_sfx.text = "SFX: %s" % ("OFF" if _sfx_muted else "ON"))
+	menu_vbox.add_child(btn_sfx)
 
 	var btn_restart := _make_comic_button("RESTART LEVEL")
-	btn_restart.custom_minimum_size = Vector2(0, 44)
+	btn_restart.custom_minimum_size = Vector2(0, 42)
 	btn_restart.pressed.connect(func() -> void:
 		_request("request_pause", [false])
 		_request("request_restart_level"))
-	vbox.add_child(btn_restart)
+	menu_vbox.add_child(btn_restart)
 
-	var btn_mute := _make_comic_button("TOGGLE SOUND")
-	btn_mute.custom_minimum_size = Vector2(0, 44)
-	btn_mute.pressed.connect(func() -> void:
-		_audio_muted = not _audio_muted
-		get_tree().call_group("music", "set_muted", _audio_muted))
-	vbox.add_child(btn_mute)
+	var btn_quit := _make_comic_button("QUIT TO MENU")
+	btn_quit.custom_minimum_size = Vector2(0, 42)
+	var sb_quit := btn_quit.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
+	sb_quit.bg_color = Color("e63946")
+	btn_quit.add_theme_stylebox_override("normal", sb_quit)
+	btn_quit.add_theme_color_override("font_color", Color("fff3d1"))
+	btn_quit.pressed.connect(func() -> void:
+		_request("request_pause", [false])
+		_request("request_quit_to_menu"))
+	menu_vbox.add_child(btn_quit)
+
+	# --- RIGHT PANEL: Controls Guide ---
+	var ctrl_panel := PanelContainer.new()
+	ctrl_panel.custom_minimum_size = Vector2(410, 460)
+	var sb_ctrl := StyleBoxFlat.new()
+	sb_ctrl.bg_color = Color("fff3d1")
+	sb_ctrl.border_width_bottom = 4
+	sb_ctrl.border_width_left = 4
+	sb_ctrl.border_width_right = 4
+	sb_ctrl.border_width_top = 4
+	sb_ctrl.border_color = Color("18151d")
+	sb_ctrl.shadow_size = 6
+	sb_ctrl.shadow_offset = Vector2(5, 5)
+	sb_ctrl.content_margin_left = 22
+	sb_ctrl.content_margin_right = 22
+	sb_ctrl.content_margin_top = 18
+	sb_ctrl.content_margin_bottom = 18
+	ctrl_panel.add_theme_stylebox_override("panel", sb_ctrl)
+	hbox.add_child(ctrl_panel)
+
+	var ctrl_vbox := VBoxContainer.new()
+	ctrl_vbox.add_theme_constant_override("separation", 6)
+	ctrl_panel.add_child(ctrl_vbox)
+
+	var ctrl_title := Label.new()
+	ctrl_title.text = "✦ HERO CONTROLS ✦"
+	ctrl_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ctrl_title.add_theme_font_override("font", FONT_TITLE)
+	ctrl_title.add_theme_font_size_override("font_size", 24)
+	ctrl_title.add_theme_color_override("font_color", Color("e63946"))
+	ctrl_vbox.add_child(ctrl_title)
+
+	var entries: Array[Array] = [
+		["ARROWS / WASD", "Move hero"],
+		["Z / SPACE / ENTER", "Interact / Action / Skip"],
+		["M", "Toggle minimap"],
+		["F", "Give task to friend ally"],
+		["TAB", "Toggle task checklist"],
+		["P / ESC", "Pause / Resume game"]
+	]
+
+	for entry in entries:
+		var row := HBoxContainer.new()
+		var key_lbl := Label.new()
+		key_lbl.text = entry[0]
+		key_lbl.custom_minimum_size = Vector2(170, 0)
+		key_lbl.add_theme_font_override("font", FONT_TITLE)
+		key_lbl.add_theme_font_size_override("font_size", 14)
+		key_lbl.add_theme_color_override("font_color", Color("18151d"))
+		row.add_child(key_lbl)
+
+		var desc_lbl := Label.new()
+		desc_lbl.text = entry[1]
+		desc_lbl.add_theme_font_override("font", FONT_BODY)
+		desc_lbl.add_theme_font_size_override("font_size", 13)
+		desc_lbl.add_theme_color_override("font_color", Color("33303c"))
+		row.add_child(desc_lbl)
+		ctrl_vbox.add_child(row)
+
+	var sep := HSeparator.new()
+	sep.add_theme_constant_override("separation", 10)
+	ctrl_vbox.add_child(sep)
+
+	var chase_title := Label.new()
+	chase_title.text = "CHASE CONTROLS"
+	chase_title.add_theme_font_override("font", FONT_TITLE)
+	chase_title.add_theme_font_size_override("font_size", 16)
+	chase_title.add_theme_color_override("font_color", Color("18151d"))
+	ctrl_vbox.add_child(chase_title)
+
+	var chase_entries: Array[Array] = [
+		["LEVEL 2 ROLL", "Arrows lean/roll, Space jump"],
+		["LEVEL 3 RUN", "Up jump, Down slide"],
+		["LEVEL 4 SWING", "Space swing, Shift reel, X web"]
+	]
+
+	for entry in chase_entries:
+		var row := HBoxContainer.new()
+		var key_lbl := Label.new()
+		key_lbl.text = entry[0]
+		key_lbl.custom_minimum_size = Vector2(140, 0)
+		key_lbl.add_theme_font_override("font", FONT_TITLE)
+		key_lbl.add_theme_font_size_override("font_size", 13)
+		key_lbl.add_theme_color_override("font_color", Color("ffd034").darkened(0.2))
+		row.add_child(key_lbl)
+
+		var desc_lbl := Label.new()
+		desc_lbl.text = entry[1]
+		desc_lbl.add_theme_font_override("font", FONT_BODY)
+		desc_lbl.add_theme_font_size_override("font_size", 12)
+		desc_lbl.add_theme_color_override("font_color", Color("33303c"))
+		row.add_child(desc_lbl)
+		ctrl_vbox.add_child(row)
 
 
 func _build_end_modal(parent: Control) -> void:
