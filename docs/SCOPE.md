@@ -77,3 +77,13 @@ Level editor, save system, controller support, mobile touch, more than six real 
 
 ## Success criteria
 A new player can finish the game in 15 to 20 minutes with no instructions beyond the in-game captions and signs, and the web build runs in a browser without errors.
+
+## Villain chases (built, 2026-10-04)
+Revealing the villain starts a chase; each level with vampires has its own, harder each time:
+- **Level 2, ROLL AFTER HIM!** (rolling-ball physics platformer): the noir detective as a bouncy ball with a fedora; hills, slopes, gaps, spikes, bounce pads up tall steps, moving platforms; momentum matters.
+- **Level 3, RUN HIM DOWN!** (free-running chase): the ninja runs by himself over rooftops; jump crates and gaps, slide under pipes, close the gap before the villain reaches the end; crashes cost ground, clean vaults give speed.
+- **Level 4, SWING AFTER HIM!** (web-slinger): the space hero swings on light-lines from glowing hooks, pumps the swing, reels in (Shift) and webs drones and goons (X, auto-aim); falls go back to the last flag.
+Catch him: sabotage stops and +1 heart. Fail: he escapes and you lose a heart.
+
+## Friend tasks (built, 2026-10-04)
+After a friend is revealed, press **F** at a task console to hand it to him. He walks there and works on it (30 s in level 2, 24 s in level 3, 18 s in level 4, with a progress ring) and finishes it; more tasks can be queued. Sabotage fixes stay the hero's job.

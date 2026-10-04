@@ -62,5 +62,18 @@ func _ready() -> void:
 	check(saw_progress, "the friend shows work progress")
 	check(w.tasks_done.has(t0["id"]) and w.tasks_done.has(t1["id"]), "the friend finished both tasks (%.0f game seconds)" % waited)
 	check(w.assigned.is_empty(), "his queue is empty afterwards")
+	# revealing the villain starts this level's chase (level 2: the rolling ball)
+	var vi := 1 - fi
+	main._start_parkour(vi)
+	await frames(3)
+	var chase: Node = null
+	for c in main._task_layer.get_children():
+		if c is ChaseBase:
+			chase = c
+	check(chase is BallChase and main.state == "parkour", "level 2 chase is the rolling ball")
+	if chase != null:
+		chase.finished.emit(true)
+	await frames(3)
+	check(main.state == "world" and w.vampires.villain_gone, "catching him ends the sabotage and returns to the level")
 	print("FAILS: %d" % fails)
 	get_tree().quit()

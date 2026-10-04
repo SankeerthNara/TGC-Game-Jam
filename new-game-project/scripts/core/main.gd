@@ -330,7 +330,8 @@ func _after_vampire_choice(i: int, reveal: bool, role: String) -> void:
 ## He is revealed and runs: the hero is teleported into a short parkour chase.
 func _start_parkour(i: int) -> void:
 	_set_state("parkour")
-	var g := ParkourGame.new()
+	# one chase per level, each harder: rolling ball (level 2), rooftop run (level 3), web swing (level 4)
+	var g: ChaseBase = [BallChase, BallChase, RunChase, WebChase][clampi(level_idx, 0, 3)].new()
 	g.difficulty = clampi(level_idx, 0, 3)
 	_task_layer.add_child(g)
 	EventBus.caption_changed.emit("NARRATOR: The villain bolts! Chase him down!")
