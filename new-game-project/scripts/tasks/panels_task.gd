@@ -13,8 +13,17 @@ func _begin() -> void:
 	title = "ORDER THE COMIC PANELS"
 	hint = "Click two panels to swap them. Put the story in order, first panel on the left."
 	_kind = SEQUENCES[randi() % SEQUENCES.size()]
-	while _order == [0, 1, 2, 3]:
+	_order = [0, 1, 2, 3]
+	while _misplaced_count() < 1 + difficulty:
 		_order.shuffle()
+
+
+func _misplaced_count() -> int:
+	var count := 0
+	for i in _order.size():
+		if _order[i] != i:
+			count += 1
+	return count
 
 
 func _slot(i: int) -> Rect2:
@@ -35,12 +44,15 @@ func _gui_input(event: InputEvent) -> void:
 				elif _sel == i:
 					_sel = -1
 				else:
+					var before := _misplaced_count()
 					var tmp := _order[_sel]
 					_order[_sel] = _order[i]
 					_order[i] = tmp
 					_sel = -1
 					if _order == [0, 1, 2, 3]:
 						succeed()
+					elif _misplaced_count() > before:
+						flash("THAT SWAP MIXED UP THE STORY!", 4.0)
 
 
 func _draw_task() -> void:

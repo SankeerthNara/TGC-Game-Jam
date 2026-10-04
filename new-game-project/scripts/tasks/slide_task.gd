@@ -15,7 +15,7 @@ func _begin() -> void:
 		_tiles.append((i + 1) % (N * N))
 	var blank := N * N - 1
 	var last := -1
-	for k in 40 + difficulty * 12:
+	for k in 16 + difficulty * 8:
 		var opts: Array[int] = []
 		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 			var nx: int = blank % N + d.x
@@ -61,6 +61,8 @@ func _gui_input(event: InputEvent) -> void:
 					_moves += 1
 					if _solved():
 						succeed()
+				else:
+					flash("THAT PANEL CAN'T REACH THE GAP!", 4.0)
 				return
 
 

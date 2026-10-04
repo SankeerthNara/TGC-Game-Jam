@@ -4,7 +4,7 @@ extends TaskBase
 ## how many are in the right place.
 
 const DIGITS := 3
-const SHOWN := 8
+var SHOWN := 8
 
 var _code: Array[int] = []
 var _guess: Array[int] = [0, 0, 0]
@@ -14,6 +14,10 @@ var _history: Array[Dictionary] = []
 func _begin() -> void:
 	title = "CRACK THE SAFE"
 	hint = "3 different digits. Click arrows or use Up/Down + Left/Right, then TRY or Enter."
+	SHOWN = 8 - 2 * difficulty
+	_code.clear()
+	_history.clear()
+	_guess = [0, 0, 0]
 	var pool := range(10)
 	pool.shuffle()
 	for i in DIGITS:
@@ -85,6 +89,8 @@ func _submit() -> void:
 		succeed()
 	elif exact == 0 and misplaced == 0:
 		flash("NONE OF THOSE DIGITS", 3.0)
+	else:
+		flash("%d IN PLACE, %d IN OTHER SLOTS" % [exact, misplaced])
 
 
 func _draw_task() -> void:

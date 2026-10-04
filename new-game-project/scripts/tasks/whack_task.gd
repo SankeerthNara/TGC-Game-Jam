@@ -53,6 +53,8 @@ func _gui_input(event: InputEvent) -> void:
 			_gap = 0.25
 			if _hit >= NEED:
 				succeed()
+		elif _lit >= 0 or event.position.y > panel.position.y + 150:
+			flash("WAIT FOR A LANTERN TO LIGHT!", 3.0)
 
 
 func _draw_task() -> void:

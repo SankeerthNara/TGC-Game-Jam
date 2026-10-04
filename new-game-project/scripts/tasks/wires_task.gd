@@ -2,7 +2,7 @@ class_name WiresTask
 extends TaskBase
 ## Drag each wire to the socket of the same colour.
 
-const WIRE_COLORS := [Color("e63946"), Color("3a86ff"), Color("ffd23f"), Color("ff7bd5"), Color("2dc653")]
+const WIRE_COLORS := [Color("e63946"), Color("3a86ff"), Color("ffd23f"), Color("ff7bd5"), Color("2dc653"), Color("9b5de5")]
 
 var _n := 4
 var _right: Array[int] = [] ## colour index at each right socket
@@ -14,7 +14,7 @@ var _mouse := Vector2.ZERO
 func _begin() -> void:
 	title = "REWIRE THE PANEL"
 	hint = "Drag each wire to the matching colour on the right."
-	_n = 4 if difficulty < 2 else 5
+	_n = 3 + difficulty
 	for i in _n:
 		_right.append(i)
 		_link.append(-1)
@@ -24,11 +24,11 @@ func _begin() -> void:
 
 
 func _left_pos(i: int) -> Vector2:
-	return Vector2(panel.position.x + 120, panel.position.y + 150 + i * (360.0 / _n + 6.0))
+	return Vector2(panel.position.x + 120, panel.position.y + 140 + i * (280.0 / maxi(1, _n - 1)))
 
 
 func _right_pos(j: int) -> Vector2:
-	return Vector2(panel.end.x - 120, panel.position.y + 150 + j * (360.0 / _n + 6.0))
+	return Vector2(panel.end.x - 120, panel.position.y + 140 + j * (280.0 / maxi(1, _n - 1)))
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -53,6 +53,8 @@ func _gui_input(event: InputEvent) -> void:
 					succeed()
 			elif hit >= 0:
 				flash("WRONG SOCKET!", 8.0)
+			else:
+				flash("CONNECT TO A SOCKET!", 4.0)
 			_drag = -1
 
 

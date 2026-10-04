@@ -3,6 +3,12 @@ extends RefCounted
 ## Maps a task type from data/world/station.json to its mini-game.
 ## "mirror" tasks are not here: they reuse the panel-and-mirror light puzzle pages.
 
+static func types() -> Array[String]:
+	return ["wires", "switches", "simon", "charge", "dial", "swipe", "panels",
+		"bubbles", "sfx", "debug", "logic", "sort", "dots", "whack", "memory",
+		"unscramble", "math", "inkmix", "rain", "needle", "proofread", "lightsout",
+		"pipes", "slide", "safe"]
+
 static func create(type: String) -> TaskBase:
 	match type:
 		"wires":

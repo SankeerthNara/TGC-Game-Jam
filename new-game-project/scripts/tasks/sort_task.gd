@@ -28,6 +28,15 @@ func _is_sorted() -> bool:
 	return true
 
 
+func _inversions() -> int:
+	var count := 0
+	for i in _nums.size():
+		for j in range(i + 1, _nums.size()):
+			if _nums[i] > _nums[j]:
+				count += 1
+	return count
+
+
 func _book(i: int) -> Rect2:
 	var w := 78.0
 	var gap := 12.0
@@ -48,12 +57,15 @@ func _gui_input(event: InputEvent) -> void:
 					_sel = -1
 				else:
 					var tmp := _nums[_sel]
+					var before := _inversions()
 					_nums[_sel] = _nums[i]
 					_nums[i] = tmp
 					_swaps += 1
 					_sel = -1
 					if _is_sorted():
 						succeed()
+					elif _inversions() > before:
+						flash("THAT SWAP ADDED MORE DISORDER!", 4.0)
 
 
 func _draw_task() -> void:
