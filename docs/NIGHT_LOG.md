@@ -84,3 +84,9 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   "BEAT THE GOONS (n left)" / "KEEP GOING >>".
 - Failing is gentler: dying in a 144p level keeps the tasks already finished (it used to reset the level).
 - Moments: the brass brute and the Ink Baron crash down from above (fast drop, shake, dust ring, "THE INK BARON!"); the Narrator arrives with a white flash, shake and a sting; the killing blow on a boss gets a long hit-stop, white flash and a burst of paper and light.
+- Audio mix: measured every WAV (sound effects peak at -2.2 dB, music layers at -3 to -9 dB, no file
+  clips). But up to four music layers plus effects could sum past 0 dB, so a hard limiter (ceiling -1 dB)
+  now sits last on the master bus in every edition (after the 144p lo-fi effects). The music dips by
+  about 4 dB while the Narrator speaks on the comms and comes back when he stops.
+- Tests: the friend-task test now waits for the Editions' first level before running (it was finishing
+  level 1 before the book's glitch had loaded it, so the level reloaded mid-test). It passes again.

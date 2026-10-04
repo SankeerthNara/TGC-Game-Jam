@@ -36,9 +36,13 @@ var _opera_level := {}
 var _last_state := ""
 
 
+var _duck := 0.0 ## 0..1: the music dips while the Narrator speaks
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("music")
+	ensure_limiter()
 	for key: String in LAYERS:
 		var p := AudioStreamPlayer.new()
 		p.stream = LAYERS[key]
@@ -187,7 +191,21 @@ func _opera_targets() -> Dictionary:
 	return t
 
 
+## A hard limiter at the end of the master bus: many music layers plus sound effects can never clip.
+static func ensure_limiter() -> void:
+	var bus := AudioServer.get_bus_index("Master")
+	for i in AudioServer.get_bus_effect_count(bus):
+		if AudioServer.get_bus_effect(bus, i) is AudioEffectHardLimiter:
+			return
+	var lim := AudioEffectHardLimiter.new()
+	lim.ceiling_db = -1.0
+	AudioServer.add_bus_effect(bus, lim)
+
+
 func _process(delta: float) -> void:
+	var comms: Node = get_tree().get_first_node_in_group("comms")
+	var speaking: bool = comms != null and comms.busy() and not comms.dead
+	_duck = move_toward(_duck, 1.0 if speaking else 0.0, delta * (4.0 if speaking else 1.5))
 	var state: String = main.state if main != null else "menu"
 	if state != _last_state:
 		_on_state(state)
@@ -255,7 +273,7 @@ func _update_synth(delta: float) -> void:
 func _db(v: float) -> float:
 	if muted or v <= 0.001:
 		return -80.0
-	return BASE_DB + linear_to_db(v)
+	return BASE_DB + linear_to_db(v) + linear_to_db(1.0 - 0.35 * _duck)
 
 
 func _on_state(state: String) -> void:

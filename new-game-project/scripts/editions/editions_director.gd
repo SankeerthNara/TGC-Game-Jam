@@ -293,3 +293,4 @@ func _set_audio(edition: String) -> void:
 		crush.drive = 0.35
 		crush.post_gain = -3.0
 		AudioServer.add_bus_effect(bus, crush)
+	MusicDirector.ensure_limiter() # always last on the master bus
