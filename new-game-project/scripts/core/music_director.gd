@@ -83,6 +83,11 @@ func _targets() -> Dictionary:
 			var ov: Variant = main._overlay
 			if ov is ComicCutscene and ov.kind != "opening":
 				t["tension"] = 0.8
+			# the comms die: the music drops out, only silence and static (until the reveal page)
+			var d: Node = main.director if "director" in main else null
+			if d != null and d.act == "reveal" and d.comms.dead and not ov is ComicCutscene:
+				t["pad"] = 0.0
+				t["tension"] = 0.0
 		"parkour":
 			t["chase"] = 1.0
 		"boss":

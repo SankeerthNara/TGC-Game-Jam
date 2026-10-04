@@ -44,3 +44,12 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - Wired for the coming art (falls back if missing): pixel hero frames `px_hero_run1/run2/punch/kick/roll/hurt`
   in the brawler; pixel comms portraits `px_narrator_friendly/evil` in the 720p comms box.
 - Pixel sprites drawn a bit bigger (hero 180 px, goons 170, Twins 230). Flow test 0 fails.
+
+## 2026-10-05, after 3:20 am (polish pass)
+- Transitions: no more empty/black screens between scenes. A finished fight stays frozen on screen
+  until an ink page turn (`EditionWipe`, with a title card like "THE STATIC TWINS") covers it and the
+  next scene starts underneath. The twist windows now appear over the frozen fight, so the player sees
+  the 144p frame sharpen into 720p (and the credits sharpen into 2K).
+- Twist 2: real fake credits ("THE END", the cast rolling with typewriter ticks, "THE MASKED VILLAIN
+  ...still out there?") that freeze and glitch before the cursor is hijacked.
+- The comms dying: the picture tears twice and the music drops out completely until the reveal page.

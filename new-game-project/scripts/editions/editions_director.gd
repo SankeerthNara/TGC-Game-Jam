@@ -5,11 +5,13 @@ extends Node
 ##   720p: a pixel-art brawler level and the Static Twins. Fake credits; the cursor moves to 2K by itself.
 ##   2k:   the library hall, the opera arena, the comms die, the Narrator unmasks; the final battle.
 ## The Narrator is the hero's friendly voice on comms until the very end.
+## Scenes never leave an empty screen: a finished scene stays frozen until an ink page turn covers it.
 
 var main: Node
 var fx: EditionFX
 var comms: CommsBox
 var act := ""
+var _stale: Node = null ## the finished scene, kept on screen until the next page turn covers it
 
 
 func setup(m: Node) -> void:
@@ -56,7 +58,7 @@ func level_intro(i: int) -> String:
 func after_144_levels() -> void:
 	main._set_state("cutscene")
 	comms.say("That door leads to the Ink Baron, one of the masked villain's lieutenants. Beat him and we're one step closer to your friends!", "narrator", 2.0)
-	_later(3.5, func() -> void: _start_boss_144())
+	_later(3.0, func() -> void: _swap(_start_boss_144, "THE INK BARON"))
 
 
 func _start_boss_144() -> void:
@@ -70,20 +72,15 @@ func _start_boss_144() -> void:
 	b.win_text = "BARON BUSTED!"
 	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "Power: V LIGHT BLADE, %s." % BossFight.POWER_TEXT_BY_KIND[0]]
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]]
-	main._overlay = b
-	main._task_layer.add_child(b)
+	_launch(b)
 	comms.say("Light him up, hero!", "narrator", 1.5)
-	b.finished.connect(func(result: String) -> void:
-		b.queue_free()
-		main._overlay = null
-		if result == "win":
-			_twist_one()
-		else:
-			comms.say("Up you get, hero! Again!", "narrator", 1.5)
-			_later(1.5, _start_boss_144))
+	b.finished.connect(func(_result: String) -> void:
+		_retire(b)
+		_twist_one())
 
 
-## Twist 1: the Narrator asks the player to raise the picture quality.
+## Twist 1: the Narrator asks the player to raise the picture quality. The last frame of the fight
+## stays on screen behind the window, so the player sees it sharpen.
 func _twist_one() -> void:
 	main._set_state("cutscene")
 	act = "twist1"
@@ -97,7 +94,7 @@ func _twist_one() -> void:
 			fx.sweep_to("720p", 1.8)
 			_set_audio("720p")
 			comms.say("WOW. Look at you! Now THAT is a hero.", "narrator", 2.0)
-			_later(2.4, start_720)))
+			_later(2.4, func() -> void: _swap(start_720, "NEON STREET"))))
 
 
 # --- 720p ----------------------------------------------------------------------------------
@@ -108,41 +105,46 @@ func start_720() -> void:
 	comms.say("New look, same mission. The Static Twins guard the line to the villain's tower. Their goons are on this street. Watch their eyes: when they glow RED, hit V and turn it around!", "narrator", 2.5)
 	var g := BrawlerGame.new()
 	g.stage = "street"
-	main._overlay = g
-	main._task_layer.add_child(g)
+	_launch(g)
 	g.finished.connect(func(_r: String) -> void:
-		g.queue_free()
-		main._overlay = null
+		_retire(g)
 		comms.say("Nice moves! The Twins are on the train. Hold on tight!", "narrator", 1.5)
-		_later(2.5, _start_twins))
+		_later(1.8, func() -> void: _swap(_start_twins, "THE STATIC TWINS")))
 
 
 func _start_twins() -> void:
 	var g := BrawlerGame.new()
 	g.stage = "train"
-	main._overlay = g
-	main._task_layer.add_child(g)
+	_launch(g)
 	comms.say("Two of them, one of you. They take turns: dodge the eye beams, counter the dashes!", "narrator", 2.0)
 	g.finished.connect(func(_r: String) -> void:
-		g.queue_free()
-		main._overlay = null
+		_retire(g)
 		main._set_state("cutscene")
-		_twist_two())
+		_later(1.2, _twist_two))
 
 
-## Twist 2: fake credits, then the cursor moves to 2K by itself.
+## Twist 2: fake credits roll... freeze... and the cursor moves to 2K by itself.
 func _twist_two() -> void:
 	act = "twist2"
 	comms.say("That's it... we did it! Roll the credits, hero!", "narrator", 1.5)
-	_later(3.0, func() -> void:
-		var tw := SettingsTwist.new()
-		tw.mode = "hijack"
-		main.add_child(tw)
-		tw.finished.connect(func(_c: String) -> void:
-			fx.sweep_to("2k", 2.0)
-			_set_audio("2k")
-			comms.say("...wait. Who clicked that? Never mind! Look how sharp everything is. Let's go, hero.", "narrator", 2.0)
-			_later(2.6, start_2k)))
+	var credits := FakeCredits.new()
+	_swap(func() -> void:
+		main._overlay = credits
+		main._task_layer.add_child(credits))
+	_later(9.0, func() -> void:
+		credits.freeze()
+		fx.glitch(0.7, 0.8)
+		EventBus.sound_requested.emit("static")
+		_later(1.0, func() -> void:
+			var tw := SettingsTwist.new()
+			tw.mode = "hijack"
+			main.add_child(tw)
+			tw.finished.connect(func(_c: String) -> void:
+				_retire(credits)
+				fx.sweep_to("2k", 2.0)
+				_set_audio("2k")
+				comms.say("...wait. Who clicked that? Never mind! Look how sharp everything is. Let's go, hero.", "narrator", 2.0)
+				_later(2.6, func() -> void: _swap(start_2k, "THE LIBRARY")))))
 
 
 # --- 2k ------------------------------------------------------------------------------------
@@ -160,13 +162,10 @@ func start_2k() -> void:
 	b.win_text = "THE HALL IS CLEAR!"
 	b.intro_lines = ["The deluxe edition. Light blade ready.", "X slash (+UP / +DOWN in the air)   C dash   V LIGHT BLADE   F heal"]
 	_launch(b)
-	b.finished.connect(func(result: String) -> void:
-		_end_fight(b)
-		if result == "win":
-			comms.say("Beautiful! Through those doors: his opera house. Stay sharp.", "narrator", 1.5)
-			_later(2.6, _opera)
-		else:
-			_later(1.0, start_2k))
+	b.finished.connect(func(_result: String) -> void:
+		_retire(b)
+		comms.say("Beautiful! Through those doors: his opera house. Stay sharp.", "narrator", 1.5)
+		_later(1.8, func() -> void: _swap(_opera, "THE OPERA")))
 
 
 func _opera() -> void:
@@ -177,21 +176,25 @@ func _opera() -> void:
 	b.intro_lines = ["The masked villain's opera. His choir is waiting.", "Two waves, then... him."]
 	_launch(b)
 	comms.say("The masked villain is close. Clear his choir and he'll have to show himself!", "narrator", 2.0)
-	b.finished.connect(func(result: String) -> void:
-		_end_fight(b)
-		if result == "win":
-			_reveal()
-		else:
-			_later(1.0, _opera))
+	b.finished.connect(func(_result: String) -> void:
+		_retire(b)
+		_reveal())
 
 
-## The comms machine dies... and the masked villain steps out.
+## The comms machine dies (the picture tears, the music drops out)... and the masked villain steps out.
 func _reveal() -> void:
 	main._set_state("cutscene")
+	act = "reveal"
 	comms.say("Hero, wait... something's wrong with the sig-", "narrator", 0.5)
-	_later(2.0, comms.kill_signal)
+	_later(2.0, func() -> void:
+		comms.kill_signal()
+		fx.glitch(0.9, 1.4))
+	_later(5.0, func() -> void: fx.glitch(0.5, 0.4))
 	_later(7.5, func() -> void:
-		main._play_cutscene("reveal", _final_boss))
+		_free_stale()
+		main._play_cutscene("reveal", func() -> void:
+			act = "2k"
+			_swap(_final_boss, "THE NARRATOR")))
 
 
 func _final_boss() -> void:
@@ -205,13 +208,9 @@ func _final_boss() -> void:
 	b.intro_lines = ["The Narrator. The one who guided you all along.", "Free the three heroes. V LIGHT BLADE, F heal."]
 	_launch(b)
 	comms.say("I wrote every page of you, hero. Even this one.", "narrator_evil", 2.0)
-	b.finished.connect(func(result: String) -> void:
-		_end_fight(b)
-		if result == "win":
-			_finale()
-		else:
-			comms.say("Again? I have all the time in the world.", "narrator_evil", 1.5)
-			_later(1.8, _final_boss))
+	b.finished.connect(func(_result: String) -> void:
+		_retire(b)
+		_finale())
 
 
 ## The player drags the brightness to 100%: sunlight, the ending, the book closes.
@@ -221,6 +220,7 @@ func _finale() -> void:
 	var f := BrightnessFinale.new()
 	main.add_child(f)
 	f.finished.connect(func() -> void:
+		_free_stale()
 		main._play_cutscene("ending_editions", func() -> void: main._final_screen(true)))
 
 
@@ -238,15 +238,34 @@ func _arena(stage: String) -> BossFight:
 	return b
 
 
-## Adds a configured fight to the screen.
-func _launch(b: BossFight) -> void:
-	main._overlay = b
-	main._task_layer.add_child(b)
+## Adds a configured scene to the screen.
+func _launch(n: Node) -> void:
+	main._overlay = n
+	main._task_layer.add_child(n)
 
 
-func _end_fight(b: BossFight) -> void:
-	b.queue_free()
-	main._overlay = null
+## A finished scene stays visible (frozen) instead of leaving an empty screen.
+func _retire(n: Node) -> void:
+	_free_stale()
+	_stale = n
+	if main._overlay == n:
+		main._overlay = null
+
+
+func _free_stale() -> void:
+	if _stale != null and is_instance_valid(_stale):
+		_stale.queue_free()
+	_stale = null
+
+
+## Turns the page: an ink wipe covers the screen, the old scene goes and `next` starts underneath.
+func _swap(next: Callable, title := "") -> void:
+	var w := EditionWipe.new()
+	w.title = title
+	main.add_child(w)
+	w.covered.connect(func() -> void:
+		_free_stale()
+		next.call())
 
 
 # --- helpers -------------------------------------------------------------------------------
