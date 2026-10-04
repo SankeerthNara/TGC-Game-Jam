@@ -48,8 +48,8 @@ func _after_book() -> void:
 ## What the Narrator says when a 144p level starts (replaces the level's own intro).
 func level_intro(i: int) -> String:
 	if i == 0:
-		return "NARRATOR: There you are, hero! It's dark, I know. Use your torch, finish the tasks and the next door opens. I'll be right here on comms."
-	return "NARRATOR: Careful. Two vampires in here: one is a friend, one works for the masked villain. Hold your light on them... and choose wisely."
+		return "NARRATOR: There you are, hero! It's dark, I know. ARROW KEYS move, your torch lights the way. Walk to a glowing console and press Z to fix it. Fix them all and the door opens. M shows the map. I'll be right here on comms."
+	return "NARRATOR: Careful. Two vampires in here: one is a friend, one works for the masked villain. Hold your light on one to catch him, then REVEAL or KILL. A revealed friend helps: stand at a console and press F."
 
 
 # --- 144p ----------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ func _final_boss() -> void:
 	b.waves = [[[["narrator", "BALCONY", 0.0]]]]
 	b.boss_name = "THE NARRATOR"
 	b.fight_title = "THE NARRATOR"
-	b.boss_hp_scale = 1.6
+	b.boss_hp_scale = 1.4
 	b.narrator_line = "LET ME WRITE YOUR LAST PAGE!"
 	b.win_text = ""
 	b.intro_lines = ["The Narrator. The one who guided you all along.", "Free the three heroes. V LIGHT BLADE, F heal."]

@@ -97,6 +97,7 @@ var _hurt_flash := 0.0
 var _atk_buf := 0.0 ## X pressed just before the swing is ready: it fires as soon as it can
 var _land := 0.0 ## landing squash
 var _was_ground := true
+var _boss_carry := -1.0 ## a retry keeps most of the damage done to the boss
 
 var _round := 0
 var _wave := 0
@@ -354,6 +355,8 @@ func _process(delta: float) -> void:
 				# back to the start of this wave, full health (the Narrator heals too)
 				_hp = max_hp
 				_invuln = 1.5
+				if _narrator != null and _narrator.kind in ["narrator", "baron"]:
+					_boss_carry = minf(_narrator.max_hp, _narrator.hp + _narrator.max_hp * 0.15)
 				_enemies.clear()
 				_pending.clear()
 				_waves.clear()
@@ -661,11 +664,17 @@ func _update_world(delta: float) -> void:
 			e.max_hp = e.hp
 			e.state = "hover"
 			_narrator = e
+			if _boss_carry > 0.0:
+				e.hp = _boss_carry
+				_boss_carry = -1.0
 			_say(narrator_line, Vector2(center_x(), 220), Color("c77dff"), 40)
 		elif e.kind in ["baron", "twin"]:
 			e.hp *= boss_hp_scale
 			e.max_hp = e.hp
 			_narrator = e
+			if _boss_carry > 0.0:
+				e.hp = _boss_carry
+				_boss_carry = -1.0
 		elif not e.flying():
 			e.pos.y = FLOOR_Y - 260.0 # drops onto the stage
 		_enemies.append(e)
@@ -831,8 +840,15 @@ func _draw() -> void:
 	if _white > 0.0:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, 0.5 * _white))
 	_draw_hud()
-	if _phase == "explore" and _pt < 6.0:
-		ComicArt.shout(self, "GO  >>", Vector2(1100, 300), 48, GOLD, 10, 0.0)
+	if _phase == "explore":
+		if _pt < 6.0:
+			ComicArt.shout(self, "GO  >>", Vector2(1100, 300), 48, GOLD, 10, 0.0)
+		# the objective, and the controls for the first seconds
+		var obj := "REACH THE END OF THE LIBRARY"
+		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
+		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
+		if _pt < 10.0:
+			draw_string(FONT_BODY, Vector2(210, 700), "ARROWS move   Z jump   X attack (+UP, or +DOWN in the air)   C dash   V power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
 	match _phase:
 		"round_intro":
 			_draw_round_card()

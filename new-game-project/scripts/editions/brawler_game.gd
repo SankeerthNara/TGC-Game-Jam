@@ -649,6 +649,16 @@ func _draw_hud() -> void:
 		var w := FONT_BODY.get_string_size(msg, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
 		draw_string(FONT_BODY, Vector2(640 - w * 0.5, 70), msg, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("fff3d1"))
 	draw_string(FONT_BODY, Vector2(30, 704), "ARROWS move   Z jump   X punch (combo)   C roll   V counter", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.6))
+	if stage == "street" and _phase == "play" and _counters > 0:
+		var obj := ""
+		if _zone_live:
+			obj = "BEAT THE GOONS  (%d left)" % (_enemies.size() + _pending.size())
+		elif _zone + 1 < STREET.size():
+			obj = "KEEP GOING  >>"
+		else:
+			obj = "TO THE TRAIN  >>"
+		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
+		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 70), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("fff3d1"))
 	if stage == "train":
 		var bar := Rect2(Vector2(340, 664), Vector2(600, 16))
 		draw_string(FONT_SHOUT, Vector2(340, 656), "THE STATIC TWINS", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("3ef0ff"))

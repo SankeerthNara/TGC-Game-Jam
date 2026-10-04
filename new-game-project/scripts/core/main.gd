@@ -161,6 +161,9 @@ func _start_game() -> void:
 	if EDITIONS:
 		bomb_left = -1.0 # no bomb clock in the editions
 		world.bomb_left = -1.0
+		# the cheap edition is a quick prologue: one task fewer per level (3 and 5) and kinder sabotage
+		level_ease[0] = 1
+		level_ease[1] = 1
 		director.start()
 		return
 	_set_state("cutscene")
@@ -415,10 +418,18 @@ func _on_player_died() -> void:
 	_set_state("dead")
 	var overlay := DeathOverlay.new()
 	overlay.message = "Back to the checkpoint: the start of Level %d." % (level_idx + 1)
+	var kept: Dictionary = world.tasks_done.duplicate()
+	if EDITIONS:
+		overlay.message = "Back to the start of Level %d. Your finished tasks stay finished." % (level_idx + 1)
 	overlay.restart.connect(func() -> void:
 		overlay.queue_free()
 		_retrying = true
-		_load_level(level_idx))
+		_load_level(level_idx)
+		if EDITIONS:
+			# failing should not cost the player their progress
+			for id in kept:
+				world.tasks_done[id] = true
+			world.queue_redraw())
 	_task_layer.add_child(overlay)
 	EventBus.caption_changed.emit("NARRATOR: Out of hearts! Respawning at your checkpoint. Level %d starts again." % (level_idx + 1))
 
@@ -438,7 +449,7 @@ func _level_complete() -> void:
 	# the next level is kinder if this one took longer than par (the run should stay about the same length)
 	if not last:
 		var over := level_time / float(maxi(world.level_par, 1))
-		level_ease[level_idx + 1] = 2 if over > 1.5 else (1 if over > 1.0 else 0)
+		level_ease[level_idx + 1] = maxi(level_ease[level_idx + 1], 2 if over > 1.5 else (1 if over > 1.0 else 0))
 	_set_state("levelend")
 	var ov := LevelOverlay.new()
 	ov.title = "Level %d: %s" % [level_idx + 1, LevelGenerator.level_title(level_idx)]

@@ -65,3 +65,21 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - Each Editions fight shows its own title on the intro card and HUD (THE INK BARON / THE LIBRARY / THE OPERA / THE NARRATOR) instead of the relay "ROUND 1: THE PULP HERO".
 - Big moments: a counter now bursts speed lines; during the brightness finale the Narrator begs over the comms as the slider rises (45%, 70%, 90%).
 - Web: the window stretch aspect was "expand", so in a browser window that is not 16:9 the game drew in one corner with an uncovered band (the edition filter only covers 1280x720). Now "keep" (letterbox): the game always fits. Re-exported and checked in the browser (no console errors).
+
+## Second pass (playtime, clarity, moments, audio, web)
+- **Playtime measured** (`scripts/tools/playtime_test.tscn`: bots play every fight, cutscenes auto-advance
+  with no skipping, windows clicked after 3 s of reading, the 144p task levels counted at par):
+  book 20 s, Ink Baron 59 s, twist 1 16 s, street 46 s, Twins 24 s, twist 2 19 s, library 51 s,
+  opera 35 s, reveal 24 s, Narrator 125 s (3 retries), ending 16 s, 144p levels 300 s (par).
+  **Total 12.6 min with bots.** Bots fight much faster than first-time players (estimate x1.5-2 for the
+  fights), so a real first playthrough was likely 16-20 min, too close to the 20-minute cut-off with the
+  ending at the very end.
+- Decisions to keep a first playthrough around 15-17 min: the 144p levels have 3 and 5 tasks (was 4 and 6)
+  and kinder sabotage timers; the Narrator has a bit less health (x1.4, was x1.6) and **a retry keeps most
+  of the damage done to a boss** (Ink Baron, Narrator) instead of healing him fully.
+- First-time clarity: the 144p level intros now say the controls (arrows, Z at a glowing console, M map;
+  vampires: hold the light, REVEAL or KILL, F gives a task to the friend); the comms box splits long lines
+  into pages (lines used to be cut off after 3 rows, e.g. the 720p counter tip); the library shows its
+  objective ("REACH THE END OF THE LIBRARY") and the controls while exploring; the street shows
+  "BEAT THE GOONS (n left)" / "KEEP GOING >>".
+- Failing is gentler: dying in a 144p level keeps the tasks already finished (it used to reset the level).

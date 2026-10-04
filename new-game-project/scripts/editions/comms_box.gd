@@ -47,10 +47,18 @@ func _on_caption(text: String) -> void:
 func say(text: String, who := "narrator", hold := 3.5) -> void:
 	if dead and who == "narrator":
 		return
-	# a new line replaces an old one that is still waiting, so the box never lags behind the game
-	if _queue.size() >= 2:
+	# long lines are split into pages of three lines, so nothing is ever cut off
+	var lines := _wrap(text, 480.0, 20)
+	var pages: Array[Dictionary] = []
+	var i := 0
+	while i < lines.size():
+		var chunk := " ".join(lines.slice(i, i + 3))
+		i += 3
+		pages.append({"text": chunk, "who": who, "hold": hold if i >= lines.size() else 1.4, "cont": not pages.is_empty()})
+	# old waiting lines give way, so the box never lags far behind the game
+	while _queue.size() + pages.size() > 6 and not _queue.is_empty():
 		_queue.pop_front()
-	_queue.append({"text": text, "who": who, "hold": hold})
+	_queue.append_array(pages)
 	if _cur.is_empty():
 		_next()
 
@@ -85,7 +93,8 @@ func _next() -> void:
 		return
 	_cur = _queue.pop_front()
 	_t = 0.0
-	EventBus.sound_requested.emit("comms_beep")
+	if not _cur.get("cont", false):
+		EventBus.sound_requested.emit("comms_beep")
 
 
 func _process(delta: float) -> void:
