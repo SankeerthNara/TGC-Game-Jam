@@ -29,3 +29,13 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   (now lower, in front of the cracked mask); his entry line in the Editions is "LET ME WRITE YOUR LAST PAGE!".
 - README rewritten for the Editions (story, controls per edition, AI use).
 - Story panels now use the same sprites as gameplay (masked villain rising, the unmask crossfade, the Narrator reveal, the hero escaping and on comms), framed so faces stay in view.
+- 720p: no pixel sprites were delivered, so the brawler draws the painted hero frames; the 720p filter
+  turns them into pixel art (looks right next to the pixel backgrounds).
+
+## For Sankeerth in the morning
+1. Play the whole Editions run once (about 16-18 minutes) from `D:\Infinium\wt-claude` (branch
+   `claude/editions`, pushed as `origin/editions`). Note anything that feels wrong.
+2. Decide: merge `editions` into `main` (I did not; rollback = keep `main` as the classic game).
+3. Still missing art (code fallbacks are used, nothing is broken): book panels, comms portraits, 720p
+   pixel sprites for the goons and the Twins.
+4. Feature freeze Tuesday 12 pm; web build `build/web/` exports cleanly (20 MB pck).
