@@ -184,3 +184,13 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   (the curtain valance hides anything above y 140). He now floats lower, fully visible, in his spotlight.
 - Asked the watchdog to relay the next art request to Antigravity: the four 2K enemies (lancer, bat,
   brute, Ink Baron) are still the old flat sprites and are now the biggest style clash.
+
+## Bug: the final fight could never end (fixed)
+- The full playtime test hung in the Narrator fight for an hour. Probe (`scripts/tools/final_probe.tscn`,
+  jumps straight to the fight with the bot): in 2 of 4 runs the Narrator's health went below zero and
+  kept falling (to -19,000) while the fight never ended. Cause: the Light Blade (V) is fired from input
+  events, which still run during hit-stop. A Light Blade landing on the already-beaten Narrator hit him
+  again and restarted the hit-stop, so the update that removes him and declares the win never ran.
+  A player mashing V at the killing blow could soft-lock the last fight of the game.
+- Fix: an enemy that is already beaten cannot be hit again. Probe: 6 of 6 runs finish (37-66 s).
+  Flow test 0 fails; bots: Ink Baron 32 s, opera 49 s, Narrator 63 s, street 62 s, Twins 27 s.

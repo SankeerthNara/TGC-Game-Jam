@@ -512,6 +512,8 @@ func _attack_box() -> Rect2:
 
 
 func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool) -> void:
+	if e.dead:
+		return # already beaten: hitting him again would restart the hit-stop forever (powers fire during it)
 	if e.kind == "bomb":
 		e.dead = true # a slashed bomb fizzles out
 	else:
