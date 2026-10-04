@@ -63,6 +63,8 @@ func _start_boss_144() -> void:
 	var b := BossFight.new()
 	b.heroes = [0]
 	b.relay = false
+	b.max_hp = 6
+	b.checkpoints = true
 	b.boss_name = "THE INK BARON"
 	b.win_text = "BARON BUSTED!"
 	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "Power: V LIGHT BLADE, %s." % BossFight.POWER_TEXT_BY_KIND[0]]
@@ -226,6 +228,8 @@ func _arena(stage: String) -> BossFight:
 	b.stage = stage
 	b.heroes = [0]
 	b.relay = false
+	b.max_hp = 6
+	b.checkpoints = true
 	b.friends_revealed = main.friends_revealed
 	b.friends_killed = main.friends_killed
 	b.bomb_left = -1.0

@@ -13,3 +13,9 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   hidden until the reveal).
 - Main menu text updated for the Editions (no bomb): subtitle, "NOW IN 144p!" badge, How to Play rules.
 - Tests: editions flow test 0 fails; task smoke test 100/100.
+- Hall fix: when the library hall's doors lock, roamers left outside stay outside (they used to be
+  clamped into the locked fight and pile in).
+- Balance (decision): a test bot lost the wave fights in about 30 s even with other heroes, so for the
+  Editions the hero has 6 hearts and **dying restarts only the current wave** (full health) instead of
+  the whole fight. Bot results after: Ink Baron win (2 retries), opera win, Narrator win. A bot is not a
+  player; Sankeerth / friends must still play them.

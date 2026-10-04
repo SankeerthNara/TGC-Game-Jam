@@ -25,7 +25,7 @@ func _ready() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	var configs := [
-		{"name": "ink baron as detective", "hero": 1, "stage": "opera", "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]], "scale": 1.0},
+		{"name": "ink baron (144p)", "stage": "opera", "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]], "scale": 1.0},
 		{"name": "opera (2k)", "stage": "opera", "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.3], ["bat", "AC", 3.0], ["lancer", "C", 6.0]], [["brute", "C", 0.0], ["bat", "AL", 3.0], ["bomb", "AR", 5.0], ["lancer", "L", 7.0], ["lancer", "R", 9.0]]]], "scale": 1.0},
 		{"name": "narrator (2k final)", "stage": "dark", "waves": [[[["narrator", "BALCONY", 0.0]]]], "scale": 1.6},
 	]
@@ -35,16 +35,21 @@ func _ready() -> void:
 		b.bomb_left = -1.0
 		var cfgd: Dictionary = configs[run]
 		b.stage = cfgd["stage"]
-		b.heroes = [cfgd.get("hero", 0)]
-		b.relay = false
-		b.waves = cfgd["waves"]
-		b.boss_hp_scale = cfgd["scale"]
+		if not cfgd.get("classic", false):
+			b.heroes = [cfgd.get("hero", 0)]
+			b.relay = false
+			b.waves = cfgd["waves"]
+			b.boss_hp_scale = cfgd["scale"]
+			b.max_hp = 6
+			b.checkpoints = true
 		layer.add_child(b)
 		var result := [""]
 		b.finished.connect(func(r: String) -> void: result[0] = r)
 		var frames := 0
 		var log_phase := ""
 		var shots := 0
+		var retries := 0
+		var was_retry := false
 		while result[0] == "" and frames < 60 * 600:
 			await get_tree().process_frame
 			frames += 1
@@ -52,12 +57,15 @@ func _ready() -> void:
 			var ph := "%s r%d w%d" % [b._phase, b._round, b._wave]
 			if ph != log_phase:
 				log_phase = ph
+			if b._phase == "retry" and not was_retry:
+				retries += 1
+			was_retry = b._phase == "retry"
 			if DisplayServer.get_name() != "headless" and frames % 900 == 450 and shots < 8:
 				get_viewport().get_texture().get_image().save_png("user://arena_%d.png" % shots)
 				shots += 1
 		for k in _keys.keys():
 			press(k, false)
-		print("run %d %s: %s after %.0f s, hero hp %d" % [run, configs[run]["name"], result[0], b._t, b._hp])
+		print("run %d %s: %s after %.0f s, hero hp %d, retries %d" % [run, configs[run]["name"], result[0], b._t, b._hp, retries])
 		b.queue_free()
 		await get_tree().process_frame
 	get_tree().quit()

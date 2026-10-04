@@ -26,7 +26,7 @@ const GRAV := 2700.0
 const RUN := 360.0
 const JUMP_V := -900.0
 const DASH_V := 1150.0
-const MAX_HP := 5
+const MAX_HP_CLASSIC := 5
 const MAX_INK := 9
 const HEROES := [1, 2, 3] ## ArenaArt / ComicArt hero kinds: noir detective, ninja, space hero
 const POWERS := ["DEDUCTION", "LIGHT DASH", "PRISM CANNON"]
@@ -84,7 +84,9 @@ var _atk_t := 0.0
 var _atk_cd := 0.0
 var _atk_dir := "side"
 var _atk_hit := {}
-var _hp := MAX_HP
+var max_hp := MAX_HP_CLASSIC ## the editions give the single hero a little more
+var checkpoints := false ## the editions: dying restarts only the current wave
+var _hp := MAX_HP_CLASSIC
 var _ink := 0
 var _invuln := 0.0
 var _heal_t := -1.0
@@ -213,7 +215,7 @@ func _begin_round(r: int) -> void:
 	_exploring = level_width > 1280.0
 	hero_pos = Vector2(200 if _exploring else 640, FLOOR_Y)
 	_vel = Vector2.ZERO
-	_hp = MAX_HP
+	_hp = max_hp
 	_ink = 3
 	_invuln = 0.0
 	_slow = 0.0
@@ -329,6 +331,8 @@ func _process(delta: float) -> void:
 				_exploring = false
 				_lock_l = arena_x - 530.0
 				_lock_r = arena_x + 530.0
+				# roamers left behind outside the doors stay behind (no teleporting into the fight)
+				_enemies = _enemies.filter(func(e: ArenaEnemy) -> bool: return e.pos.x > _lock_l and e.pos.x < _lock_r)
 				_begin_wave()
 		"wave_intro":
 			_gate = move_toward(_gate, 1.0, delta * 2.5)
@@ -340,6 +344,20 @@ func _process(delta: float) -> void:
 			_update_world(delta)
 			if _pending.is_empty() and _enemies.is_empty() and _phase == "wave":
 				_wave_done()
+		"retry":
+			if _pt > 2.2:
+				# back to the start of this wave, full health (the Narrator heals too)
+				_hp = max_hp
+				_invuln = 1.5
+				_enemies.clear()
+				_pending.clear()
+				_waves.clear()
+				_drops.clear()
+				_narrator = null
+				hero_pos.x = center_x()
+				hero_pos.y = FLOOR_Y
+				_vel = Vector2.ZERO
+				_begin_wave()
 		"the_end":
 			_update_world(delta * 0.3)
 			if _pt > 2.4:
@@ -385,7 +403,7 @@ func _update_hero(delta: float) -> void:
 		move = 0.0
 		if _heal_t > 0.6:
 			_heal_t = -1.0
-			_hp = mini(MAX_HP, _hp + 2)
+			_hp = mini(max_hp, _hp + 2)
 			_ink -= 6
 			_fx.append({"kind": "ring", "pos": hero_center(), "t": 0.0, "life": 0.5, "col": Color("8ef0ff")})
 			_say("HEAL!", hero_center() + Vector2(0, -60), Color("8ef0ff"), 40)
@@ -503,6 +521,11 @@ func _hurt(from_x: float) -> void:
 		if _relay_round():
 			_phase = "the_end"
 			_pt = 0.0
+		elif checkpoints:
+			_phase = "retry"
+			_pt = 0.0
+			_say("TRY AGAIN!", hero_center() + Vector2(0, -60), RED, 56)
+			EventBus.sound_requested.emit("hero_ko")
 		else:
 			_phase = "lost"
 			_pt = 0.0
@@ -534,7 +557,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_V:
 			_power()
 		KEY_F:
-			if _ink >= 6 and _ground and _hp < MAX_HP and _heal_t < 0.0:
+			if _ink >= 6 and _ground and _hp < max_hp and _heal_t < 0.0:
 				_heal_t = 0.0
 		_:
 			return
@@ -955,7 +978,7 @@ func _draw_hud() -> void:
 	draw_circle(pc, 39.0, Color("2d1420"))
 	ComicArt.hero_bust(self, kind, pc + Vector2(0, -6), 0.32, "determined", _t)
 	draw_arc(pc, 42.0, 0.0, TAU, 32, GOLD, 3.0)
-	for i in MAX_HP:
+	for i in max_hp:
 		var m := Vector2(130 + i * 34, 52)
 		var full := i < _hp
 		var drop := PackedVector2Array([m + Vector2(0, -16), m + Vector2(11, 2), m + Vector2(0, 14), m + Vector2(-11, 2)])
