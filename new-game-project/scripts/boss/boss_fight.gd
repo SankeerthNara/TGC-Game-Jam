@@ -50,6 +50,7 @@ var win_text := "SOLAR FLARE!"
 var boss_name := "THE NARRATOR"
 var boss_hp_scale := 1.0
 var narrator_line := "ENOUGH! I'LL END THIS MYSELF!"
+var fight_title := "" ## the Editions name each fight; empty = the classic "ROUND n: hero"
 ## Levels (the editions' 2k act): stage art, a wide scrolling level with ledges, pre-placed roamers,
 ## and the x where the locked fight begins.
 var stage := "opera" ## opera | hall | dark
@@ -1019,7 +1020,7 @@ func _draw_hud() -> void:
 		draw_rect(r.grow(-2.0), Color("2ec4b6") if i < _ink else Color(0.15, 0.15, 0.2))
 	draw_string(FONT_BODY, Vector2(126, 116), "V %s (3)   F heal (6)" % POWER_BY_KIND[_hero_kind()], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
 	# round, wave, bomb (top right)
-	draw_string(FONT_SHOUT, Vector2(930, 46), "ROUND %d  -  %s" % [_round + 1, ComicArt.HERO_NAMES[kind]], HORIZONTAL_ALIGNMENT_LEFT, 330, 22, GOLD)
+	draw_string(FONT_SHOUT, Vector2(930, 46), ("ROUND %d  -  %s" % [_round + 1, ComicArt.HERO_NAMES[kind]]) if fight_title == "" else fight_title, HORIZONTAL_ALIGNMENT_LEFT, 330, 22, GOLD)
 	if bomb_left >= 0.0:
 		var bs := int(ceil(bomb_left))
 		draw_string(FONT_SHOUT, Vector2(930, 82), "BOMB %d:%02d" % [bs / 60, bs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 32, RED if bomb_left < 60.0 else PAPER)
@@ -1060,7 +1061,7 @@ func _draw_round_card() -> void:
 				lines = ["The detective cleared %d of 2 waves. TAG IN, NINJA!" % mini(_cleared, 2), "Power: V LIGHT DASH, %s." % POWER_TEXT[1]]
 			2:
 				lines = ["His shield is cracked %d%%: he is weaker now." % int(crack_share() * 100.0), "Power: V PRISM CANNON, %s." % POWER_TEXT[2]]
-	_card("ROUND %d: %s" % [_round + 1, ComicArt.HERO_NAMES[kind]], lines, GOLD)
+	_card(("ROUND %d: %s" % [_round + 1, ComicArt.HERO_NAMES[kind]]) if fight_title == "" else fight_title, lines, GOLD)
 	var k := clampf(_pt / 0.4, 0.0, 1.0)
 	ArenaArt.hero(self, kind, Vector2(640 - 120 * (1.0 - k), 440), 1.0, "idle", _t, 0.0, 2.2)
 
