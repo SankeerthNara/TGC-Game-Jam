@@ -94,7 +94,7 @@ func _build_menu() -> void:
 
 	# Subtitle
 	var sub_lbl := Label.new()
-	sub_lbl.text = "A COMIC-STRIP LIGHT-ROUTING MYSTERY"
+	sub_lbl.text = "A DARK COMIC RACE AGAINST THE BOMB"
 	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub_lbl.add_theme_font_override("font", FONT_TITLE)
 	sub_lbl.add_theme_font_size_override("font_size", 22)
@@ -103,7 +103,7 @@ func _build_menu() -> void:
 
 	# Story premise blurb
 	var blurb := Label.new()
-	blurb.text = "The story cannot advance in the dark! Rearrange panels, flip mirrors, and steer the beam across the gutters. But beware the narrator..."
+	blurb.text = "A masked villain has hidden a bomb: 17 minutes on the clock. Light your way through four dark comics, finish the tasks, win the keys to the bomb room. Two vampires lurk in every shadow: one is your friend. Choose wisely... and never trust the narrator."
 	blurb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	blurb.add_theme_font_override("font", FONT_BODY)
@@ -208,12 +208,12 @@ func _build_help_modal() -> void:
 	vbox.add_child(title)
 
 	var rules := [
-		"1. THE EMITTER (>) shines a beam of light across the page.",
-		"2. DRAG PANELS: Left-click and drag any unlocked comic panel to swap positions.",
-		"3. FLIP MIRRORS: Click rotatable mirrors (/ and \\) to redirect the beam 90 degrees.",
-		"4. OBJECTIVE: Route the beam into all target stars (T) without hitting hazards (X).",
-		"5. TWIST: Read the narrator's captions carefully! The rules will change under your feet!",
-		"6. CONTROLS: [Z] Undo move, [R] Reset level, [ESC] Pause menu."
+		"1. THE BOMB: 17 minutes for the whole run. Finish a level to win a key; 4 keys open the bomb room.",
+		"2. MOVE with the arrow keys (hold two for diagonals). It is dark: only your torch lights the way. [M] opens the map.",
+		"3. TASKS: walk to a console and press [Z]. Finish every task to fill the progress bar. [ESC] leaves a task.",
+		"4. SABOTAGE: the villain breaks things. Run to the fix console before the timer ends or lose hearts.",
+		"5. VAMPIRES: hold your torch on one, then REVEAL or KILL. One is your friend, one is the villain. Pure chance!",
+		"6. Out of hearts? Back to the start of the level, but the bomb keeps its time.",
 	]
 
 	for r in rules:
