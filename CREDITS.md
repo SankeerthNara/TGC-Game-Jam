@@ -9,3 +9,4 @@
 | Procedural gameplay sound effects | Audio | Synthesised by `tools/make_sfx.py` (written with ChatGPT/Codex) | Procedural Code Generation | CC0 1.0 Universal | `new-game-project/assets/audio/sfx_*.wav` (tasks, sabotage, story, chases and interactions) |
 | Adaptive music layers, chase music, stingers | Audio | Synthesised by `tools/make_music.py` (written with Claude Code) | Procedural Code Generation | CC0 1.0 Universal | `assets/audio/music_*.wav`, `assets/audio/sting_*.wav` |
 | Comic Bursts & Textures | 2D Art | Antigravity AI Generator | Procedural PIL Generation | CC0 1.0 Universal | `assets/art/*.png` (Twist burst, Solved burst, Halftone, Paper) |
+| The Editions Background Art | 2D Art | Antigravity AI | AI-generated with Antigravity, logged in docs/AI_USAGE.md | CC0 1.0 Universal | `new-game-project/assets/editions/2k/*`, `new-game-project/assets/editions/720/*` |
