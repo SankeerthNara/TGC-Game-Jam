@@ -15,6 +15,7 @@ const SFX_TWIST := preload("res://assets/audio/twist.wav")
 
 const TEX_BURST_TWIST := preload("res://assets/art/comic_burst_twist.png")
 const TEX_BURST_SOLVED := preload("res://assets/art/comic_burst_solved.png")
+const SHADER_COMIC_SCREEN := preload("res://assets/shaders/comic_screen.gdshader")
 
 var _caption_label: Label
 var _level_label: Label
@@ -28,6 +29,8 @@ var _hud_root: Control
 var _info_box: Control
 var _action_bar: Control
 var _end_modal: Control
+var _fx_layer: CanvasLayer
+var _fx_mat: ShaderMaterial
 
 var _audio_players: Dictionary = {}
 var _bgm: AudioStreamPlayer
@@ -42,6 +45,7 @@ var _current_level_name := "Page"
 func _ready() -> void:
 	layer = 10
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_setup_screen_fx()
 	_setup_audio()
 	_build_ui()
 	_connect_event_bus()
@@ -101,6 +105,8 @@ func _connect_event_bus() -> void:
 	eb.panel_swapped.connect(_on_panel_swapped)
 	eb.mirror_toggled.connect(_on_mirror_toggled)
 	eb.game_state_changed.connect(_on_game_state_changed)
+	eb.sabotage_failed.connect(_on_sabotage_failed)
+	eb.player_died.connect(_on_player_died)
 
 
 func _build_ui() -> void:
@@ -544,6 +550,8 @@ func _on_reset_pressed() -> void:
 
 func _on_game_state_changed(state: String) -> void:
 	_hud_root.visible = state != "menu"
+	if _fx_layer:
+		_fx_layer.visible = state != "menu"
 	var in_puzzle := state == "playing"
 	_info_box.visible = in_puzzle
 	_action_bar.visible = in_puzzle
@@ -627,3 +635,56 @@ func _show_banner(tex: Texture2D, duration: float) -> void:
 	tw.tween_interval(duration)
 	tw.tween_property(_banner_rect, "scale", Vector2.ZERO, 0.2)
 	tw.tween_callback(func() -> void: _banner_rect.visible = false)
+
+func _setup_screen_fx() -> void:
+	_fx_layer = CanvasLayer.new()
+	_fx_layer.layer = 8
+	_fx_layer.visible = false
+	add_child(_fx_layer)
+
+	var fx_rect := ColorRect.new()
+	fx_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fx_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fx_mat = ShaderMaterial.new()
+	_fx_mat.shader = SHADER_COMIC_SCREEN
+	fx_rect.material = _fx_mat
+	_fx_layer.add_child(fx_rect)
+
+
+func _screen_flash_and_shake(color: Color, duration: float, intensity: float) -> void:
+	if not _fx_mat:
+		return
+	_fx_mat.set_shader_parameter("flash_color", color)
+	_fx_mat.set_shader_parameter("flash_amount", 1.0)
+	
+	var tw := create_tween()
+	tw.tween_method(func(v: float) -> void:
+		if _fx_mat:
+			_fx_mat.set_shader_parameter("flash_amount", v),
+		1.0, 0.0, duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	var shake_tw := create_tween()
+	var steps := 8
+	var step_time := duration / float(steps)
+	for i in steps:
+		var decay := 1.0 - float(i) / float(steps)
+		var ox := (randf() * 2.0 - 1.0) * intensity * decay * 0.015
+		var oy := (randf() * 2.0 - 1.0) * intensity * decay * 0.015
+		shake_tw.tween_method(func(offset: Vector2) -> void:
+			if _fx_mat:
+				_fx_mat.set_shader_parameter("shake_offset", offset),
+			Vector2(ox, oy), Vector2.ZERO, step_time
+		)
+	shake_tw.tween_callback(func() -> void:
+		if _fx_mat:
+			_fx_mat.set_shader_parameter("shake_offset", Vector2.ZERO)
+	)
+
+
+func _on_sabotage_failed(_name: String, _hp_left: int) -> void:
+	_screen_flash_and_shake(Color("e63946"), 0.45, 1.2)
+
+
+func _on_player_died() -> void:
+	_screen_flash_and_shake(Color("18151d"), 0.65, 1.8)
