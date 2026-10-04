@@ -199,6 +199,7 @@ func _final_boss() -> void:
 	b.waves = [[[["narrator", "BALCONY", 0.0]]]]
 	b.boss_name = "THE NARRATOR"
 	b.boss_hp_scale = 1.6
+	b.narrator_line = "LET ME WRITE YOUR LAST PAGE!"
 	b.win_text = ""
 	b.intro_lines = ["The Narrator. The one who guided you all along.", "Free the three heroes. V LIGHT BLADE, F heal."]
 	_launch(b)

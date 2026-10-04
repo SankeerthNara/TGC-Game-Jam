@@ -49,6 +49,7 @@ var intro_lines: Array = [] ## replaces the round card text when set
 var win_text := "SOLAR FLARE!"
 var boss_name := "THE NARRATOR"
 var boss_hp_scale := 1.0
+var narrator_line := "ENOUGH! I'LL END THIS MYSELF!"
 ## Levels (the editions' 2k act): stage art, a wide scrolling level with ledges, pre-placed roamers,
 ## and the x where the locked fight begins.
 var stage := "opera" ## opera | hall | dark
@@ -637,7 +638,7 @@ func _update_world(delta: float) -> void:
 			e.max_hp = e.hp
 			e.state = "hover"
 			_narrator = e
-			_say("ENOUGH! I'LL END THIS MYSELF!", Vector2(640, 220), Color("c77dff"), 40)
+			_say(narrator_line, Vector2(center_x(), 220), Color("c77dff"), 40)
 		elif e.kind in ["baron", "twin"]:
 			e.hp *= boss_hp_scale
 			e.max_hp = e.hp

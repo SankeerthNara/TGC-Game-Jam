@@ -24,3 +24,7 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   (the preview pane is hidden, so the browser throttles the game); the desktop build plays end to end
   in the automated flow test.
 - Menu: the villain's bubble now says "THE LIGHT IS MINE..." (no clock in the Editions).
+- Full visual tour of every part (book → 144p → twist 1 → 720p street/twins → twist 2 → 2k hall/opera →
+  reveal → Narrator → finale → ending). Fixes: the Narrator boss floated behind the curtain valance
+  (now lower, in front of the cracked mask); his entry line in the Editions is "LET ME WRITE YOUR LAST PAGE!".
+- README rewritten for the Editions (story, controls per edition, AI use).

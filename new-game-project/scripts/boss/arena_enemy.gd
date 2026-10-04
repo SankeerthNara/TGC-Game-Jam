@@ -298,7 +298,7 @@ func _narrator(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
 	var sp: float = fight.enemy_speed() * (1.25 if phase2 else 1.0)
 	match state:
 		"hover":
-			target = Vector2(fight.center_x() + sin(t * 0.6) * 380.0, 230.0 + sin(t * 1.1) * 30.0)
+			target = Vector2(fight.center_x() + sin(t * 0.6) * 360.0, 320.0 + sin(t * 1.1) * 30.0)
 			pos = pos.move_toward(target, 220.0 * sp * dt)
 			cd -= dt * sp
 			if cd <= 0.0:
@@ -328,7 +328,7 @@ func _narrator(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
 					_rest()
 		"slam":
 			if st < 0.6 / sp:
-				pos = pos.move_toward(Vector2(target.x, 200.0), 700.0 * dt)
+				pos = pos.move_toward(Vector2(target.x, 280.0), 700.0 * dt)
 			else:
 				pos.y = move_toward(pos.y, FLOOR_Y - 70.0, 1500.0 * dt)
 				if pos.y >= FLOOR_Y - 71.0 and state == "slam":
