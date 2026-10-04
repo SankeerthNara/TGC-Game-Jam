@@ -96,6 +96,10 @@ func _ready() -> void:
 	if ResourceLoader.exists(UI_SCENE):
 		add_child((load(UI_SCENE) as PackedScene).instantiate()) # Antigravity's comic UI replaces the debug HUD
 		_to_menu()
+	else:
+		_build_debug_hud()
+		EventBus.caption_changed.connect(func(t: String) -> void: _caption.text = t)
+		_start_game()
 	if "boss" in OS.get_cmdline_user_args():
 		# testing shortcut: `godot --path . -- boss` starts straight in the final battle
 		EventBus.request_start_game.emit()
@@ -104,10 +108,6 @@ func _ready() -> void:
 			c.queue_free()
 		bomb_left = 300.0
 		_start_boss.call_deferred()
-	else:
-		_build_debug_hud()
-		EventBus.caption_changed.connect(func(t: String) -> void: _caption.text = t)
-		_start_game()
 
 
 func _set_state(s: String) -> void:
