@@ -36,8 +36,10 @@ func _ready() -> void:
 				e.state = "idle" if not e.flying() else "hover"
 				b._enemies.append(e)
 		if stage == "dark":
-			var n := ArenaEnemy.new("narrator", Vector2(760, 330))
-			n.state = "hover"
+			var n := ArenaEnemy.new("narrator", Vector2(1150, 480))
+			n.state = "dash"
+			n.st = 0.3
+			n.target = Vector2(560, 560)
 			n.hp = 70.0
 			n.max_hp = 100.0
 			b._enemies.append(n)

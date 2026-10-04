@@ -60,3 +60,4 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - Balance (decision): the brawler bot beat the Static Twins in 18 s, too short for a boss, so each Twin
   has 40 HP (was 26) and a counter does 3 to them (was 4). Bot now: street 47 s, Twins 33 s, no deaths.
   New tool: `scripts/tools/brawler_bot_test.tscn`.
+- Telegraphs: the Narrator's dash shows a red lane across the stage and his slam a target ring on the floor; the Ink Baron's cane sweep shows the shockwave path and a "!" before every attack.

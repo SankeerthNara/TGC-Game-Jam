@@ -361,8 +361,10 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 	if state == "enter":
 		a = clampf(st / 0.4, 0.0, 1.0)
 	var white := flash
+	_telegraph(ci, time)
 	if _draw_sprite(ci, a, time):
-		if state in ["windup", "charge_wind", "fuse"]:
+		var warn := state in ["windup", "charge_wind", "fuse"] or (kind == "baron" and state in ["sweep", "lob", "summon"] and st < 0.75)
+		if warn:
 			var c2 := center() + Vector2(0, -float(STATS[kind]["h"]) * 0.7)
 			ComicArt.shout(ci, "!", c2 + _o, 40, Color("ffd23f"), 8)
 			ci.draw_set_transform(_o, 0.0, Vector2.ONE)
@@ -424,6 +426,23 @@ func _col(c: Color, white: float, a: float) -> Color:
 	var r := c.lerp(Color.WHITE, white)
 	r.a = a
 	return r
+
+
+## Clear warnings before the big attacks: the Narrator's dash lane and slam spot, the Baron's sweep.
+func _telegraph(ci: CanvasItem, time: float) -> void:
+	var pulse := 0.5 + 0.5 * sin(time * 24.0)
+	if kind == "narrator" and state == "dash" and st < 0.75:
+		var y := clampf(target.y, 300.0, 560.0) - 20.0
+		ci.draw_rect(Rect2(Vector2(-200.0, y - 45.0) + Vector2(0, _o.y), Vector2(4000.0, 90.0)), Color(1, 0.1, 0.25, 0.10 + 0.12 * pulse))
+		ci.draw_line(Vector2(-200.0, y) + Vector2(0, _o.y), Vector2(4000.0, y) + Vector2(0, _o.y), Color(1, 0.3, 0.4, 0.5 + 0.4 * pulse), 3.0)
+	elif kind == "narrator" and state == "slam" and st < 0.6:
+		ci.draw_set_transform(Vector2(target.x, FLOOR_Y) + _o, 0.0, Vector2(1.0, 0.25))
+		ci.draw_circle(Vector2.ZERO, 90.0, Color(1, 0.1, 0.25, 0.15 + 0.15 * pulse))
+		ci.draw_arc(Vector2.ZERO, 90.0, 0.0, TAU, 32, Color(1, 0.3, 0.4, 0.8), 4.0)
+		ci.draw_set_transform(_o, 0.0, Vector2.ONE)
+	elif kind == "baron" and state == "sweep" and st < 0.75:
+		for side in [-1.0, 1.0]:
+			ci.draw_line(Vector2(pos.x, FLOOR_Y - 6.0) + _o, Vector2(pos.x + side * (160.0 + 300.0 * st), FLOOR_Y - 6.0) + _o, Color(1, 0.3, 0.4, 0.4 + 0.4 * pulse), 6.0)
 
 
 func _sc() -> float:
