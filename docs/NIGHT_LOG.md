@@ -194,3 +194,6 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   A player mashing V at the killing blow could soft-lock the last fight of the game.
 - Fix: an enemy that is already beaten cannot be hit again. Probe: 6 of 6 runs finish (37-66 s).
   Flow test 0 fails; bots: Ink Baron 32 s, opera 49 s, Narrator 63 s, street 62 s, Twins 27 s.
+- Playtime re-measured after the fix: the whole game runs end to end, 11.2 min with bots (book 21 s,
+  Ink Baron 36 s, street 46 s, Twins 24 s, library 42 s, opera 43 s, reveal 18 s, Narrator 57 s, ending
+  17 s, 144p levels 5 min at par). A first-time human: roughly 14-18 min.
