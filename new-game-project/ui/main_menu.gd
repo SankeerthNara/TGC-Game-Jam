@@ -21,8 +21,8 @@ const HERO_NAMES := ["PULP", "NOIR", "NINJA", "SPACE"]
 
 
 func _ready() -> void:
+	set_deferred("size", Vector2(1280, 720))
 	custom_minimum_size = Vector2(1280, 720)
-	size = Vector2(1280, 720)
 	
 	_sfx_player = AudioStreamPlayer.new()
 	_sfx_player.stream = SFX_CLICK
@@ -211,14 +211,12 @@ func _create_button(text: String, bg_color: Color) -> Button:
 
 func _build_help_modal() -> void:
 	_help_modal = Control.new()
-	_help_modal.custom_minimum_size = Vector2(1280, 720)
-	size = Vector2(1280, 720)
+	_help_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_help_modal.visible = false
 	add_child(_help_modal)
 
 	var dim := ColorRect.new()
-	dim.custom_minimum_size = Vector2(1280, 720)
-	size = Vector2(1280, 720)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.color = Color(0, 0, 0, 0.7)
 	_help_modal.add_child(dim)
 
@@ -279,14 +277,12 @@ func _build_help_modal() -> void:
 
 func _build_credits_modal() -> void:
 	_credits_modal = Control.new()
-	_credits_modal.custom_minimum_size = Vector2(1280, 720)
-	size = Vector2(1280, 720)
+	_credits_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_credits_modal.visible = false
 	add_child(_credits_modal)
 
 	var dim := ColorRect.new()
-	dim.custom_minimum_size = Vector2(1280, 720)
-	size = Vector2(1280, 720)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.color = Color(0, 0, 0, 0.7)
 	_credits_modal.add_child(dim)
 
