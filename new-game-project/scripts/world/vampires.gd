@@ -208,8 +208,22 @@ func _follow(v: Dictionary, speed_tiles: float, delta: float) -> void:
 		v["pos"] = pos.move_toward(target, step)
 
 
+## Seconds the friend needs for one task: slower than you, faster every level.
+const ALLY_WORK := [30.0, 30.0, 24.0, 18.0]
+
+
 func _update_ally(v: Dictionary, delta: float) -> void:
 	var pos: Vector2 = v["pos"]
+	# drop tasks the hero already finished himself
+	while not world.assigned.is_empty() and world.tasks_done.has(world.assigned[0]):
+		world.assigned.pop_front()
+		v["work"] = 0.0
+	if not world.assigned.is_empty():
+		_work_on_task(v, delta)
+		_ally_help(delta)
+		return
+	v["work"] = 0.0
+	v["job"] = ""
 	var gap := pos.distance_to(world._foot) / World.TILE
 	if gap > 14.0:
 		v["pos"] = world._foot + Vector2(world.TILE, 0)
@@ -225,13 +239,49 @@ func _update_ally(v: Dictionary, delta: float) -> void:
 	_ally_help(delta)
 
 
+## Walks to the first task in the queue and works on it until it is done.
+func _work_on_task(v: Dictionary, delta: float) -> void:
+	var id: String = world.assigned[0]
+	if String(v.get("job", "")) != id:
+		v["job"] = id
+		v["work"] = 0.0
+		v["path"] = []
+		v["goal"] = world.task_stand_tile(id)
+	var goal: Vector2i = v["goal"]
+	var pos: Vector2 = v["pos"]
+	if pos.distance_to(world.center_of(goal)) > World.TILE * 0.35:
+		v["repath"] = float(v.get("repath", 0.0)) - delta
+		if (v["path"] as Array).is_empty() or float(v["repath"]) <= 0.0:
+			v["repath"] = 1.0
+			v["path"] = _bfs(_tile_of(pos), goal)
+			if (v["path"] as Array).is_empty():
+				v["pos"] = world.center_of(goal) # no path (should not happen): just get there
+		_follow(v, ALLY_SPEED, delta)
+		return
+	v["path"] = []
+	v["work"] = float(v["work"]) + delta
+	if float(v["work"]) >= work_time():
+		v["work"] = 0.0
+		v["job"] = ""
+		world.ally_complete(id)
+
+
+func work_time() -> float:
+	return ALLY_WORK[clampi(world.level_index, 0, 3)]
+
+
+## 0..1 progress on the current task, or -1 when the friend is not working.
+func work_progress() -> float:
+	if ally_index < 0 or world.assigned.is_empty():
+		return -1.0
+	var v: Dictionary = list[ally_index]
+	if String(v.get("job", "")) == "" or not (v["path"] as Array).is_empty():
+		return -1.0
+	return clampf(float(v.get("work", 0.0)) / work_time(), 0.0, 1.0)
+
+
 ## What the friend does for you. It grows with every level.
 func _ally_help(delta: float) -> void:
-	if world.level_index >= 2:
-		ally_task_t += delta
-		if ally_task_t >= 45.0:
-			ally_task_t = 0.0
-			world.ally_finish_a_task()
 	if autofix_t > 0.0:
 		autofix_t -= delta
 		if autofix_t <= 0.0:
@@ -312,5 +362,13 @@ func draw_one(c: CanvasItem, i: int, time: float, ink: Color) -> void:
 		c.draw_circle(hp + Vector2(-0.04 * s, 0), s * 0.05, Color("e63946"))
 		c.draw_circle(hp + Vector2(0.04 * s, 0), s * 0.05, Color("e63946"))
 		c.draw_colored_polygon(PackedVector2Array([hp + Vector2(-0.085 * s, 0.015 * s), hp + Vector2(0.085 * s, 0.015 * s), hp + Vector2(0, 0.1 * s)]), Color("e63946"))
+		var prog := work_progress()
+		if prog >= 0.0 and i == ally_index:
+			# progress ring above the friend while he works on a task you gave him
+			var rc := h + Vector2(0, -0.62 * s)
+			c.draw_circle(rc, s * 0.2, Color(0.1, 0.08, 0.15, 0.85))
+			c.draw_arc(rc, s * 0.16, -PI * 0.5, -PI * 0.5 + TAU * prog, 32, Color("4cc9f0"), s * 0.07)
+			var wrench := rc + Vector2(0, -0.01 * s)
+			c.draw_line(wrench + Vector2(-0.06, 0.06) * s, wrench + Vector2(0.06, -0.06) * s, Color.WHITE, s * 0.035)
 	elif state == "frozen":
 		c.draw_string(ThemeDB.fallback_font, h + Vector2(-6, -s * 0.3), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("ffe066"))

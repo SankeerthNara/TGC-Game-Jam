@@ -67,7 +67,7 @@ func _draw() -> void:
 	draw_rect(Rect2(lbox.position + Vector2(4, 4), lbox.size), Color(0, 0, 0, 0.3))
 	draw_rect(lbox, Color(1, 0.98, 0.9, 0.9))
 	draw_rect(lbox, INK, false, 3.0)
-	draw_string(FONT_SHOUT, lbox.position + Vector2(12, 22), "TASKS  (M: map)", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, INK)
+	draw_string(FONT_SHOUT, lbox.position + Vector2(12, 22), "TASKS  (M: map, F: give to friend)" if world.vampires.ally_index >= 0 else "TASKS  (M: map)", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, INK)
 	var y := lbox.position.y + 44.0
 	for t: Dictionary in world.tasks:
 		var is_done := world.tasks_done.has(t["id"])
@@ -77,7 +77,13 @@ func _draw() -> void:
 		if is_done:
 			draw_line(Vector2(lbox.position.x + 14, y - 6), Vector2(lbox.position.x + 18, y - 1), Color("2dc653"), 3.0)
 			draw_line(Vector2(lbox.position.x + 18, y - 1), Vector2(lbox.position.x + 26, y - 14), Color("2dc653"), 3.0)
-		draw_string(FONT_BODY, Vector2(lbox.position.x + 34, y), "%s: %s" % [t["room"], t["name"]], HORIZONTAL_ALIGNMENT_LEFT, 310, 15, c)
+		var label := "%s: %s" % [t["room"], t["name"]]
+		var friend := not is_done and world.assigned.has(t["id"])
+		if friend:
+			var prog := world.vampires.work_progress() if world.assigned[0] == t["id"] else -1.0
+			label += "  [friend %d%%]" % int(prog * 100.0) if prog >= 0.0 else "  [friend]"
+			c = Color("1d7fa8")
+		draw_string(FONT_BODY, Vector2(lbox.position.x + 34, y), label, HORIZONTAL_ALIGNMENT_LEFT, 310, 15, c)
 		y += lh
 
 

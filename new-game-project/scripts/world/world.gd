@@ -118,6 +118,7 @@ var _flash := 0.0
 var _mood_timer := 0.0
 var _pops: Array[Dictionary] = []
 var _task_at := {} ## Vector2i -> task dictionary
+var assigned: Array[String] = [] ## task ids handed to the friend (F), in order
 var _room_of := PackedInt32Array()
 var _room_colors: Array[Color] = []
 var _task_hud: TaskHUD
@@ -200,6 +201,7 @@ func load_data(data: Dictionary) -> void:
 		for yy in range(int(rm["y"]), int(rm["y"]) + int(rm["h"])):
 			for xx in range(int(rm["x"]), int(rm["x"]) + int(rm["w"])):
 				_room_of[yy * cols + xx] = i
+	assigned.clear()
 	_task_at.clear()
 	for t: Dictionary in tasks:
 		_task_at[Vector2i(int(t["x"]), int(t["y"]))] = t
@@ -776,6 +778,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_minimap_open = false
 			_minimap.visible = false
 		return
+	if station_mode and event.keycode == KEY_F:
+		_assign_to_friend()
+		return
 	if event.keycode in [KEY_Z, KEY_ENTER, KEY_SPACE, KEY_E]:
 		if station_mode:
 			_interact_station()
@@ -920,6 +925,63 @@ func _process_station(delta: float) -> void:
 	hero.drive(_foot + Vector2(0, -TILE * 0.2), moving, v.x, _foot + _face * TILE * 2.0, delta)
 	_update_torch()
 	queue_redraw()
+
+
+## F at a console: the friend goes there and does that task for you.
+func _assign_to_friend() -> void:
+	var t := _nearest_console()
+	if vampires.ally_index < 0:
+		message.emit("NARRATOR: You have no friend to help you yet. Catch a vampire in your light and REVEAL him... if you dare.")
+		return
+	if t.x < 0:
+		message.emit("NARRATOR: Stand at a task console and press F to hand it to your friend.")
+		return
+	var task: Dictionary = _task_at[t]
+	if task.get("is_fix", false):
+		message.emit("NARRATOR: Sabotage is your job, hero. Your friend only takes regular tasks.")
+	elif tasks_done.has(task["id"]):
+		message.emit("NARRATOR: That one is already done.")
+	elif assigned.has(task["id"]):
+		message.emit("NARRATOR: Your friend is already on \"%s\"." % task["name"])
+	else:
+		assigned.append(String(task["id"]))
+		var queue_note := "" if assigned.size() == 1 else " (%d tasks in his queue)" % assigned.size()
+		message.emit("NARRATOR: Your friend will do \"%s\"%s. Go do something else!" % [task["name"], queue_note])
+
+
+## The friend finished a task you gave him.
+func ally_complete(task_id: String) -> void:
+	assigned.erase(task_id)
+	if tasks_done.has(task_id):
+		return
+	var nm := task_id
+	for t: Dictionary in tasks:
+		if t["id"] == task_id:
+			nm = String(t["name"])
+	complete_task(task_id)
+	ally_helped.emit(nm)
+	if all_tasks_done():
+		tasks_all_done.emit()
+
+
+## Where the friend stands to work on a task.
+func task_stand_tile(task_id: String) -> Vector2i:
+	for t: Dictionary in tasks:
+		if t["id"] == task_id:
+			return find_free_tile(Vector2i(int(t["x"]), int(t["y"]) + 1))
+	return Vector2i(-1, -1)
+
+
+func _nearest_console() -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var best_d := TILE * 1.75
+	for t: Vector2i in _task_at:
+		var c := _center(t)
+		var d := _foot.distance_to(c)
+		if d < best_d and (c - _foot).normalized().dot(_face) > -0.35:
+			best_d = d
+			best = t
+	return best
 
 
 func _interact_station() -> void:

@@ -304,8 +304,8 @@ func _after_vampire_choice(i: int, reveal: bool, role: String) -> void:
 		world.on_ally_revealed()
 		score.on_friend_revealed()
 		_enter_world()
-		var helps := ["points you to tasks", "points you to the nearest task", "also finishes small tasks and buys you time", "also fixes a sabotage and shields you once"]
-		EventBus.caption_changed.emit("NARRATOR: A friend! He is not afraid of light now, and he %s." % helps[clampi(level_idx, 0, 3)])
+		var helps := ["points you to tasks", "points you to the nearest task", "points to tasks and buys you time on sabotage", "buys you time, fixes a sabotage and shields you once"]
+		EventBus.caption_changed.emit("NARRATOR: A friend! He is not afraid of light now, and he %s. Stand at a task and press F: he will do it for you!" % helps[clampi(level_idx, 0, 3)])
 	elif reveal:
 		world.vampires.reveal_villain(i)
 		_start_parkour(i)
