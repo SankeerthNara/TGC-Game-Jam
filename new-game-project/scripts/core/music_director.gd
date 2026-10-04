@@ -137,10 +137,37 @@ func _nearest_vampire(world: World) -> float:
 	return best
 
 
+const SYNTH := {
+	"pad": "res://assets/audio/music_synth_pad.wav",
+	"bass": "res://assets/audio/music_synth_bass.wav",
+	"drums": "res://assets/audio/music_synth_drums.wav",
+	"lead": "res://assets/audio/music_synth_lead.wav",
+}
+var _synth := {}
+var _synth_level := {}
+
+
+## The 720p edition plays Codex's synthwave layers (street: pad, bass, drums; the Twins: + lead).
+func _synth_targets() -> Dictionary:
+	var t := {"pad": 0.0, "bass": 0.0, "drums": 0.0, "lead": 0.0}
+	var d: Node = main.director if main != null and "director" in main else null
+	if d == null or d.act != "720p":
+		return t
+	t["pad"] = 0.8
+	t["bass"] = 0.9 if main.state == "boss" else 0.4
+	t["drums"] = 0.9 if main.state == "boss" else 0.0
+	if main._overlay is BrawlerGame and main._overlay.stage == "train":
+		t["lead"] = 0.85
+	if main.paused:
+		for k in t:
+			t[k] *= 0.35
+	return t
+
+
 ## The battle opera: more layers as the fight heats up (BossFight.intensity 0..3).
 func _opera_targets() -> Dictionary:
 	var t := {"strings": 0.0, "choir": 0.0, "brass": 0.0, "frenzy": 0.0}
-	if main == null or main.state != "boss":
+	if main == null or main.state != "boss" or main._overlay is BrawlerGame:
 		return t
 	var level := 0
 	if main._overlay is BossFight:
@@ -176,6 +203,7 @@ func _process(delta: float) -> void:
 	elif not opera_on and _opera["strings"].playing:
 		for key: String in _opera:
 			_opera[key].stop()
+	_update_synth(delta)
 	_chase_level = move_toward(_chase_level, t["chase"], FADE * 2.0 * delta)
 	_chase.volume_db = _db(_chase_level)
 	if _chase_level > 0.0 and not _chase.playing:
@@ -187,6 +215,36 @@ func _process(delta: float) -> void:
 	var pitch := 1.06 if urgent else 1.0
 	for key: String in _players:
 		_players[key].pitch_scale = move_toward(_players[key].pitch_scale, pitch, delta * 0.2)
+
+
+func _update_synth(delta: float) -> void:
+	if _synth.is_empty():
+		for key: String in SYNTH:
+			if ResourceLoader.exists(SYNTH[key]):
+				var p := AudioStreamPlayer.new()
+				p.stream = load(SYNTH[key])
+				p.volume_db = -80.0
+				add_child(p)
+				_synth[key] = p
+				_synth_level[key] = 0.0
+		if _synth.is_empty():
+			_synth["none"] = null
+			return
+	if _synth.has("none"):
+		return
+	var st := _synth_targets()
+	var on := false
+	for key: String in _synth:
+		_synth_level[key] = move_toward(_synth_level[key], st[key], FADE * delta)
+		_synth[key].volume_db = _db(_synth_level[key])
+		on = on or _synth_level[key] > 0.0
+	var first: AudioStreamPlayer = _synth.values()[0]
+	if on and not first.playing:
+		for key: String in _synth:
+			_synth[key].play()
+	elif not on and first.playing:
+		for key: String in _synth:
+			_synth[key].stop()
 
 
 func _db(v: float) -> float:

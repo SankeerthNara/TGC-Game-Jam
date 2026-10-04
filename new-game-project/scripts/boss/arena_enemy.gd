@@ -34,6 +34,7 @@ var t := 0.0
 var seed := 0.0
 var target := Vector2.ZERO
 var phase2 := false
+var _o := Vector2.ZERO ## drawing origin (the camera offset)
 
 
 func _init(k: String, p: Vector2) -> void:
@@ -112,6 +113,8 @@ func update(dt: float, fight: Node) -> void:
 		"lancer":
 			_lancer(dt, hero, fight)
 		"bat":
+			_fl = fight.bound_l()
+			_fr = fight.bound_r()
 			_bat(dt, hc)
 		"bomb":
 			_bomb(dt, hc, fight)
@@ -126,7 +129,6 @@ func update(dt: float, fight: Node) -> void:
 func _ground(dt: float) -> void:
 	pos.x += vel.x * dt
 	vel.x = move_toward(vel.x, 0.0, 1400.0 * dt)
-	pos.x = clampf(pos.x, 110.0, 1170.0)
 	pos.y = FLOOR_Y
 
 
@@ -158,6 +160,11 @@ func _lancer(dt: float, hero: Vector2, fight: Node) -> void:
 				st = 0.0
 				cd = randf_range(0.8, 1.6)
 	_ground(dt)
+	pos.x = clampf(pos.x, fight.bound_l(), fight.bound_r())
+
+
+var _fl := 100.0
+var _fr := 1180.0
 
 
 func _bat(dt: float, hc: Vector2) -> void:
@@ -184,7 +191,7 @@ func _bat(dt: float, hc: Vector2) -> void:
 				state = "hover"
 				st = 0.0
 				cd = randf_range(1.2, 2.2)
-	pos.x = clampf(pos.x, 100.0, 1180.0)
+	pos.x = clampf(pos.x, _fl - 10.0, _fr + 10.0)
 
 
 func _bomb(dt: float, hc: Vector2, fight: Node) -> void:
@@ -231,14 +238,14 @@ func _brute(dt: float, hero: Vector2, fight: Node) -> void:
 				st = 0.0
 				vel.x = dir * 420.0
 		"charge":
-			if st > 1.0 or pos.x <= 120.0 or pos.x >= 1160.0:
+			if st > 1.0 or pos.x <= fight.bound_l() + 10.0 or pos.x >= fight.bound_r() - 10.0:
 				state = "idle"
 				st = 0.0
 				vel.x = 0.0
 				cd = randf_range(1.0, 1.8)
 				fight.shake(8.0)
 	pos.x += vel.x * dt
-	pos.x = clampf(pos.x, 110.0, 1170.0)
+	pos.x = clampf(pos.x, fight.bound_l(), fight.bound_r())
 	pos.y = FLOOR_Y
 
 
@@ -276,7 +283,7 @@ func _baron(dt: float, hero: Vector2, fight: Node) -> void:
 				fight.spawn("lancer", Vector2(clampf(pos.x + 220.0, 200.0, 1080.0), FLOOR_Y))
 			if st > 1.2:
 				_baron_rest()
-	pos.x = clampf(pos.x + vel.x * dt, 140.0, 1140.0)
+	pos.x = clampf(pos.x + vel.x * dt, fight.bound_l() + 30.0, fight.bound_r() - 30.0)
 	pos.y = FLOOR_Y
 
 
@@ -291,7 +298,7 @@ func _narrator(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
 	var sp: float = fight.enemy_speed() * (1.25 if phase2 else 1.0)
 	match state:
 		"hover":
-			target = Vector2(640.0 + sin(t * 0.6) * 380.0, 230.0 + sin(t * 1.1) * 30.0)
+			target = Vector2(fight.center_x() + sin(t * 0.6) * 380.0, 230.0 + sin(t * 1.1) * 30.0)
 			pos = pos.move_toward(target, 220.0 * sp * dt)
 			cd -= dt * sp
 			if cd <= 0.0:
@@ -310,12 +317,14 @@ func _narrator(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
 		"dash":
 			# telegraph a line at the hero's height, then sweep across the stage
 			if st < 0.75 / sp:
-				pos = pos.move_toward(Vector2(-60.0 if hero.x > 640.0 else 1340.0, clampf(target.y, 300.0, 560.0)), 900.0 * dt)
+				var cx: float = fight.center_x()
+				pos = pos.move_toward(Vector2(cx - 700.0 if hero.x > cx else cx + 700.0, clampf(target.y, 300.0, 560.0)), 900.0 * dt)
 			else:
-				var goal_x := 1340.0 if target.x > 640.0 or pos.x < 640.0 else -60.0
+				var cx2: float = fight.center_x()
+				var goal_x := cx2 + 700.0 if target.x > cx2 or pos.x < cx2 else cx2 - 700.0
 				pos.x = move_toward(pos.x, goal_x, 1300.0 * dt)
 				if absf(pos.x - goal_x) < 1.0 or st > 2.2:
-					pos.x = clampf(pos.x, 80.0, 1200.0)
+					pos.x = clampf(pos.x, fight.bound_l(), fight.bound_r())
 					_rest()
 		"slam":
 			if st < 0.6 / sp:
@@ -346,7 +355,8 @@ func _rest() -> void:
 
 # --- drawing ----------------------------------------------------------------------------
 
-func draw(ci: CanvasItem, time: float) -> void:
+func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
+	_o = origin
 	var a := 1.0
 	if state == "enter":
 		a = clampf(st / 0.4, 0.0, 1.0)
@@ -366,7 +376,8 @@ func draw(ci: CanvasItem, time: float) -> void:
 			_draw_baron(ci, white, a)
 	if state in ["windup", "charge_wind", "fuse"]:
 		var c := center() + Vector2(0, -float(STATS[kind]["h"]) * 0.7)
-		ComicArt.shout(ci, "!", c, 40, Color("ffd23f"), 8)
+		ComicArt.shout(ci, "!", c + _o, 40, Color("ffd23f"), 8)
+		ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
 func _col(c: Color, white: float, a: float) -> Color:
@@ -380,7 +391,7 @@ func _sc() -> float:
 
 
 func _draw_lancer(ci: CanvasItem, white: float, a: float) -> void:
-	ci.draw_set_transform(pos, 0.0, Vector2(dir * _sc(), _sc()))
+	ci.draw_set_transform(pos + _o, 0.0, Vector2(dir * _sc(), _sc()))
 	var back := 8.0 if state == "windup" else (-10.0 if state == "lunge" else 0.0)
 	var bob := sin(t * 8.0) * 2.0 if state == "idle" and absf(vel.x) > 5.0 else 0.0
 	# robe of ink
@@ -398,12 +409,12 @@ func _draw_lancer(ci: CanvasItem, white: float, a: float) -> void:
 	ci.draw_line(hand - Vector2(30, -6), tip, _col(INK, 0.0, a), 5.0)
 	ci.draw_line(hand - Vector2(30, -6), tip, _col(Color("d8cbb0"), white, a), 2.5)
 	ci.draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(-12, -5), tip + Vector2(-12, 5)]), _col(Color("ffd23f"), white, a))
-	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
 func _draw_bat(ci: CanvasItem, white: float, a: float) -> void:
 	var flap := sin(t * (24.0 if state != "dive" else 8.0)) * 0.6
-	ci.draw_set_transform(pos, 0.0, Vector2((1.0 if vel.x >= 0.0 else -1.0) * _sc(), _sc()))
+	ci.draw_set_transform(pos + _o, 0.0, Vector2((1.0 if vel.x >= 0.0 else -1.0) * _sc(), _sc()))
 	for side in [-1.0, 1.0]:
 		ArenaArt.poly(ci, PackedVector2Array([Vector2(side * 8, -6), Vector2(side * 36, -14 - flap * 18.0), Vector2(side * 24, 8)]), _col(Color("3c2a4d"), white, a), 2.0)
 	# body: a folded comic page
@@ -412,13 +423,13 @@ func _draw_bat(ci: CanvasItem, white: float, a: float) -> void:
 	ci.draw_line(Vector2(-8, 2), Vector2(6, 2), _col(Color("c2a878"), 0.0, a), 2.0)
 	ci.draw_circle(Vector2(-4, -8), 3.0, _col(Color("e63946"), 0.0, a))
 	ci.draw_circle(Vector2(5, -8), 3.0, _col(Color("e63946"), 0.0, a))
-	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
 func _draw_bomb(ci: CanvasItem, white: float, a: float) -> void:
 	var blink := state == "fuse" and int(st * 12.0) % 2 == 0
 	var real := pos
-	ci.draw_set_transform(pos, 0.0, Vector2(_sc(), _sc()))
+	ci.draw_set_transform(pos + _o, 0.0, Vector2(_sc(), _sc()))
 	pos = Vector2.ZERO
 	ci.draw_circle(pos, 17.0, _col(INK, 0.0, a))
 	ci.draw_circle(pos, 14.0, _col(Color("e63946") if blink else Color("2b2d42"), white, a))
@@ -428,11 +439,11 @@ func _draw_bomb(ci: CanvasItem, white: float, a: float) -> void:
 	ci.draw_circle(pos + Vector2(-5, 1), 2.5, _col(Color.WHITE, 0.0, a))
 	ci.draw_circle(pos + Vector2(4, 1), 2.5, _col(Color.WHITE, 0.0, a))
 	pos = real
-	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
 func _draw_brute(ci: CanvasItem, white: float, a: float) -> void:
-	ci.draw_set_transform(pos, 0.0, Vector2(dir * _sc(), _sc()))
+	ci.draw_set_transform(pos + _o, 0.0, Vector2(dir * _sc(), _sc()))
 	var shell := _col(Color("b5512f"), white, a)
 	# little legs
 	for k in 3:
@@ -458,13 +469,13 @@ func _draw_brute(ci: CanvasItem, white: float, a: float) -> void:
 	var head := hand + Vector2.from_angle(swing) * 70.0
 	ci.draw_line(hand, head, _col(INK, 0.0, a), 8.0)
 	ci.draw_line(hand, head, _col(Color("6b4226"), white, a), 4.0)
-	ci.draw_set_transform(pos + head * Vector2(dir, 1.0) * _sc(), swing * dir, Vector2(dir * _sc(), _sc()))
+	ci.draw_set_transform(pos + _o + head * Vector2(dir, 1.0) * _sc(), swing * dir, Vector2(dir * _sc(), _sc()))
 	ArenaArt.poly(ci, PackedVector2Array([Vector2(-14, -22), Vector2(14, -22), Vector2(14, 22), Vector2(-14, 22)]), _col(Color("c9a227"), white, a), 3.0)
-	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
 func _draw_baron(ci: CanvasItem, white: float, a: float) -> void:
-	ci.draw_set_transform(pos, 0.0, Vector2(dir, 1.0))
+	ci.draw_set_transform(pos + _o, 0.0, Vector2(dir, 1.0))
 	var wind := state in ["sweep", "lob", "summon"] and st < 0.75
 	var bob := sin(t * 4.0) * 3.0
 	# coat tails and legs
@@ -492,18 +503,18 @@ func _draw_baron(ci: CanvasItem, white: float, a: float) -> void:
 		var sx := -10.0 + k * 5.0
 		ci.draw_line(h + Vector2(sx + 2, 14), h + Vector2(sx + 2, 22), _col(INK, 0.0, a), 2.0)
 	# crooked top hat
-	ci.draw_set_transform(pos + Vector2(dir * 10.0, -200 + bob), -0.2 * dir, Vector2(dir, 1.0))
+	ci.draw_set_transform(pos + _o + Vector2(dir * 10.0, -200 + bob), -0.2 * dir, Vector2(dir, 1.0))
 	ArenaArt.poly(ci, PackedVector2Array([Vector2(-34, 0), Vector2(34, 0), Vector2(34, -8), Vector2(-34, -8)]), _col(INK, 0.0, a), 2.0)
 	ArenaArt.poly(ci, PackedVector2Array([Vector2(-20, -8), Vector2(20, -8), Vector2(18, -54), Vector2(-18, -54)]), _col(Color("1b1b22"), white, a), 3.0)
 	ci.draw_rect(Rect2(Vector2(-20, -20), Vector2(40, 7)), _col(Color("b5172a"), white, a))
 	# the cane
-	ci.draw_set_transform(pos, 0.0, Vector2(dir, 1.0))
+	ci.draw_set_transform(pos + _o, 0.0, Vector2(dir, 1.0))
 	var hand := Vector2(56, -110 + bob)
 	var tip := hand + (Vector2(10, -90) if wind else Vector2(30, 104))
 	ci.draw_line(hand, tip, _col(INK, 0.0, a), 9.0)
 	ci.draw_line(hand, tip, _col(Color("2b1d14"), white, a), 5.0)
 	ci.draw_circle(hand + (tip - hand).normalized() * -6.0, 9.0, _col(Color("ffd23f"), white, a))
-	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
 func _draw_narrator(ci: CanvasItem, white: float, a: float, time: float) -> void:

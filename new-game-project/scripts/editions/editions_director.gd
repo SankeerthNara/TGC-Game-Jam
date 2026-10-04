@@ -146,14 +146,101 @@ func _twist_two() -> void:
 
 func start_2k() -> void:
 	act = "2k"
+	main._set_state("boss")
+	comms.say("The villain's tower. A library first, then his opera. Your friends are close, hero. I can feel it.", "narrator", 2.0)
+	var b := _arena("hall")
+	b.level_width = 3840.0
+	b.arena_x = 3200.0
+	b.platforms = [Rect2(620, 470, 220, 20), Rect2(980, 380, 200, 20), Rect2(1360, 470, 240, 20), Rect2(1800, 420, 220, 20), Rect2(2200, 330, 200, 20), Rect2(2540, 450, 240, 20)]
+	b.roamers = [["lancer", Vector2(1100, 600)], ["bat", Vector2(1500, 260)], ["lancer", Vector2(2000, 600)], ["bat", Vector2(2400, 220)], ["lancer", Vector2(2700, 600)]]
+	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AL", 2.0], ["bat", "AR", 3.5], ["lancer", "C", 5.0]]]]
+	b.win_text = "THE HALL IS CLEAR!"
+	b.intro_lines = ["The deluxe edition. Light blade ready.", "X slash (+UP / +DOWN in the air)   C dash   V LIGHT BLADE   F heal"]
+	_launch(b)
+	b.finished.connect(func(result: String) -> void:
+		_end_fight(b)
+		if result == "win":
+			comms.say("Beautiful! Through those doors: his opera house. Stay sharp.", "narrator", 1.5)
+			_later(2.6, _opera)
+		else:
+			_later(1.0, start_2k))
+
+
+func _opera() -> void:
+	var b := _arena("opera")
+	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.3], ["bat", "AC", 3.0], ["lancer", "C", 6.0]],
+		[["brute", "C", 0.0], ["bat", "AL", 3.0], ["bomb", "AR", 5.0], ["lancer", "L", 7.0], ["lancer", "R", 9.0]]]]
+	b.win_text = "ENCORE!"
+	b.intro_lines = ["The masked villain's opera. His choir is waiting.", "Two waves, then... him."]
+	_launch(b)
+	comms.say("The masked villain is close. Clear his choir and he'll have to show himself!", "narrator", 2.0)
+	b.finished.connect(func(result: String) -> void:
+		_end_fight(b)
+		if result == "win":
+			_reveal()
+		else:
+			_later(1.0, _opera))
+
+
+## The comms machine dies... and the masked villain steps out.
+func _reveal() -> void:
 	main._set_state("cutscene")
-	var card := EditionCard.new()
-	card.title = "2K EDITION"
-	card.lines = ["The library hall and the opera arena are being built.", "Press Z for the final battle."]
-	main._task_layer.add_child(card)
-	card.done.connect(func() -> void:
-		card.queue_free()
-		main._start_boss())
+	comms.say("Hero, wait... something's wrong with the sig-", "narrator", 0.5)
+	_later(2.0, comms.kill_signal)
+	_later(7.5, func() -> void:
+		main._play_cutscene("reveal", _final_boss))
+
+
+func _final_boss() -> void:
+	var b := _arena("dark")
+	b.caged_heroes = true
+	b.waves = [[[["narrator", "BALCONY", 0.0]]]]
+	b.boss_name = "THE NARRATOR"
+	b.boss_hp_scale = 1.6
+	b.win_text = ""
+	b.intro_lines = ["The Narrator. The one who guided you all along.", "Free the three heroes. V LIGHT BLADE, F heal."]
+	_launch(b)
+	comms.say("I wrote every page of you, hero. Even this one.", "narrator_evil", 2.0)
+	b.finished.connect(func(result: String) -> void:
+		_end_fight(b)
+		if result == "win":
+			_finale()
+		else:
+			comms.say("Again? I have all the time in the world.", "narrator_evil", 1.5)
+			_later(1.8, _final_boss))
+
+
+## The player drags the brightness to 100%: sunlight, the ending, the book closes.
+func _finale() -> void:
+	main._set_state("cutscene")
+	comms.say("Reader... you wouldn't.", "narrator_evil", 1.0)
+	var f := BrightnessFinale.new()
+	main.add_child(f)
+	f.finished.connect(func() -> void:
+		main._play_cutscene("ending_editions", func() -> void: main._final_screen(true)))
+
+
+func _arena(stage: String) -> BossFight:
+	main._set_state("boss")
+	var b := BossFight.new()
+	b.stage = stage
+	b.heroes = [0]
+	b.relay = false
+	b.friends_revealed = main.friends_revealed
+	b.friends_killed = main.friends_killed
+	b.bomb_left = -1.0
+	return b
+
+
+## Adds a configured fight to the screen.
+func _launch(b: BossFight) -> void:
+	main._overlay = b
+	main._task_layer.add_child(b)
+
+
+func _end_fight(b: BossFight) -> void:
+	b.queue_free()
+	main._overlay = null
 
 
 # --- helpers -------------------------------------------------------------------------------

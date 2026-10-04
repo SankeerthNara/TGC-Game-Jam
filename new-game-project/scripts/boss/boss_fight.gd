@@ -49,6 +49,19 @@ var intro_lines: Array = [] ## replaces the round card text when set
 var win_text := "SOLAR FLARE!"
 var boss_name := "THE NARRATOR"
 var boss_hp_scale := 1.0
+## Levels (the editions' 2k act): stage art, a wide scrolling level with ledges, pre-placed roamers,
+## and the x where the locked fight begins.
+var stage := "opera" ## opera | hall | dark
+var level_width := 1280.0
+var platforms: Array[Rect2] = []
+var roamers: Array = [] ## [kind, Vector2]
+var arena_x := 0.0
+var caged_heroes := false ## the three captured heroes hang in cages (the final stage)
+var _cam := 0.0
+var _lock_l := LEFT_X
+var _lock_r := RIGHT_X
+var _exploring := false
+var _bg := {}
 const POWER_BY_KIND := {0: "LIGHT BLADE", 1: "DEDUCTION", 2: "LIGHT DASH", 3: "PRISM CANNON"}
 const POWER_TEXT_BY_KIND := {0: "a huge arc of light that cuts everything in front of you", 1: "slows every enemy for 4 seconds", 2: "a dash that cuts through every enemy in the way", 3: "a beam of light across the whole stage"}
 
@@ -105,6 +118,13 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_ALL
 	grab_focus()
+	for key in ["hall_far", "hall_mid", "hall_near", "arena_far", "arena_mid", "arena_near", "arena_dark"]:
+		for ext in [".jpg", ".png"]:
+			var path: String = "res://assets/editions/2k/" + key + ext
+			if ResourceLoader.exists(path):
+				_bg[key] = load(path)
+	if stage == "opera" or stage == "dark":
+		platforms.append(ArenaArt.PODIUM)
 	for i in 50:
 		_paper.append(Vector3(randf() * 1280.0, randf() * 720.0, randf()))
 	_begin_round(0)
@@ -129,6 +149,18 @@ func _total_waves() -> int:
 	for r: Array in waves:
 		n += r.size()
 	return n
+
+
+func bound_l() -> float:
+	return 40.0 if _exploring else _lock_l
+
+
+func bound_r() -> float:
+	return level_width - 40.0 if _exploring else _lock_r
+
+
+func center_x() -> float:
+	return (_lock_l + _lock_r) * 0.5
 
 
 func hero_center() -> Vector2:
@@ -166,8 +198,8 @@ func explode(p: Vector2, r: float) -> void:
 
 func ink_rain(n: int) -> void:
 	for k in n:
-		_drops.append({"x": randf_range(LEFT_X + 30.0, RIGHT_X - 30.0), "y": -40.0, "warn": 0.8 + k * 0.12})
-	var aim := clampf(hero_pos.x, LEFT_X + 30.0, RIGHT_X - 30.0)
+		_drops.append({"x": randf_range(_lock_l + 30.0, _lock_r - 30.0), "y": -40.0, "warn": 0.8 + k * 0.12})
+	var aim := clampf(hero_pos.x, _lock_l + 30.0, _lock_r - 30.0)
 	_drops.append({"x": aim, "y": -40.0, "warn": 0.9})
 
 
@@ -178,7 +210,8 @@ func _begin_round(r: int) -> void:
 	_wave = 0
 	_phase = "round_intro"
 	_pt = 0.0
-	hero_pos = Vector2(640, FLOOR_Y)
+	_exploring = level_width > 1280.0
+	hero_pos = Vector2(200 if _exploring else 640, FLOOR_Y)
 	_vel = Vector2.ZERO
 	_hp = MAX_HP
 	_ink = 3
@@ -191,6 +224,11 @@ func _begin_round(r: int) -> void:
 	_drops.clear()
 	_beams.clear()
 	intensity = 0
+	if _exploring:
+		for rm: Array in roamers:
+			var e := ArenaEnemy.new(String(rm[0]), rm[1])
+			e.state = "hover" if e.flying() else "idle"
+			_enemies.append(e)
 
 
 func _begin_wave() -> void:
@@ -209,19 +247,19 @@ func _start_spawns() -> void:
 		var p := Vector2(640, FLOOR_Y)
 		match where:
 			"L":
-				p = Vector2(220, FLOOR_Y)
+				p = Vector2(_lock_l + 110.0, FLOOR_Y)
 			"R":
-				p = Vector2(1060, FLOOR_Y)
+				p = Vector2(_lock_r - 110.0, FLOOR_Y)
 			"C":
-				p = Vector2(640, FLOOR_Y)
+				p = Vector2(center_x(), FLOOR_Y)
 			"AL":
-				p = Vector2(260, 220)
+				p = Vector2(_lock_l + 150.0, 220)
 			"AR":
-				p = Vector2(1020, 220)
+				p = Vector2(_lock_r - 150.0, 220)
 			"AC":
-				p = Vector2(640, 180)
+				p = Vector2(center_x(), 180)
 			"BALCONY":
-				p = Vector2(640, 150)
+				p = Vector2(center_x(), 150)
 		_pending.append({"kind": kind, "pos": p, "delay": float(s[2]), "mark": 0.7})
 	intensity = 3 if _last_wave() else (2 if _round >= 1 or _wave >= 1 else 1)
 
@@ -278,6 +316,19 @@ func _process(delta: float) -> void:
 			_gate = move_toward(_gate, 0.0, delta * 2.0)
 			if _pt > 3.4:
 				_gate = 0.0
+				if _exploring:
+					_phase = "explore"
+					_pt = 0.0
+				else:
+					_begin_wave()
+		"explore":
+			_update_hero(delta)
+			_update_world(delta)
+			if hero_pos.x > arena_x:
+				# the doors slam: a locked fight, like the video
+				_exploring = false
+				_lock_l = arena_x - 530.0
+				_lock_r = arena_x + 530.0
 				_begin_wave()
 		"wave_intro":
 			_gate = move_toward(_gate, 1.0, delta * 2.5)
@@ -366,17 +417,20 @@ func _update_hero(delta: float) -> void:
 		EventBus.sound_requested.emit("hero_jump")
 	var prev_y := hero_pos.y
 	hero_pos += _vel * delta
-	hero_pos.x = clampf(hero_pos.x, LEFT_X, RIGHT_X)
+	hero_pos.x = clampf(hero_pos.x, bound_l(), bound_r())
 	_ground = false
 	if hero_pos.y >= FLOOR_Y:
 		hero_pos.y = FLOOR_Y
 		_vel.y = 0.0
 		_ground = true
-	var rim := ArenaArt.PODIUM
-	if _vel.y >= 0.0 and prev_y <= rim.position.y + 1.0 and hero_pos.y >= rim.position.y and hero_pos.x > rim.position.x and hero_pos.x < rim.end.x and not Input.is_key_pressed(KEY_DOWN):
-		hero_pos.y = rim.position.y
-		_vel.y = 0.0
-		_ground = true
+	for rim in platforms:
+		if _vel.y >= 0.0 and prev_y <= rim.position.y + 1.0 and hero_pos.y >= rim.position.y and hero_pos.x > rim.position.x and hero_pos.x < rim.end.x and not Input.is_key_pressed(KEY_DOWN):
+			hero_pos.y = rim.position.y
+			_vel.y = 0.0
+			_ground = true
+	# the camera follows in wide levels and frames the locked fight
+	var cam_target := clampf(hero_pos.x - 560.0, 0.0, level_width - 1280.0) if _exploring else clampf(center_x() - 640.0, 0.0, maxf(0.0, level_width - 1280.0))
+	_cam = lerpf(_cam, cam_target, minf(1.0, delta * 5.0))
 	# the slash hits during its first frames
 	if _atk_t > 0.12:
 		var box := _attack_box()
@@ -432,7 +486,7 @@ func _kill_fx(e: ArenaEnemy) -> void:
 
 
 func _hurt(from_x: float) -> void:
-	if _invuln > 0.0 or _dash_t > 0.0 or not _phase in ["wave", "wave_intro"]:
+	if _invuln > 0.0 or _dash_t > 0.0 or not _phase in ["wave", "wave_intro", "explore"]:
 		return
 	_hp -= 1
 	_invuln = 1.3
@@ -458,7 +512,7 @@ func _hurt(from_x: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or event.echo:
 		return
-	if not _phase in ["wave", "wave_intro"]:
+	if not _phase in ["wave", "wave_intro", "explore"]:
 		return
 	if not event.pressed:
 		if event.keycode in [KEY_Z, KEY_SPACE] and _vel.y < -300.0:
@@ -529,7 +583,7 @@ func _power() -> void:
 		2:
 			var y := hero_center().y
 			var x0 := hero_pos.x
-			var x1 := RIGHT_X + 120.0 if _face > 0.0 else LEFT_X - 120.0
+			var x1 := _lock_r + 120.0 if _face > 0.0 else _lock_l - 120.0
 			_beams.append({"from": Vector2(x0, y), "to": Vector2(x1, y), "t": 0.35})
 			var band := Rect2(Vector2(minf(x0, x1), y - 40.0), Vector2(absf(x1 - x0), 80.0))
 			for e in _enemies:
@@ -589,7 +643,7 @@ func _update_world(delta: float) -> void:
 		w["life"] = float(w["life"]) - et
 		if absf(float(w["x"]) - hero_pos.x) < 26.0 and hero_pos.y > FLOOR_Y - 40.0:
 			_hurt(float(w["x"]) - float(w["dir"]) * 10.0)
-	_waves = _waves.filter(func(w: Dictionary) -> bool: return float(w["life"]) > 0.0 and float(w["x"]) > LEFT_X - 40.0 and float(w["x"]) < RIGHT_X + 40.0)
+	_waves = _waves.filter(func(w: Dictionary) -> bool: return float(w["life"]) > 0.0 and float(w["x"]) > bound_l() - 40.0 and float(w["x"]) < bound_r() + 40.0)
 	for d in _drops:
 		if float(d["warn"]) > 0.0:
 			d["warn"] = float(d["warn"]) - et
@@ -619,19 +673,58 @@ func _say(text: String, at: Vector2, col: Color, fs := 44) -> void:
 
 # --- drawing ---------------------------------------------------------------------------------
 
+func _bg_layer(key: String, par: float, off: Vector2) -> bool:
+	if not _bg.has(key):
+		return false
+	var tex: Texture2D = _bg[key]
+	var sc := 720.0 / tex.get_height()
+	var w := tex.get_width() * sc
+	var x := -_cam * par + off.x
+	if w <= 1281.0:
+		draw_texture_rect(tex, Rect2(Vector2(off.x * 0.5, off.y * 0.5), Vector2(1280, 720)), false)
+		return true
+	x = -fposmod(_cam * par, maxf(w - 1280.0, 1.0)) if par < 1.0 else -_cam * par
+	draw_texture_rect(tex, Rect2(Vector2(x, 0) + off, Vector2(w, 720)), false)
+	return true
+
+
 func _draw() -> void:
-	var off := Vector2(randf_range(-_shake, _shake), randf_range(-_shake, _shake)) if _shake > 0.0 else Vector2.ZERO
-	draw_set_transform(off)
+	var shake_off := Vector2(randf_range(-_shake, _shake), randf_range(-_shake, _shake)) if _shake > 0.0 else Vector2.ZERO
+	var off := shake_off - Vector2(_cam, 0)
+	draw_set_transform(shake_off)
 	var glow := 1.0 + 0.15 * sin(_t * 1.3) + (0.3 if intensity >= 3 else 0.0)
-	ArenaArt.stage_back(self, size, _t, glow)
+	var art := false
+	match stage:
+		"hall":
+			art = _bg_layer("hall_far", 0.0, shake_off)
+			if art:
+				_bg_layer("hall_mid", 0.45, shake_off)
+		"dark":
+			art = _bg_layer("arena_dark", 0.0, shake_off)
+			if art:
+				_bg_layer("arena_mid", 0.0, shake_off)
+		_:
+			art = _bg_layer("arena_far", 0.0, shake_off)
+			if art:
+				_bg_layer("arena_mid", 0.0, shake_off)
+	if not art:
+		ArenaArt.stage_back(self, size, _t, glow)
 	draw_set_transform(off)
-	_draw_balcony()
-	ArenaArt.stage_floor(self, size)
+	if stage == "opera" and _narrator == null:
+		draw_set_transform(shake_off)
+		_draw_balcony()
+		draw_set_transform(off)
+	if stage == "dark" and caged_heroes:
+		_draw_cages(off)
+	if stage == "hall":
+		_draw_hall_floor(off)
+	elif not art:
+		ArenaArt.stage_floor(self, size)
 	for c in _corpses:
 		_draw_corpse(c, off)
 	draw_set_transform(off)
-	ArenaArt.gate(self, LEFT_X - 34.0, _gate, _t)
-	ArenaArt.gate(self, RIGHT_X + 34.0, _gate, _t)
+	ArenaArt.gate(self, _lock_l - 34.0, _gate, _t)
+	ArenaArt.gate(self, _lock_r + 34.0, _gate, _t)
 	# spawn marks: ink splashes before an enemy drops in
 	for p in _pending:
 		if float(p["delay"]) <= 0.0:
@@ -656,7 +749,7 @@ func _draw() -> void:
 			draw_colored_polygon(PackedVector2Array([Vector2(dx, dy - 34), Vector2(dx + 14, dy), Vector2(dx, dy + 12), Vector2(dx - 14, dy)]), Color("3c096c"))
 			draw_line(Vector2(dx, dy - 80), Vector2(dx, dy - 34), Color(0.5, 0.2, 0.8, 0.4), 4.0)
 	for e in _enemies:
-		e.draw(self, _t)
+		e.draw(self, _t, off)
 		draw_set_transform(off)
 	_draw_hero(off)
 	draw_set_transform(off)
@@ -673,8 +766,15 @@ func _draw() -> void:
 		var py := fposmod(p.y + _t * (18.0 + p.z * 22.0), size.y)
 		draw_set_transform(Vector2(px, py) + off, _t * 2.0 + p.z * 6.0, Vector2.ONE)
 		draw_rect(Rect2(-3, -1.5, 6, 3), Color(1, 0.95, 0.85, 0.35 + 0.3 * p.z))
-	draw_set_transform(off)
-	ArenaArt.curtains(self, size, _t)
+	draw_set_transform(shake_off)
+	var near := false
+	match stage:
+		"hall":
+			near = _bg_layer("hall_near", 1.15, shake_off)
+		_:
+			near = _bg_layer("arena_near", 0.0, shake_off)
+	if not near:
+		ArenaArt.curtains(self, size, _t)
 	ArenaArt.foreground(self, size)
 	draw_set_transform(Vector2.ZERO)
 	if _slow > 0.0:
@@ -684,6 +784,8 @@ func _draw() -> void:
 	if _white > 0.0:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, 0.5 * _white))
 	_draw_hud()
+	if _phase == "explore" and _pt < 6.0:
+		ComicArt.shout(self, "GO  >>", Vector2(1100, 300), 48, GOLD, 10, 0.0)
 	match _phase:
 		"round_intro":
 			_draw_round_card()
@@ -699,6 +801,32 @@ func _draw() -> void:
 			ComicArt.shout(self, win_text, Vector2(640, 330), 96, GOLD, 14, -0.04)
 		"lost":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0.3, 0.02, 0.05, clampf(_pt * 0.5, 0.0, 0.85)))
+
+
+## The library hall's stone floor and ledges.
+func _draw_hall_floor(off: Vector2) -> void:
+	draw_set_transform(Vector2(0, off.y))
+	draw_rect(Rect2(0, FLOOR_Y, 1280, 120), Color("0e1416"))
+	draw_line(Vector2(0, FLOOR_Y), Vector2(1280, FLOOR_Y), Color("c79a55"), 3.0)
+	draw_set_transform(off)
+	for r in platforms:
+		var ledge := Rect2(r.position, Vector2(r.size.x, 22))
+		draw_rect(ledge.grow(3.0), Color("06090a"))
+		draw_rect(ledge, Color("23302f"))
+		draw_line(ledge.position, Vector2(ledge.end.x, ledge.position.y), Color(1, 0.8, 0.5, 0.7), 3.0)
+		for k in 3:
+			draw_line(Vector2(r.position.x + 12 + k * r.size.x / 3.0, r.position.y + 22), Vector2(r.position.x + 20 + k * r.size.x / 3.0, r.position.y + 60), Color("06090a"), 4.0)
+
+
+## The three captured heroes hanging in ink cages above the Narrator's stage.
+func _draw_cages(off: Vector2) -> void:
+	for i in 3:
+		var cx: float = [260.0, 640.0, 1020.0][i]
+		var cy := 170.0 + sin(_t * 1.5 + i) * 6.0
+		draw_line(Vector2(cx, 0), Vector2(cx, cy - 60), INK, 4.0)
+		ComicArt.hero_bust(self, i + 1, Vector2(cx, cy - 6), 0.26, "scared", _t)
+		ComicArt.cage(self, Vector2(cx, cy), 0.42)
+		draw_set_transform(off)
 
 
 func _global_wave() -> int:

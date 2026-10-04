@@ -16,6 +16,10 @@ static func pages(kind: String) -> Array:
 			return _ending_sun()
 		"book":
 			return _book()
+		"reveal":
+			return _reveal()
+		"ending_editions":
+			return _ending_editions()
 		"ending_lava":
 			return _ending_lava()
 	return []
@@ -208,4 +212,57 @@ static func _book() -> Array:
 			_say("Can you hear me, hero? I'm the Narrator. I'll guide you. Let's bring your friends home.", 1, 2.4, Vector2(0.5, 0.2), Vector2(0.62, 0.42), "narrator", 320.0)],
 		 "sfx": [_sfx("BZZT!", 1, 2.0, Vector2(0.8, 0.7), 46, Color("4cc9f0"), 0.1)],
 		 "hold": 2.2},
+	]
+
+
+## The comms die; the masked villain steps out and unmasks: it was the Narrator all along.
+static func _reveal() -> Array:
+	return [
+		{"panels": [
+			_p("op_comms", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("masked_closeup", 0.5, 0, 0.5, 1, 1.8, "right")],
+		 "text": [
+			_cap("The comms went dead.", 0, 0.2, "tl", 260.0),
+			_say("Lost your friendly voice, hero?", 1, 2.4, Vector2(0.35, 0.2), Vector2(0.45, 0.36), "narrator", 240.0)],
+		 "sfx": [_sfx("KZZZT!", 0, 0.6, Vector2(0.72, 0.62), 56, Color("4cc9f0"), 0.1)],
+		 "hold": 1.4},
+		{"panels": [
+			_p("unmask", 0, 0, 0.42, 1, 0.0, "left"),
+			_p("narrator_reveal", 0.42, 0, 0.58, 1, 1.4, "pop")],
+		 "text": [
+			_say("...that VOICE. It was YOU on the comms?!", 0, 0.3, Vector2(0.5, 0.12), Vector2(0.4, 0.3), "hero", 240.0, true),
+			_say("This is the perfect ending I've been waiting for all these years.", 1, 1.8, Vector2(0.78, 0.22), Vector2(0.6, 0.4), "narrator", 300.0),
+			_say("You fell into my trap perfectly.", 1, 4.4, Vector2(0.24, 0.78), Vector2(0.42, 0.62), "narrator", 260.0)],
+		 "sfx": [_sfx("RIIIP!", 0, 0.9, Vector2(0.7, 0.3), 60, Color("e63946"), 0.12)],
+		 "hold": 2.2},
+		{"panels": [_p("op_capture", 0, 0, 1, 1, 0.0, "fade")],
+		 "text": [
+			_cap("Above the stage hung the three captured heroes.", 0, 0.2, "tl", 380.0),
+			_say("Now watch me write THE END.", 0, 1.6, Vector2(0.78, 0.8), Vector2(0.95, 0.95), "narrator", 260.0)],
+		 "hold": 1.6},
+	]
+
+
+## The editions ending: sunlight, the Narrator's last words, the heroes together, the book closes.
+static func _ending_editions() -> Array:
+	return [
+		{"panels": [
+			_p("solar_flare", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("narrator_melt", 0.5, 0, 0.5, 1, 1.2, "right")],
+		 "text": [
+			_cap("Every hero's light, and the reader's hand, flooded the stage with sunlight.", 0, 0.2, "tl", 360.0),
+			_say("I guess this is how it was always meant to happen.", 1, 2.2, Vector2(0.5, 0.16), Vector2(0.5, 0.34), "narrator", 280.0)],
+		 "sfx": [_sfx("FWOOOSH!", 0, 0.8, Vector2(0.55, 0.82), 70, Color("ffb703"), -0.1)],
+		 "hold": 2.4},
+		{"panels": [
+			_p("op_heroes", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("earth_sunlit", 0.5, 0, 0.5, 1, 1.2, "fade")],
+		 "text": [
+			_cap("Four heroes, together again.", 0, 0.3, "tl", 300.0),
+			_cap("And light returned to the Earth, in every detail.", 1, 1.8, "br", 340.0)],
+		 "hold": 2.0},
+		{"panels": [_p("book_cover", 0, 0, 1, 1, 0.0, "fade")],
+		 "text": [_cap("The story was finally told the way it was always meant to be.", 0, 0.6, "bl", 420.0)],
+		 "sfx": [_sfx("THE END", 0, 1.6, Vector2(0.5, 0.45), 120, Color("ffd23f"), -0.03)],
+		 "hold": 3.0},
 	]
