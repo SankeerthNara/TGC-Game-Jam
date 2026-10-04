@@ -70,6 +70,9 @@ func _ready() -> void:
 	var music := MusicDirector.new()
 	music.main = self
 	add_child(music)
+	var sfx := SfxPlayer.new() # Codex's sound effects (listens to EventBus)
+	sfx.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(sfx)
 	_task_layer = CanvasLayer.new()
 	_task_layer.process_mode = Node.PROCESS_MODE_PAUSABLE
 	_task_layer.layer = 18

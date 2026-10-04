@@ -1,11 +1,13 @@
 class_name TaskHUD
 extends Control
-## Top-right: the task progress bar and the task checklist (Among Us style).
+## Slim comic-styled HUD: top masthead bar, mini task bar, collapsible checklist, big sabotage alert.
 
 const FONT_SHOUT := preload("res://assets/fonts/Bangers-Regular.ttf")
 const FONT_BODY := preload("res://assets/fonts/ComicNeue-Bold.ttf")
 const INK := Color("18151d")
+const PAPER := Color("fff3d1")
 const GOLD := Color("ffd23f")
+const RED := Color("e63946")
 
 var world: World
 var _shown := 0.0 ## animated fill so the bar glides
@@ -13,16 +15,52 @@ var _pulse := 0.0
 var _last_done := 0
 var list_open := true
 
+var _auto_collapse_timer := 0.0
+var _player_manually_toggled := false
+var _last_level_idx := -1
+
+var _task_bar_rect := Rect2(Vector2(930, 58), Vector2(330, 28))
+
 
 func _ready() -> void:
 	position = Vector2.ZERO
 	size = get_viewport_rect().size
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_PASS
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if _task_bar_rect.has_point(event.position):
+			list_open = not list_open
+			_player_manually_toggled = true
+			queue_redraw()
+			accept_event()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.is_pressed() and not event.is_echo():
+		if event.keycode == KEY_TAB:
+			list_open = not list_open
+			_player_manually_toggled = true
+			queue_redraw()
+			get_viewport().set_input_as_handled()
 
 
 func _process(delta: float) -> void:
 	if world == null or not visible:
 		return
+	if world.level_index != _last_level_idx:
+		_last_level_idx = world.level_index
+		_auto_collapse_timer = 0.0
+		_player_manually_toggled = false
+		list_open = true
+
+	if not _player_manually_toggled and list_open:
+		_auto_collapse_timer += delta
+		if _auto_collapse_timer >= 10.0:
+			list_open = false
+			queue_redraw()
+
 	var total := maxi(world.tasks.size(), 1)
 	var target := float(world.tasks_done.size()) / total
 	_shown = move_toward(_shown, target, delta * 0.45)
@@ -37,75 +75,136 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if world == null or not world.station_mode:
 		return
+	_draw_top_bar()
+	_draw_task_bar()
 	_draw_health_and_sabotage()
-	_draw_bomb()
+	_draw_ally_arrow()
+
+
+func _draw_top_bar() -> void:
+	var bar := Rect2(Vector2(20, 8), Vector2(1240, 44))
+	draw_rect(Rect2(bar.position + Vector2(3, 3), bar.size), Color(0, 0, 0, 0.45))
+	draw_rect(bar, INK)
+	draw_rect(bar, GOLD, false, 2.5)
+
+	# 1. Hearts
+	var hp_start_x := 36.0
+	for i in world.max_health:
+		_heart(Vector2(hp_start_x + i * 26, 30), 10.0, i < world.hp)
+
+	# 2. Bomb & Keys
+	var bomb_x := hp_start_x + world.max_health * 26 + 18.0
+	var left := world.bomb_left
+	var urgent := left < 60.0
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / (90.0 if urgent else 250.0))
+	var col_bomb := GOLD if urgent and pulse > 0.5 else (RED if urgent else PAPER)
+
+	var bc := Vector2(bomb_x + 10, 30)
+	draw_circle(bc, 9.5, Color("2b2d42"))
+	draw_circle(bc + Vector2(-3, -3), 3.0, Color(1, 1, 1, 0.35))
+	draw_line(bc + Vector2(6, -7), bc + Vector2(11, -13), Color("c9ada7"), 2.0)
+	draw_circle(bc + Vector2(12, -14), 2.5 + (1.5 * pulse if urgent else 0.0), GOLD)
+
+	var secs := int(ceil(left))
+	draw_string(FONT_SHOUT, Vector2(bomb_x + 28, 37), "BOMB %d:%02d" % [secs / 60, secs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, col_bomb)
+
+	var keys_x := bomb_x + 140.0
+	for i in world.level_count:
+		var k := Vector2(keys_x + i * 22, 30)
+		var col := GOLD if i < world.keys_found else Color(0.35, 0.35, 0.42)
+		draw_circle(k + Vector2(0, -4), 4.5, col)
+		draw_circle(k + Vector2(0, -4), 2.0, INK)
+		draw_line(k + Vector2(0, 0), k + Vector2(0, 10), col, 2.5)
+		draw_line(k + Vector2(0, 7), k + Vector2(4, 7), col, 2.5)
+
+	# 3. Level Name & Par / Time
+	var lvl_title := "LVL %d: %s" % [world.level_index + 1, world.level_title.to_upper()]
+	draw_string(FONT_SHOUT, Vector2(610, 36), lvl_title, HORIZONTAL_ALIGNMENT_LEFT, 230, 18, PAPER)
+
+	var over := world.level_par > 0 and world.level_time > world.level_par
+	var t_str := "%s / PAR %s" % [_fmt(world.level_time), _fmt(world.level_par)]
+	draw_string(FONT_SHOUT, Vector2(850, 36), t_str, HORIZONTAL_ALIGNMENT_LEFT, 130, 17, Color("ff8b8b") if over else Color("cfc9be"))
+
+	# 4. Score
+	draw_string(FONT_SHOUT, Vector2(1010, 37), "SCORE %d" % world.score_total, HORIZONTAL_ALIGNMENT_RIGHT, 230, 22, GOLD)
+
+
+func _draw_task_bar() -> void:
 	var total := world.tasks.size()
 	var done := world.tasks_done.size()
-	_draw_timers()
-	var box := Rect2(Vector2(900, 112), Vector2(350, 76))
-	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
+
+	# Slim floating task progress box
+	var box := _task_bar_rect
+	draw_rect(Rect2(box.position + Vector2(2, 2), box.size), Color(0, 0, 0, 0.35))
 	draw_rect(box, Color("fff9e6"))
-	draw_rect(box, INK, false, 4.0)
-	draw_string(FONT_SHOUT, box.position + Vector2(14, 28), "TOTAL TASKS COMPLETED", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, INK)
-	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 74, 28), "%d/%d" % [done, total], HORIZONTAL_ALIGNMENT_RIGHT, 60, 22, INK)
-	var bar := Rect2(box.position + Vector2(14, 40), Vector2(box.size.x - 28, 24))
-	draw_rect(bar, INK)
-	var inner := bar.grow(-4)
+	draw_rect(box, INK, false, 2.5)
+
+	draw_string(FONT_SHOUT, box.position + Vector2(10, 20), "TASKS %d/%d" % [done, total], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, INK)
+
+	var pbar := Rect2(box.position + Vector2(98, 6), Vector2(160, 16))
+	draw_rect(pbar, INK)
+	var inner := pbar.grow(-2)
 	var w := inner.size.x * clampf(_shown, 0.0, 1.0)
 	var col := Color("2dc653").lerp(Color("95d5b2"), _pulse)
 	draw_rect(Rect2(inner.position, Vector2(w, inner.size.y)), col)
-	draw_rect(Rect2(inner.position, Vector2(w, inner.size.y * 0.35)), Color(1, 1, 1, 0.25))
+	draw_rect(Rect2(inner.position, Vector2(w, inner.size.y * 0.35)), Color(1, 1, 1, 0.3))
 	for k in range(1, total):
 		var x := inner.position.x + inner.size.x * k / total
-		draw_line(Vector2(x, inner.position.y), Vector2(x, inner.end.y), Color(0, 0, 0, 0.35), 1.5)
-	_draw_ally_arrow()
+		draw_line(Vector2(x, inner.position.y), Vector2(x, inner.end.y), Color(0, 0, 0, 0.35), 1.0)
+
+	var toggle_hint := "[TAB] ^" if list_open else "[TAB] v"
+	draw_string(FONT_SHOUT, box.position + Vector2(264, 19), toggle_hint, HORIZONTAL_ALIGNMENT_CENTER, 60, 13, Color("4a4555"))
+
 	if not list_open:
 		return
+
 	var n := world.tasks.size()
-	var lh := 21.0
-	var lbox := Rect2(Vector2(900, 200), Vector2(350, 30 + n * lh))
-	draw_rect(Rect2(lbox.position + Vector2(4, 4), lbox.size), Color(0, 0, 0, 0.3))
-	draw_rect(lbox, Color(1, 0.98, 0.9, 0.9))
-	draw_rect(lbox, INK, false, 3.0)
-	draw_string(FONT_SHOUT, lbox.position + Vector2(12, 22), "TASKS  (M: map, F: give to friend)" if world.vampires.ally_index >= 0 else "TASKS  (M: map)", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, INK)
-	var y := lbox.position.y + 44.0
+	var lh := 20.0
+	var lbox := Rect2(Vector2(930, 90), Vector2(330, 26 + n * lh))
+	draw_rect(Rect2(lbox.position + Vector2(3, 3), lbox.size), Color(0, 0, 0, 0.3))
+	draw_rect(lbox, Color(1, 0.98, 0.9, 0.94))
+	draw_rect(lbox, INK, false, 2.5)
+
+	var friend_suffix := ", F: friend" if world.vampires.ally_index >= 0 else ""
+	var header_txt := "TASKS (TAB: hide, M: map" + friend_suffix + ")"
+	draw_string(FONT_SHOUT, lbox.position + Vector2(10, 18), header_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, INK)
+
+	var y := lbox.position.y + 36.0
 	for t: Dictionary in world.tasks:
 		var is_done := world.tasks_done.has(t["id"])
 		var c := Color("6c757d") if is_done else INK
-		draw_rect(Rect2(Vector2(lbox.position.x + 12, y - 13), Vector2(14, 14)), Color(1, 1, 1, 0.8))
-		draw_rect(Rect2(Vector2(lbox.position.x + 12, y - 13), Vector2(14, 14)), INK, false, 2.0)
+		draw_rect(Rect2(Vector2(lbox.position.x + 10, y - 11), Vector2(12, 12)), Color(1, 1, 1, 0.85))
+		draw_rect(Rect2(Vector2(lbox.position.x + 10, y - 11), Vector2(12, 12)), INK, false, 1.5)
 		if is_done:
-			draw_line(Vector2(lbox.position.x + 14, y - 6), Vector2(lbox.position.x + 18, y - 1), Color("2dc653"), 3.0)
-			draw_line(Vector2(lbox.position.x + 18, y - 1), Vector2(lbox.position.x + 26, y - 14), Color("2dc653"), 3.0)
+			draw_line(Vector2(lbox.position.x + 12, y - 5), Vector2(lbox.position.x + 15, y - 1), Color("2dc653"), 2.5)
+			draw_line(Vector2(lbox.position.x + 15, y - 1), Vector2(lbox.position.x + 21, y - 12), Color("2dc653"), 2.5)
 		var label := "%s: %s" % [t["room"], t["name"]]
 		var friend := not is_done and world.assigned.has(t["id"])
 		if friend:
 			var prog := world.vampires.work_progress() if world.assigned[0] == t["id"] else -1.0
 			label += "  [friend %d%%]" % int(prog * 100.0) if prog >= 0.0 else "  [friend]"
 			c = Color("1d7fa8")
-		draw_string(FONT_BODY, Vector2(lbox.position.x + 34, y), label, HORIZONTAL_ALIGNMENT_LEFT, 310, 15, c)
+		draw_string(FONT_BODY, Vector2(lbox.position.x + 28, y), label, HORIZONTAL_ALIGNMENT_LEFT, 290, 13, c)
 		y += lh
 
 
 func _heart(c: Vector2, r: float, filled: bool) -> void:
 	var pts := PackedVector2Array()
-	for k in 28:
-		var t := k / 28.0 * TAU
+	for k in 24:
+		var t := k / 24.0 * TAU
 		var x := 16.0 * pow(sin(t), 3.0)
 		var y := -(13.0 * cos(t) - 5.0 * cos(2.0 * t) - 2.0 * cos(3.0 * t) - cos(4.0 * t))
 		pts.append(c + Vector2(x, y) * r / 16.0)
 	if filled:
-		draw_colored_polygon(pts, Color("e63946"))
+		draw_colored_polygon(pts, RED)
 	else:
 		draw_colored_polygon(pts, Color(0.2, 0.2, 0.25, 0.7))
 	var closed := pts.duplicate()
 	closed.append(pts[0])
-	draw_polyline(closed, INK, 3.0)
+	draw_polyline(closed, INK, 2.5)
 
 
 func _draw_health_and_sabotage() -> void:
-	for i in world.max_health:
-		_heart(Vector2(52 + i * 52, 142), 20.0, i < world.hp)
 	if world.sabotage.is_empty():
 		return
 	var def: Dictionary = world.sabotage["def"]
@@ -118,20 +217,19 @@ func _draw_health_and_sabotage() -> void:
 	draw_rect(Rect2(0, 0, 14, vp.y), Color(1, 0.1, 0.1, a * 2.0))
 	draw_rect(Rect2(vp.x - 14, 0, 14, vp.y), Color(1, 0.1, 0.1, a * 2.0))
 	var fix: Dictionary = world.active_fix()
-	var box := Rect2(Vector2(30, 176), Vector2(560, 74))
+	var box := Rect2(Vector2(30, 64), Vector2(560, 74))
 	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
 	draw_rect(box, Color(0.55 + 0.35 * pulse, 0.05, 0.08))
 	draw_rect(box, INK, false, 4.0)
 	var tp := box.position + Vector2(34, 36)
-	draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -22), tp + Vector2(-24, 20), tp + Vector2(24, 20)]), Color("ffd23f"))
+	draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -22), tp + Vector2(-24, 20), tp + Vector2(24, 20)]), GOLD)
 	draw_polyline(PackedVector2Array([tp + Vector2(0, -22), tp + Vector2(-24, 20), tp + Vector2(24, 20), tp + Vector2(0, -22)]), INK, 3.0)
 	draw_line(tp + Vector2(0, -8), tp + Vector2(0, 6), INK, 4.0)
 	draw_circle(tp + Vector2(0, 13), 2.5, INK)
-	draw_string(FONT_SHOUT, box.position + Vector2(76, 32), "%s%s!" % ["BIG SABOTAGE: " if def.get("big", false) else "", def["name"]], HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("fff3d1"))
-	draw_string(FONT_BODY, box.position + Vector2(76, 60), "Fix: %s (%s)" % [fix.get("name", "?"), fix.get("room", "?")], HORIZONTAL_ALIGNMENT_LEFT, 360, 18, Color("fff3d1"))
+	draw_string(FONT_SHOUT, box.position + Vector2(76, 32), "%s%s!" % ["BIG SABOTAGE: " if def.get("big", false) else "", def["name"]], HORIZONTAL_ALIGNMENT_LEFT, -1, 30, PAPER)
+	draw_string(FONT_BODY, box.position + Vector2(76, 60), "Fix: %s (%s)" % [fix.get("name", "?"), fix.get("room", "?")], HORIZONTAL_ALIGNMENT_LEFT, 360, 18, PAPER)
 	var secs := int(ceil(left))
-	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 120, 52), "%d:%02d" % [secs / 60, secs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 48, Color("fff3d1") if left > 10.0 else Color("ffe066"))
-	# arrow around the hero pointing to the fix console
+	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 120, 52), "%d:%02d" % [secs / 60, secs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 48, PAPER if left > 10.0 else Color("ffe066"))
 	if fix.is_empty():
 		return
 	var to := Vector2(float(fix["x"]) + 0.5, float(fix["y"]) + 0.5) * World.TILE - world._foot
@@ -148,51 +246,20 @@ func _fmt(t: float) -> String:
 
 
 func _draw_timers() -> void:
-	var box := Rect2(Vector2(900, 20), Vector2(350, 84))
-	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
-	draw_rect(box, Color("18151d"))
-	draw_rect(box, Color("ffd23f"), false, 3.0)
-	draw_string(FONT_SHOUT, box.position + Vector2(12, 24), "LEVEL %d/%d" % [world.level_index + 1, world.level_count], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("ffd23f"))
-	var over := world.level_par > 0 and world.level_time > world.level_par
-	draw_string(FONT_SHOUT, box.position + Vector2(12, 45), "THIS LEVEL  %s / PAR %s" % [_fmt(world.level_time), _fmt(world.level_par)], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("ff8b8b") if over else Color("fff3d1"))
-	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 12 - 120, 45), "TOTAL %s" % _fmt(world.total_time), HORIZONTAL_ALIGNMENT_RIGHT, 120, 20, Color("fff3d1"))
-	draw_string(FONT_BODY, box.position + Vector2(box.size.x - 12 - 190, 22), world.level_title, HORIZONTAL_ALIGNMENT_RIGHT, 190, 15, Color("ffffff"))
-	draw_string(FONT_SHOUT, box.position + Vector2(12, 76), "SCORE  %d" % world.score_total, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("ffd23f"))
+	pass
 
 
-## The 17 minute bomb clock and the keys to the bomb room, next to the hearts.
 func _draw_bomb() -> void:
-	var box := Rect2(Vector2(300, 122), Vector2(290, 44))
-	var left := world.bomb_left
-	var urgent := left < 60.0
-	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / (90.0 if urgent else 250.0))
-	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
-	draw_rect(box, Color(0.45 + 0.4 * pulse, 0.04, 0.06) if urgent else INK)
-	draw_rect(box, Color("e63946"), false, 3.0)
-	var b := box.position + Vector2(24, 24)
-	draw_circle(b, 13.0, Color("2b2d42"))
-	draw_circle(b + Vector2(-4, -4), 4.0, Color(1, 1, 1, 0.35))
-	draw_line(b + Vector2(8, -10), b + Vector2(14, -18), Color("c9ada7"), 3.0)
-	draw_circle(b + Vector2(15, -19), 3.0 + 2.0 * pulse, Color("ffb703"))
-	var secs := int(ceil(left))
-	draw_string(FONT_SHOUT, box.position + Vector2(48, 34), "BOMB %d:%02d" % [secs / 60, secs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 30, GOLD if urgent and pulse > 0.5 else Color("fff3d1"))
-	for i in world.level_count:
-		var k := box.position + Vector2(190 + i * 24, 22)
-		var col := GOLD if i < world.keys_found else Color(0.35, 0.35, 0.42)
-		draw_circle(k + Vector2(0, -5), 6.0, col)
-		draw_circle(k + Vector2(0, -5), 2.5, INK)
-		draw_line(k + Vector2(0, 1), k + Vector2(0, 14), col, 3.0)
-		draw_line(k + Vector2(0, 10), k + Vector2(5, 10), col, 3.0)
+	pass
 
 
-## Once a friend has been revealed he points to the nearest unfinished task.
 func _draw_ally_arrow() -> void:
 	if world.vampires.ally_index < 0:
 		return
 	var best := Vector2.ZERO
 	var best_d := 1e9
 	for t: Dictionary in world.tasks:
-		if world.tasks_done.has(t["id"]):
+		if world.tasks_done.has(t["id"]) or (world.assigned.has(t["id"]) and world.assigned[0] == t["id"]):
 			continue
 		var p := Vector2(float(t["x"]) + 0.5, float(t["y"]) + 0.5) * World.TILE
 		var d := p.distance_to(world._foot)

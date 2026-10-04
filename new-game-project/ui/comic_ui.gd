@@ -15,22 +15,29 @@ const SFX_TWIST := preload("res://assets/audio/twist.wav")
 
 const TEX_BURST_TWIST := preload("res://assets/art/comic_burst_twist.png")
 const TEX_BURST_SOLVED := preload("res://assets/art/comic_burst_solved.png")
+const SHADER_COMIC_SCREEN := preload("res://assets/shaders/comic_screen.gdshader")
+const LEVEL_TRANSITION_SCENE := preload("res://ui/level_transition.gd")
 
 var _caption_label: Label
 var _level_label: Label
 var _moves_label: Label
 var _status_label: Label
 var _caption_box: PanelContainer
+var _caption_tween: Tween
 var _banner_rect: TextureRect
 var _pause_modal: Control
 var _hud_root: Control
 var _info_box: Control
 var _action_bar: Control
 var _end_modal: Control
+var _fx_layer: CanvasLayer
+var _fx_mat: ShaderMaterial
 
 var _audio_players: Dictionary = {}
 var _bgm: AudioStreamPlayer
 var _audio_muted := false
+var _music_muted := false
+var _sfx_muted := false
 
 var _current_level_idx := 0
 var _current_level_name := "Page"
@@ -38,6 +45,8 @@ var _current_level_name := "Page"
 
 func _ready() -> void:
 	layer = 10
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_setup_screen_fx()
 	_setup_audio()
 	_build_ui()
 	_connect_event_bus()
@@ -97,6 +106,9 @@ func _connect_event_bus() -> void:
 	eb.panel_swapped.connect(_on_panel_swapped)
 	eb.mirror_toggled.connect(_on_mirror_toggled)
 	eb.game_state_changed.connect(_on_game_state_changed)
+	eb.sabotage_failed.connect(_on_sabotage_failed)
+	eb.player_died.connect(_on_player_died)
+	eb.level_started.connect(_on_level_started)
 
 
 func _build_ui() -> void:
@@ -107,43 +119,45 @@ func _build_ui() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 
-	# --- TOP BAR: Caption Box ---
+	# --- CAPTION BOX: Compact comic narration banner at bottom-center ---
 	_caption_box = PanelContainer.new()
-	_caption_box.position = Vector2(30, 20)
-	_caption_box.custom_minimum_size = Vector2(860, 95)
+	_caption_box.position = Vector2((1280 - 640) * 0.5, 650)
+	_caption_box.custom_minimum_size = Vector2(640, 50)
+	_caption_box.visible = false
 	
 	var box_style := StyleBoxFlat.new()
 	box_style.bg_color = Color("fff9e6") # Pale vintage paper
-	box_style.border_width_bottom = 4
-	box_style.border_width_left = 4
-	box_style.border_width_right = 4
-	box_style.border_width_top = 4
+	box_style.border_width_bottom = 3
+	box_style.border_width_left = 3
+	box_style.border_width_right = 3
+	box_style.border_width_top = 3
 	box_style.border_color = Color("18151d") # Ink black
-	box_style.shadow_color = Color(0, 0, 0, 0.4)
-	box_style.shadow_size = 4
-	box_style.shadow_offset = Vector2(4, 4)
-	box_style.content_margin_left = 16
-	box_style.content_margin_right = 16
-	box_style.content_margin_top = 10
-	box_style.content_margin_bottom = 10
+	box_style.shadow_color = Color(0, 0, 0, 0.35)
+	box_style.shadow_size = 3
+	box_style.shadow_offset = Vector2(3, 3)
+	box_style.content_margin_left = 12
+	box_style.content_margin_right = 12
+	box_style.content_margin_top = 4
+	box_style.content_margin_bottom = 4
 	_caption_box.add_theme_stylebox_override("panel", box_style)
 	root.add_child(_caption_box)
 
 	var caption_vbox := VBoxContainer.new()
+	caption_vbox.add_theme_constant_override("separation", 2)
 	_caption_box.add_child(caption_vbox)
 
 	var tag := Label.new()
 	tag.text = "✦ NARRATION ✦"
 	tag.add_theme_font_override("font", FONT_TITLE)
-	tag.add_theme_font_size_override("font_size", 14)
-	tag.add_theme_color_override("font_color", Color("e63946")) # Punch red tag
+	tag.add_theme_font_size_override("font_size", 12)
+	tag.add_theme_color_override("font_color", Color("e63946"))
 	caption_vbox.add_child(tag)
 
 	_caption_label = Label.new()
-	_caption_label.text = "Loading comic issue..."
+	_caption_label.text = ""
 	_caption_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_caption_label.add_theme_font_override("font", FONT_BODY)
-	_caption_label.add_theme_font_size_override("font_size", 18)
+	_caption_label.add_theme_font_size_override("font_size", 15)
 	_caption_label.add_theme_color_override("font_color", Color("18151d"))
 	caption_vbox.add_child(_caption_label)
 
@@ -274,64 +288,193 @@ func _make_comic_button(title: String) -> Button:
 func _build_pause_modal(parent: Control) -> void:
 	_pause_modal = Control.new()
 	_pause_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pause_modal.process_mode = Node.PROCESS_MODE_ALWAYS
 	_pause_modal.visible = false
 	parent.add_child(_pause_modal)
 
 	var dim := ColorRect.new()
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.color = Color(0, 0, 0, 0.65)
+	dim.color = Color(0, 0, 0, 0.7)
 	_pause_modal.add_child(dim)
 
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(400, 320)
-	panel.position = Vector2((1280 - 400) * 0.5, (720 - 320) * 0.5)
-	
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color("fff9e6")
-	sb.border_width_bottom = 5
-	sb.border_width_left = 5
-	sb.border_width_right = 5
-	sb.border_width_top = 5
-	sb.border_color = Color("18151d")
-	sb.shadow_size = 8
-	sb.shadow_offset = Vector2(6, 6)
-	sb.content_margin_left = 30
-	sb.content_margin_right = 30
-	sb.content_margin_top = 25
-	sb.content_margin_bottom = 25
-	panel.add_theme_stylebox_override("panel", sb)
-	_pause_modal.add_child(panel)
+	# Main container: side-by-side menu and controls in comic book spread style
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 24)
+	hbox.position = Vector2((1280 - 780) * 0.5, (720 - 460) * 0.5)
+	hbox.custom_minimum_size = Vector2(780, 460)
+	_pause_modal.add_child(hbox)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 15)
-	panel.add_child(vbox)
+	# --- LEFT PANEL: Menu Buttons ---
+	var menu_panel := PanelContainer.new()
+	menu_panel.custom_minimum_size = Vector2(340, 460)
+	var sb_menu := StyleBoxFlat.new()
+	sb_menu.bg_color = Color("fff9e6")
+	sb_menu.border_width_bottom = 4
+	sb_menu.border_width_left = 4
+	sb_menu.border_width_right = 4
+	sb_menu.border_width_top = 4
+	sb_menu.border_color = Color("18151d")
+	sb_menu.shadow_size = 6
+	sb_menu.shadow_offset = Vector2(5, 5)
+	sb_menu.content_margin_left = 24
+	sb_menu.content_margin_right = 24
+	sb_menu.content_margin_top = 20
+	sb_menu.content_margin_bottom = 20
+	menu_panel.add_theme_stylebox_override("panel", sb_menu)
+	hbox.add_child(menu_panel)
+
+	var menu_vbox := VBoxContainer.new()
+	menu_vbox.add_theme_constant_override("separation", 12)
+	menu_panel.add_child(menu_vbox)
 
 	var title := Label.new()
 	title.text = "PAUSED"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
-	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_font_size_override("font_size", 38)
 	title.add_theme_color_override("font_color", Color("18151d"))
-	vbox.add_child(title)
+	menu_vbox.add_child(title)
+
+	var sub := Label.new()
+	sub.text = "ISSUE FROZEN IN TIME"
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_override("font", FONT_BODY)
+	sub.add_theme_font_size_override("font_size", 13)
+	sub.add_theme_color_override("font_color", Color("6c757d"))
+	menu_vbox.add_child(sub)
 
 	var btn_resume := _make_comic_button("RESUME")
-	btn_resume.custom_minimum_size = Vector2(0, 44)
+	btn_resume.custom_minimum_size = Vector2(0, 42)
 	btn_resume.pressed.connect(func() -> void: _request("request_pause", [false]))
-	vbox.add_child(btn_resume)
+	menu_vbox.add_child(btn_resume)
+
+	var btn_music := _make_comic_button("MUSIC: ON")
+	btn_music.custom_minimum_size = Vector2(0, 42)
+	btn_music.pressed.connect(func() -> void:
+		_music_muted = not _music_muted
+		get_tree().call_group("music", "set_muted", _music_muted)
+		btn_music.text = "MUSIC: %s" % ("OFF" if _music_muted else "ON"))
+	menu_vbox.add_child(btn_music)
+
+	var btn_sfx := _make_comic_button("SFX: ON")
+	btn_sfx.custom_minimum_size = Vector2(0, 42)
+	btn_sfx.pressed.connect(func() -> void:
+		_sfx_muted = not _sfx_muted
+		get_tree().call_group("sfx", "set_muted", _sfx_muted)
+		_audio_muted = _sfx_muted
+		btn_sfx.text = "SFX: %s" % ("OFF" if _sfx_muted else "ON"))
+	menu_vbox.add_child(btn_sfx)
 
 	var btn_restart := _make_comic_button("RESTART LEVEL")
-	btn_restart.custom_minimum_size = Vector2(0, 44)
+	btn_restart.custom_minimum_size = Vector2(0, 42)
 	btn_restart.pressed.connect(func() -> void:
 		_request("request_pause", [false])
 		_request("request_restart_level"))
-	vbox.add_child(btn_restart)
+	menu_vbox.add_child(btn_restart)
 
-	var btn_mute := _make_comic_button("TOGGLE SOUND")
-	btn_mute.custom_minimum_size = Vector2(0, 44)
-	btn_mute.pressed.connect(func() -> void:
-		_audio_muted = not _audio_muted
-		get_tree().call_group("music", "set_muted", _audio_muted))
-	vbox.add_child(btn_mute)
+	var btn_quit := _make_comic_button("QUIT TO MENU")
+	btn_quit.custom_minimum_size = Vector2(0, 42)
+	var sb_quit := btn_quit.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
+	sb_quit.bg_color = Color("e63946")
+	btn_quit.add_theme_stylebox_override("normal", sb_quit)
+	btn_quit.add_theme_color_override("font_color", Color("fff3d1"))
+	btn_quit.pressed.connect(func() -> void:
+		_request("request_pause", [false])
+		_request("request_quit_to_menu"))
+	menu_vbox.add_child(btn_quit)
+
+	# --- RIGHT PANEL: Controls Guide ---
+	var ctrl_panel := PanelContainer.new()
+	ctrl_panel.custom_minimum_size = Vector2(410, 460)
+	var sb_ctrl := StyleBoxFlat.new()
+	sb_ctrl.bg_color = Color("fff3d1")
+	sb_ctrl.border_width_bottom = 4
+	sb_ctrl.border_width_left = 4
+	sb_ctrl.border_width_right = 4
+	sb_ctrl.border_width_top = 4
+	sb_ctrl.border_color = Color("18151d")
+	sb_ctrl.shadow_size = 6
+	sb_ctrl.shadow_offset = Vector2(5, 5)
+	sb_ctrl.content_margin_left = 22
+	sb_ctrl.content_margin_right = 22
+	sb_ctrl.content_margin_top = 18
+	sb_ctrl.content_margin_bottom = 18
+	ctrl_panel.add_theme_stylebox_override("panel", sb_ctrl)
+	hbox.add_child(ctrl_panel)
+
+	var ctrl_vbox := VBoxContainer.new()
+	ctrl_vbox.add_theme_constant_override("separation", 6)
+	ctrl_panel.add_child(ctrl_vbox)
+
+	var ctrl_title := Label.new()
+	ctrl_title.text = "✦ HERO CONTROLS ✦"
+	ctrl_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ctrl_title.add_theme_font_override("font", FONT_TITLE)
+	ctrl_title.add_theme_font_size_override("font_size", 24)
+	ctrl_title.add_theme_color_override("font_color", Color("e63946"))
+	ctrl_vbox.add_child(ctrl_title)
+
+	var entries: Array[Array] = [
+		["ARROWS / WASD", "Move hero"],
+		["Z / SPACE / ENTER", "Interact / Action / Skip"],
+		["M", "Toggle minimap"],
+		["F", "Give task to friend ally"],
+		["TAB", "Toggle task checklist"],
+		["P / ESC", "Pause / Resume game"]
+	]
+
+	for entry in entries:
+		var row := HBoxContainer.new()
+		var key_lbl := Label.new()
+		key_lbl.text = entry[0]
+		key_lbl.custom_minimum_size = Vector2(170, 0)
+		key_lbl.add_theme_font_override("font", FONT_TITLE)
+		key_lbl.add_theme_font_size_override("font_size", 14)
+		key_lbl.add_theme_color_override("font_color", Color("18151d"))
+		row.add_child(key_lbl)
+
+		var desc_lbl := Label.new()
+		desc_lbl.text = entry[1]
+		desc_lbl.add_theme_font_override("font", FONT_BODY)
+		desc_lbl.add_theme_font_size_override("font_size", 13)
+		desc_lbl.add_theme_color_override("font_color", Color("33303c"))
+		row.add_child(desc_lbl)
+		ctrl_vbox.add_child(row)
+
+	var sep := HSeparator.new()
+	sep.add_theme_constant_override("separation", 10)
+	ctrl_vbox.add_child(sep)
+
+	var chase_title := Label.new()
+	chase_title.text = "CHASE CONTROLS"
+	chase_title.add_theme_font_override("font", FONT_TITLE)
+	chase_title.add_theme_font_size_override("font_size", 16)
+	chase_title.add_theme_color_override("font_color", Color("18151d"))
+	ctrl_vbox.add_child(chase_title)
+
+	var chase_entries: Array[Array] = [
+		["LEVEL 2 ROLL", "Arrows lean/roll, Space jump"],
+		["LEVEL 3 RUN", "Up jump, Down slide"],
+		["LEVEL 4 SWING", "Space swing, Shift reel, X web"]
+	]
+
+	for entry in chase_entries:
+		var row := HBoxContainer.new()
+		var key_lbl := Label.new()
+		key_lbl.text = entry[0]
+		key_lbl.custom_minimum_size = Vector2(140, 0)
+		key_lbl.add_theme_font_override("font", FONT_TITLE)
+		key_lbl.add_theme_font_size_override("font_size", 13)
+		key_lbl.add_theme_color_override("font_color", Color("ffd034").darkened(0.2))
+		row.add_child(key_lbl)
+
+		var desc_lbl := Label.new()
+		desc_lbl.text = entry[1]
+		desc_lbl.add_theme_font_override("font", FONT_BODY)
+		desc_lbl.add_theme_font_size_override("font_size", 12)
+		desc_lbl.add_theme_color_override("font_color", Color("33303c"))
+		row.add_child(desc_lbl)
+		ctrl_vbox.add_child(row)
 
 
 func _build_end_modal(parent: Control) -> void:
@@ -409,6 +552,8 @@ func _on_reset_pressed() -> void:
 
 func _on_game_state_changed(state: String) -> void:
 	_hud_root.visible = state != "menu"
+	if _fx_layer:
+		_fx_layer.visible = state != "menu"
 	var in_puzzle := state == "playing"
 	_info_box.visible = in_puzzle
 	_action_bar.visible = in_puzzle
@@ -429,7 +574,20 @@ func _on_level_loaded(index: int, data: Dictionary) -> void:
 
 
 func _on_caption_changed(text: String) -> void:
-	_caption_label.text = text
+	var clean := text.strip_edges()
+	if clean.is_empty():
+		_caption_box.visible = false
+		return
+	_caption_label.text = clean
+	_caption_box.visible = true
+	_caption_box.modulate = Color(1, 1, 1, 1)
+	if _caption_tween and _caption_tween.is_valid():
+		_caption_tween.kill()
+	var duration := clampf(3.5 + clean.length() * 0.03, 3.5, 7.0)
+	_caption_tween = create_tween()
+	_caption_tween.tween_interval(duration)
+	_caption_tween.tween_property(_caption_box, "modulate:a", 0.0, 0.4)
+	_caption_tween.tween_callback(func() -> void: _caption_box.visible = false)
 
 
 func _on_move_count_changed(moves: int) -> void:
@@ -479,3 +637,62 @@ func _show_banner(tex: Texture2D, duration: float) -> void:
 	tw.tween_interval(duration)
 	tw.tween_property(_banner_rect, "scale", Vector2.ZERO, 0.2)
 	tw.tween_callback(func() -> void: _banner_rect.visible = false)
+
+func _setup_screen_fx() -> void:
+	_fx_layer = CanvasLayer.new()
+	_fx_layer.layer = 8
+	_fx_layer.visible = false
+	add_child(_fx_layer)
+
+	var fx_rect := ColorRect.new()
+	fx_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fx_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fx_mat = ShaderMaterial.new()
+	_fx_mat.shader = SHADER_COMIC_SCREEN
+	fx_rect.material = _fx_mat
+	_fx_layer.add_child(fx_rect)
+
+
+func _screen_flash_and_shake(color: Color, duration: float, intensity: float) -> void:
+	if not _fx_mat:
+		return
+	_fx_mat.set_shader_parameter("flash_color", color)
+	_fx_mat.set_shader_parameter("flash_amount", 1.0)
+	
+	var tw := create_tween()
+	tw.tween_method(func(v: float) -> void:
+		if _fx_mat:
+			_fx_mat.set_shader_parameter("flash_amount", v),
+		1.0, 0.0, duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	var shake_tw := create_tween()
+	var steps := 8
+	var step_time := duration / float(steps)
+	for i in steps:
+		var decay := 1.0 - float(i) / float(steps)
+		var ox := (randf() * 2.0 - 1.0) * intensity * decay * 0.015
+		var oy := (randf() * 2.0 - 1.0) * intensity * decay * 0.015
+		shake_tw.tween_method(func(offset: Vector2) -> void:
+			if _fx_mat:
+				_fx_mat.set_shader_parameter("shake_offset", offset),
+			Vector2(ox, oy), Vector2.ZERO, step_time
+		)
+	shake_tw.tween_callback(func() -> void:
+		if _fx_mat:
+			_fx_mat.set_shader_parameter("shake_offset", Vector2.ZERO)
+	)
+
+
+func _on_sabotage_failed(_name: String, _hp_left: int) -> void:
+	_screen_flash_and_shake(Color("e63946"), 0.45, 1.2)
+
+
+func _on_player_died() -> void:
+	_screen_flash_and_shake(Color("18151d"), 0.65, 1.8)
+
+func _on_level_started(index: int, title: String) -> void:
+	var trans = LEVEL_TRANSITION_SCENE.new()
+	trans.level_index = index
+	trans.level_title = title
+	add_child(trans)
