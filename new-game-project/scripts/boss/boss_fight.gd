@@ -204,6 +204,18 @@ func explode(p: Vector2, r: float) -> void:
 		_hurt(p.x)
 
 
+## A brute or the Ink Baron crashes onto the stage.
+func heavy_landing(e: ArenaEnemy) -> void:
+	shake(16.0)
+	_freeze = maxf(_freeze, 0.08)
+	EventBus.sound_requested.emit("shockwave")
+	for k in 18:
+		var ang := PI + k * PI / 17.0
+		_fx.append({"kind": "dust", "pos": e.pos + Vector2(cos(ang) * 30.0, -6), "vel": Vector2(cos(ang) * randf_range(200, 420), randf_range(-260, -60)), "t": 0.0, "life": 0.7, "size": randf_range(6, 12)})
+	if e.kind == "baron":
+		_say("THE INK BARON!", e.pos + Vector2(0, -260), Color("ff6b6b"), 60)
+
+
 func ink_rain(n: int) -> void:
 	for k in n:
 		_drops.append({"x": randf_range(_lock_l + 30.0, _lock_r - 30.0), "y": -40.0, "warn": 0.8 + k * 0.12})
@@ -668,15 +680,19 @@ func _update_world(delta: float) -> void:
 				e.hp = _boss_carry
 				_boss_carry = -1.0
 			_say(narrator_line, Vector2(center_x(), 220), Color("c77dff"), 40)
+			_white = maxf(_white, 0.6)
+			shake(14.0)
+			EventBus.sound_requested.emit("narrator_attack")
 		elif e.kind in ["baron", "twin"]:
 			e.hp *= boss_hp_scale
 			e.max_hp = e.hp
+			e.pos.y = FLOOR_Y - 520.0 # he drops in from the flies
 			_narrator = e
 			if _boss_carry > 0.0:
 				e.hp = _boss_carry
 				_boss_carry = -1.0
 		elif not e.flying():
-			e.pos.y = FLOOR_Y - 260.0 # drops onto the stage
+			e.pos.y = FLOOR_Y - (520.0 if e.kind == "brute" else 260.0) # drops onto the stage
 		_enemies.append(e)
 		EventBus.sound_requested.emit("enemy_spawn")
 	for e in _enemies:
@@ -693,6 +709,13 @@ func _update_world(delta: float) -> void:
 			_narrator = null
 			_enemies.clear()
 			_pending.clear()
+			_freeze = 0.55
+			_white = 1.0
+			shake(22.0)
+			for k in 40:
+				var ang := randf() * TAU
+				_fx.append({"kind": "paper", "pos": e.center(), "vel": Vector2.from_angle(ang) * randf_range(250, 700), "t": 0.0, "life": 1.6, "size": randf_range(5, 11)})
+			_fx.append({"kind": "spark", "pos": e.center(), "t": 0.0, "life": 0.6, "size": 3.5})
 			_win()
 	for w in _waves:
 		w["x"] = float(w["x"]) + float(w["dir"]) * 470.0 * et

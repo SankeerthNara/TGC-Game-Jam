@@ -103,11 +103,14 @@ func update(dt: float, fight: Node) -> void:
 	var hero: Vector2 = fight.hero_pos
 	var hc: Vector2 = fight.hero_center()
 	if state == "enter":
-		if st > 0.55:
+		var heavy := kind in ["brute", "baron"]
+		if not flying():
+			pos.y = minf(FLOOR_Y, pos.y + (1500.0 if heavy else 900.0) * dt)
+		if st > 0.55 and (not heavy or pos.y >= FLOOR_Y):
 			state = "idle" if not flying() else "hover"
 			st = 0.0
-		if not flying():
-			pos.y = minf(FLOOR_Y, pos.y + 900.0 * dt)
+			if heavy:
+				fight.heavy_landing(self)
 		return
 	match kind:
 		"lancer":

@@ -83,3 +83,4 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   objective ("REACH THE END OF THE LIBRARY") and the controls while exploring; the street shows
   "BEAT THE GOONS (n left)" / "KEEP GOING >>".
 - Failing is gentler: dying in a 144p level keeps the tasks already finished (it used to reset the level).
+- Moments: the brass brute and the Ink Baron crash down from above (fast drop, shake, dust ring, "THE INK BARON!"); the Narrator arrives with a white flash, shake and a sting; the killing blow on a boss gets a long hit-stop, white flash and a burst of paper and light.
