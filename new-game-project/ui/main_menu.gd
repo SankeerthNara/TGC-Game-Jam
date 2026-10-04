@@ -1,7 +1,7 @@
 class_name MainMenu
 extends Control
 ## Animated comic cover main menu for Mirror Page:
-## Big logo, looming masked villain, 4 hero busts, ticking 17:00 bomb, comic buttons.
+## Big logo, looming masked villain, 4 hero busts, a "NOW IN 144p" badge, comic buttons.
 
 const FONT_TITLE := preload("res://assets/fonts/Bangers-Regular.ttf")
 const FONT_BODY := preload("res://assets/fonts/ComicNeue-Bold.ttf")
@@ -113,7 +113,7 @@ func _draw() -> void:
 	draw_rect(speech_rect, INK, false, 2.5)
 	draw_colored_polygon(PackedVector2Array([speech_c + Vector2(-60, 24), speech_c + Vector2(-75, 38), speech_c + Vector2(-45, 24)]), PAPER)
 	draw_polyline(PackedVector2Array([speech_c + Vector2(-60, 24), speech_c + Vector2(-75, 38), speech_c + Vector2(-45, 24)]), INK, 2.5)
-	draw_string(FONT_TITLE, speech_c + Vector2(-90, 7), "THE CLOCK IS TICKING...", HORIZONTAL_ALIGNMENT_CENTER, 180, 16, RED)
+	draw_string(FONT_TITLE, speech_c + Vector2(-90, 7), "THE LIGHT IS MINE...", HORIZONTAL_ALIGNMENT_CENTER, 180, 16, RED)
 
 	# 4. Big MIRROR PAGE Logo
 	var logo_pos := Vector2(460, 130)

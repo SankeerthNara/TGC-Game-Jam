@@ -19,3 +19,8 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   Editions the hero has 6 hearts and **dying restarts only the current wave** (full health) instead of
   the whole fight. Bot results after: Ink Baron win (2 retries), opera win, Narrator win. A bot is not a
   player; Sankeerth / friends must still play them.
+- Web build re-exported (index.pck 20.4 MB, engine wasm 39.5 MB): loads in the browser, menu and book
+  render, the edition shader works, no console errors. A full browser playthrough was not possible here
+  (the preview pane is hidden, so the browser throttles the game); the desktop build plays end to end
+  in the automated flow test.
+- Menu: the villain's bubble now says "THE LIGHT IS MINE..." (no clock in the Editions).
