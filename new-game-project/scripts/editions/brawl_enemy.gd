@@ -169,6 +169,28 @@ func _choose(dist: float) -> void:
 
 func draw(ci: CanvasItem, cam: float) -> void:
 	var p := pos - Vector2(cam, 0)
+	var key := "px_thug" if kind == "thug" else ("px_gunner" if kind == "gunner" else "px_" + kind)
+	if Sprites.has(key):
+		var h := 140.0 if not twin() else 190.0
+		var lean := 0.0
+		if state == "windup":
+			lean = -0.12 * dir
+		elif state == "strike":
+			lean = 0.15 * dir
+		var tint := Color(1, 1.0 - flash * 0.6, 1.0 - flash * 0.6)
+		Sprites.draw(ci, key, p, h, dir, tint, 1.0 + sin(t * 8.0) * 0.02, lean)
+		# the eyes still glow red / yellow on top of the sprite: that is the counter cue
+		var red := counterable() or (state == "strike" and attack in ["heavy", "dash", "shot"])
+		var yellow := state == "windup" and attack == "jab"
+		if red or yellow:
+			var glow := Color("ff2a3a") if red else Color("ffd23f")
+			var eye := p + Vector2(dir * 8.0, -h * 0.82)
+			ci.draw_circle(eye, 16.0, Color(glow.r, glow.g, glow.b, 0.35))
+			ci.draw_circle(eye, 6.0, glow)
+		if kind == "gunner" and state == "windup":
+			var from := p + Vector2(dir * 40.0, -h * 0.62)
+			ci.draw_line(from, from + Vector2(dir * 1400.0, 0), Color(1, 0.1, 0.15, 0.85) if counterable() else Color(1, 0.3, 0.3, 0.35), 2.0)
+		return
 	var white := flash
 	var lean := 0.0
 	if state == "windup":

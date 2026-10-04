@@ -167,6 +167,8 @@ static func foreground(ci: CanvasItem, sz: Vector2) -> void:
 ## A hero (kind: ComicArt hero index 1 noir, 2 ninja, 3 space) at feet position `f`, facing `dir` (1 or -1).
 ## pose: idle | run | jump | fall | dash | attack | attack_up | attack_down | hurt | heal
 static func hero(ci: CanvasItem, kind: int, f: Vector2, dir: float, pose: String, t: float, flash := 0.0, sc := 1.0) -> void:
+	if kind == 0 and _hero_sprite(ci, f, dir, pose, t, flash, sc):
+		return
 	var main: Color = HERO_MAIN[kind]
 	var acc: Color = HERO_ACCENT[kind]
 	if flash > 0.0:
@@ -283,6 +285,30 @@ static func hero(ci: CanvasItem, kind: int, f: Vector2, dir: float, pose: String
 			ci.draw_line(head + Vector2(-4, -12), head + Vector2(-10, -26), INK, 2.5)
 			ci.draw_circle(head + Vector2(-10, -27), 3.5, Color("e63946"))
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## The painted pulp hero (Antigravity's sprite frames), if they exist.
+static func _hero_sprite(ci: CanvasItem, f: Vector2, dir: float, pose: String, t: float, flash: float, sc: float) -> bool:
+	var key := "hero_idle"
+	var squash := 1.0 + sin(t * 3.0) * 0.012
+	var rot := 0.0
+	match pose:
+		"run":
+			key = "hero_run1" if int(t * 9.0) % 2 == 0 else "hero_run2"
+			squash = 1.0
+		"jump", "fall", "attack_down":
+			key = "hero_jump"
+		"attack", "attack_up":
+			key = "hero_attack"
+			rot = -0.2 * dir if pose == "attack_up" else 0.0
+		"dash":
+			key = "hero_dash"
+		"hurt":
+			key = "hero_hurt"
+	if not Sprites.has(key):
+		key = "hero_idle"
+	var tint := Color(1, 1, 1, 0.55) if flash > 0.0 else Color.WHITE
+	return Sprites.draw(ci, key, f + Vector2(0, 4), 128.0 * sc, dir, tint, squash, rot)
 
 
 static func _weapon(ci: CanvasItem, kind: int, hand: Vector2, pose: String) -> void:

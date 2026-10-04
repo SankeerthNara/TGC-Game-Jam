@@ -70,7 +70,7 @@ func _draw_ui() -> void:
 	# three beams of light converge on the hero
 	var hero := Vector2(640, 520)
 	for i in 3:
-		var from := Vector2([260.0, 640.0, 1020.0][i], 170.0)
+		var from := Vector2([430.0, 640.0, 850.0][i], 230.0 - (40.0 if i == 1 else 0.0))
 		var w := 6.0 + 30.0 * light
 		ci.draw_line(from, hero, Color(1, 0.95, 0.6, 0.25 + 0.5 * light), w)
 		ci.draw_line(from, hero, Color(1, 1, 0.9, 0.6), w * 0.35)

@@ -361,6 +361,12 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 	if state == "enter":
 		a = clampf(st / 0.4, 0.0, 1.0)
 	var white := flash
+	if _draw_sprite(ci, a, time):
+		if state in ["windup", "charge_wind", "fuse"]:
+			var c2 := center() + Vector2(0, -float(STATS[kind]["h"]) * 0.7)
+			ComicArt.shout(ci, "!", c2 + _o, 40, Color("ffd23f"), 8)
+			ci.draw_set_transform(_o, 0.0, Vector2.ONE)
+		return
 	match kind:
 		"lancer":
 			_draw_lancer(ci, white, a)
@@ -378,6 +384,40 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 		var c := center() + Vector2(0, -float(STATS[kind]["h"]) * 0.7)
 		ComicArt.shout(ci, "!", c + _o, 40, Color("ffd23f"), 8)
 		ci.draw_set_transform(_o, 0.0, Vector2.ONE)
+
+
+const SPRITE_KEYS := {"lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
+const SPRITE_H := {"lancer": 120.0, "bat": 64.0, "brute": 190.0, "baron": 230.0, "narrator": 260.0}
+
+
+func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
+	var key: String = SPRITE_KEYS.get(kind, "")
+	if key == "" or not Sprites.has(key):
+		return false
+	var feet := pos + _o
+	var h: float = SPRITE_H[kind]
+	var face := dir
+	var squash := 1.0
+	var rot := 0.0
+	match kind:
+		"bat":
+			feet = pos + _o + Vector2(0, h * 0.5)
+			face = 1.0 if vel.x >= 0.0 else -1.0
+			squash = 1.0 + sin(t * 24.0) * 0.08
+		"narrator":
+			feet = pos + _o + Vector2(0, 110)
+			face = 1.0 if pos.x < 640.0 else -1.0
+			rot = sin(time * 1.5) * 0.04
+		_:
+			squash = 1.0 + sin(t * 6.0) * 0.015
+			if state == "windup" or state == "charge_wind":
+				rot = -0.12 * dir
+			elif state in ["lunge", "slam", "charge", "sweep"]:
+				rot = 0.12 * dir
+	var tint := Color(1, 1.0 - flash * 0.6, 1.0 - flash * 0.6, a)
+	Sprites.draw(ci, key, feet, h, face, tint, squash, rot)
+	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
+	return true
 
 
 func _col(c: Color, white: float, a: float) -> Color:

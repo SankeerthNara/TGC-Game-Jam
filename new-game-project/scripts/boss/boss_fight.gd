@@ -821,8 +821,8 @@ func _draw_hall_floor(off: Vector2) -> void:
 ## The three captured heroes hanging in ink cages above the Narrator's stage.
 func _draw_cages(off: Vector2) -> void:
 	for i in 3:
-		var cx: float = [260.0, 640.0, 1020.0][i]
-		var cy := 170.0 + sin(_t * 1.5 + i) * 6.0
+		var cx: float = [430.0, 640.0, 850.0][i]
+		var cy := 230.0 + sin(_t * 1.5 + i) * 6.0 - (40.0 if i == 1 else 0.0)
 		draw_line(Vector2(cx, 0), Vector2(cx, cy - 60), INK, 4.0)
 		ComicArt.hero_bust(self, i + 1, Vector2(cx, cy - 6), 0.26, "scared", _t)
 		ComicArt.cage(self, Vector2(cx, cy), 0.42)
@@ -839,8 +839,12 @@ func _global_wave() -> int:
 func _draw_balcony() -> void:
 	# the Narrator conducting from his balcony (until he comes down himself)
 	var b := Vector2(640, 150)
-	ArenaArt.poly(self, PackedVector2Array([b + Vector2(-110, 40), b + Vector2(110, 40), b + Vector2(90, 90), b + Vector2(-90, 90)]), Color("2a1a2e"), 4.0)
-	draw_line(b + Vector2(-110, 40), b + Vector2(110, 40), GOLD, 3.0)
+	if _bg.has("arena_far"):
+		# on the painted stage he floats in a spotlight instead of standing on a drawn balcony
+		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(b - Vector2(150, 150), Vector2(300, 300)), false, Color(1, 0.8, 0.5, 0.35))
+	else:
+		ArenaArt.poly(self, PackedVector2Array([b + Vector2(-110, 40), b + Vector2(110, 40), b + Vector2(90, 90), b + Vector2(-90, 90)]), Color("2a1a2e"), 4.0)
+		draw_line(b + Vector2(-110, 40), b + Vector2(110, 40), GOLD, 3.0)
 	if (_narrator != null and _narrator.kind == "narrator") or (_last_wave() and _phase == "wave" and boss_name == "THE NARRATOR"):
 		return
 	var beat := sin(_t * (5.0 if _phase == "wave" else 2.5))
