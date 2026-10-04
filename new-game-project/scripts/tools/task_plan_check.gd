@@ -1,5 +1,5 @@
 extends SceneTree
-## Checks the run task plan over many seeds: 4/6/8/8 tasks, no type repeated, no mirror pages,
+## Checks the run task plan over many seeds: 4/6/8/7 tasks, no type repeated, no mirror pages,
 ## and every level generates (not part of the game).
 
 func _init() -> void:
@@ -15,7 +15,7 @@ func _init() -> void:
 					bad += 1
 					print("BAD seed %d: %s" % [seed_value, t])
 				seen[t] = true
-		if counts != [4, 6, 8, 8]:
+		if counts != [4, 6, 8, 7]:
 			bad += 1
 			print("BAD counts seed %d: %s" % [seed_value, counts])
 		if seed_value < 15:

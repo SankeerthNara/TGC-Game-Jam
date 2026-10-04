@@ -15,8 +15,6 @@ static func create(type: String) -> TaskBase:
 			return ChargeTask.new()
 		"dial":
 			return DialTask.new()
-		"blots":
-			return BlotsTask.new()
 		"swipe":
 			return SwipeTask.new()
 		"panels":

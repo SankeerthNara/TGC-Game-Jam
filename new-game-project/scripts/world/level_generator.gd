@@ -24,7 +24,7 @@ const LEVELS := [
 	 "tasks": ["wires", "bubbles", "dial", "dots"]},
 	{"title": "THE ARCHIVE WING", "par": 180, "risky": 1, "disrupt": 0, "big": false, "vampires": true,
 	 "intro": "Level 2: THE ARCHIVE WING. You are not alone: two vampires lurk in the dark, a friend and the villain who cut the lights. Hold your torch on one to catch him!",
-	 "tasks": ["sort", "switches", "blots", "swipe", "panels", "math"]},
+	 "tasks": ["sort", "switches", "needle", "swipe", "panels", "math"]},
 	{"title": "THE MACHINE FLOOR", "par": 240, "risky": 2, "disrupt": 0, "big": true, "vampires": true,
 	 "intro": "Level 3: THE MACHINE FLOOR. The sabotage is bigger now and the timers are shorter. Catch a vampire in your light!",
 	 "tasks": ["logic", "simon", "sfx", "charge", "debug", "wires", "dial", "pipes"]},
@@ -37,7 +37,6 @@ const TASK_NAMES := {
 	"mirror": ["Light the Page", "Steer the Light Beam", "Bounce the Beam"],
 	"wires": ["Rewire the Panel", "Reboot the Breakers", "Reconnect the Cameras"],
 	"bubbles": ["Fill the Speech Bubbles", "Letter the Dialogue"],
-	"blots": ["Wipe the Ink Spills", "Clean the Print Floor"],
 	"dial": ["Align the Telescope", "Steer the Beam"],
 	"sort": ["Shelve the Library Books", "Sort the Reading List"],
 	"switches": ["Fix the Fuse Box", "Reset the Fuses"],
@@ -67,10 +66,10 @@ const TASK_NAMES_NEW := {
 }
 
 ## Task tiers: easy ones come first, hard ones last. Every task type is used at most once per run
-## (26 types: 4 + 6 + 8 + 8 tasks).
+## (25 types: 4 + 6 + 8 + 7 tasks).
 const TIERS := {
 	"easy": ["dots", "whack", "memory", "unscramble", "math", "inkmix", "rain", "bubbles", "wires", "swipe"],
-	"medium": ["blots", "dial", "switches", "sort", "panels", "needle", "proofread", "lightsout", "simon", "sfx"],
+	"medium": ["dial", "switches", "sort", "panels", "needle", "proofread", "lightsout", "simon", "sfx"],
 	"hard": ["logic", "debug", "safe", "pipes", "slide", "charge"],
 }
 
@@ -88,7 +87,7 @@ static func run_plan(run_seed: int) -> Array:
 	var l1: Array = easy.slice(0, 4)
 	var l2: Array = easy.slice(4, 7) + medium.slice(0, 3)
 	var l3: Array = easy.slice(7, 8) + medium.slice(3, 7) + hard.slice(0, 3)
-	var l4: Array = easy.slice(8, 10) + medium.slice(7, 10) + hard.slice(3, 6)
+	var l4: Array = easy.slice(8, 10) + medium.slice(7, 9) + hard.slice(3, 6)
 	var out: Array = []
 	var lists := [l1, l2, l3, l4]
 	for i in 4:
@@ -103,7 +102,7 @@ static func run_plan(run_seed: int) -> Array:
 const SABOTAGES := [
 	{"name": "POWER SURGE", "line": "Sparks everywhere!", "fix_name": "Vent the Boiler", "fix_type": "charge"},
 	{"name": "REACTOR OVERLOAD", "line": "The core is overheating!", "fix_name": "Cool the Reactor Core", "fix_type": "switches"},
-	{"name": "INK FLOOD", "line": "The press burst and ink is flooding the floor!", "fix_name": "Mop Up the Ink Flood", "fix_type": "blots"},
+	{"name": "INK FLOOD", "line": "The press burst and ink is flooding the floor!", "fix_name": "Catch the Flooding Ink", "fix_type": "rain"},
 	{"name": "FIRE ALARM", "line": "Something is on fire!", "fix_name": "Silence the Fire Alarm", "fix_type": "wires"},
 	{"name": "WRONG COURSE", "line": "The compass spun wildly!", "fix_name": "Re-sort the Star Charts", "fix_type": "sort"},
 	{"name": "CHEMICAL SPILL", "line": "A beaker smashed!", "fix_name": "Neutralise the Spill", "fix_type": "dial"},

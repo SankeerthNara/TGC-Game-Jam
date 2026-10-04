@@ -80,6 +80,7 @@ func _ready() -> void:
 		chase.finished.emit(true)
 	await frames(3)
 	check(main.state == "world" and w.vampires.villain_gone, "catching him ends the sabotage and returns to the level")
+	w.sabotage = {} # a real sabotage may have fired while the friend worked
 	var calm: float = music._targets()["tension"]
 	w.sabotage = {"def": {"name": "TEST", "fix": "f0"}, "left": 10.0}
 	var t: Dictionary = music._targets()
