@@ -13,7 +13,7 @@ var undo_stack: Array[Dictionary] = []
 var busy := false
 var run_id := 0 ## bumps on every level start so stale timers do nothing
 var decoy_revealed := false
-var state := "menu" ## menu | world | task | playing (a page puzzle) | choice | parkour | paused | ended | dead
+var state := "menu" ## menu | cutscene | world | task | playing (a page puzzle) | choice | parkour | paused | levelend | ended | dead
 var friends_killed := 0
 var active_task := ""
 var run_seed := 0
@@ -26,6 +26,10 @@ var _retrying := false
 var score := ScoreKeeper.new()
 var level_ease: Array[int] = [0, 0, 0, 0]
 var _task_layer: CanvasLayer
+const BOMB_SECONDS := 17 * 60.0 ## the masked villain's bomb: find the 4 keys and open the bomb room in time
+const TICKING := ["world", "task", "playing", "parkour"] ## the bomb clock pauses in cutscenes, menus and score screens
+var bomb_left := BOMB_SECONDS
+var keys_found := 0
 
 var _caption: Label
 var _info: Label
@@ -113,10 +117,16 @@ func _start_game() -> void:
 	total_time = 0.0
 	score.new_run()
 	friends_killed = 0
+	bomb_left = BOMB_SECONDS
+	keys_found = 0
+	world.bomb_left = bomb_left
+	world.keys_found = 0
 	for i in level_ease.size():
 		level_ease[i] = 0
 	_clear_overlay()
-	_load_level(0)
+	_set_state("cutscene")
+	EventBus.caption_changed.emit("NARRATOR: Once upon a time...")
+	_play_cutscene("opening", func() -> void: _load_level(0))
 
 
 ## Builds level `i` (same layout every time for this run, so a respawn is the same map) and starts it.
@@ -144,6 +154,24 @@ func _process(delta: float) -> void:
 	world.level_time = level_time
 	world.total_time = total_time
 	world.score_total = score.live(level_idx, world.tasks_done.size())
+	if state in TICKING and bomb_left > 0.0:
+		bomb_left = maxf(0.0, bomb_left - delta)
+		if bomb_left <= 0.0:
+			_bomb_exploded()
+	world.bomb_left = bomb_left
+
+
+## The 17 minutes ran out before the bomb room was opened: the Earth is blasted.
+func _bomb_exploded() -> void:
+	for c in _task_layer.get_children():
+		c.queue_free()
+	_overlay = null
+	active_task = ""
+	_set_state("ended")
+	EventBus.caption_changed.emit("NARRATOR: Tick... tick... BOOM. The heroes were too late.")
+	_play_cutscene("earth_blast", func() -> void:
+		EventBus.game_finished.emit()
+		EventBus.request_quit_to_menu.emit())
 
 
 func _clear_overlay() -> void:
@@ -236,6 +264,7 @@ func _back_from_task(success: bool) -> void:
 func _play_cutscene(kind: String, then: Callable) -> void:
 	var cs := CutScene.new()
 	cs.kind = kind
+	cs.bomb_left = bomb_left
 	_overlay = cs
 	_task_layer.add_child(cs)
 	cs.finished.connect(func() -> void:
@@ -353,6 +382,8 @@ func _level_complete() -> void:
 	var big_flags: Array = []
 	for sab in world.sabotage_defs.values():
 		big_flags.append(sab.get("big", false))
+	keys_found = mini(keys_found + 1, LevelGenerator.level_count())
+	world.keys_found = keys_found
 	var result := score.finish_level(level_idx, world.tasks.size(), level_time, world.level_par, world.hp, world.max_health, big_flags)
 	# the next level is kinder if this one took longer than par (the run should stay about the same length)
 	if not last:
@@ -365,7 +396,10 @@ func _level_complete() -> void:
 	ov.total_time = total_time
 	ov.splits = level_splits.duplicate()
 	ov.par = world.level_par
-	ov.final = last
+	ov.to_bomb_room = last
+	ov.keys_found = keys_found
+	ov.key_total = LevelGenerator.level_count()
+	ov.bomb_left = bomb_left
 	ov.lines = result["lines"]
 	ov.score = result["score"]
 	ov.rank = result["rank"]
@@ -381,11 +415,41 @@ func _level_complete() -> void:
 	ov.continue_pressed.connect(func() -> void:
 		_clear_overlay()
 		if last:
-			EventBus.game_finished.emit()
-			EventBus.request_quit_to_menu.emit()
+			_open_bomb_room()
 		else:
 			_load_level(level_idx + 1))
-	EventBus.caption_changed.emit("NARRATOR: Level complete! Checkpoint saved. Rank %s." % result["rank"])
+	if last:
+		EventBus.caption_changed.emit("NARRATOR: All four keys! The bomb room... wait. Don't open that door.")
+	else:
+		EventBus.caption_changed.emit("NARRATOR: Level complete! Key %d of %d to the bomb room. Rank %s." % [keys_found, LevelGenerator.level_count(), result["rank"]])
+
+
+## All four keys: the bomb room opens, the masked villain unmasks (it was the Narrator) and captures
+## the level 1 hero. The boss fight (relay duels, bomb still ticking) is not built yet, so for now
+## the run ends on the final score screen.
+func _open_bomb_room() -> void:
+	_set_state("cutscene")
+	_play_cutscene("bomb_room", func() -> void:
+		_set_state("ended")
+		EventBus.caption_changed.emit("NARRATOR: Yes, it was me all along. Now, heroes... come and get your friend. The bomb is still ticking.")
+		var ov := LevelOverlay.new()
+		ov.final = true
+		ov.title = "The bomb room is open"
+		ov.total_time = total_time
+		ov.splits = level_splits.duplicate()
+		ov.total_score = score.total
+		ov.level_scores = score.level_totals.duplicate()
+		ov.level_ranks = score.level_ranks.duplicate()
+		ov.overall_rank = score.overall_rank()
+		ov.keys_found = keys_found
+		ov.key_total = LevelGenerator.level_count()
+		ov.bomb_left = bomb_left
+		_overlay = ov
+		_task_layer.add_child(ov)
+		ov.continue_pressed.connect(func() -> void:
+			_clear_overlay()
+			EventBus.game_finished.emit()
+			EventBus.request_quit_to_menu.emit()))
 
 
 func _wait_playing() -> void:

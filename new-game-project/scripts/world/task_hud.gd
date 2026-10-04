@@ -38,6 +38,7 @@ func _draw() -> void:
 	if world == null or not world.station_mode:
 		return
 	_draw_health_and_sabotage()
+	_draw_bomb()
 	var total := world.tasks.size()
 	var done := world.tasks_done.size()
 	_draw_timers()
@@ -151,6 +152,31 @@ func _draw_timers() -> void:
 	draw_string(FONT_SHOUT, box.position + Vector2(box.size.x - 12 - 120, 45), "TOTAL %s" % _fmt(world.total_time), HORIZONTAL_ALIGNMENT_RIGHT, 120, 20, Color("fff3d1"))
 	draw_string(FONT_BODY, box.position + Vector2(box.size.x - 12 - 190, 22), world.level_title, HORIZONTAL_ALIGNMENT_RIGHT, 190, 15, Color("ffffff"))
 	draw_string(FONT_SHOUT, box.position + Vector2(12, 76), "SCORE  %d" % world.score_total, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("ffd23f"))
+
+
+## The 17 minute bomb clock and the keys to the bomb room, next to the hearts.
+func _draw_bomb() -> void:
+	var box := Rect2(Vector2(300, 122), Vector2(290, 44))
+	var left := world.bomb_left
+	var urgent := left < 60.0
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / (90.0 if urgent else 250.0))
+	draw_rect(Rect2(box.position + Vector2(4, 4), box.size), Color(0, 0, 0, 0.4))
+	draw_rect(box, Color(0.45 + 0.4 * pulse, 0.04, 0.06) if urgent else INK)
+	draw_rect(box, Color("e63946"), false, 3.0)
+	var b := box.position + Vector2(24, 24)
+	draw_circle(b, 13.0, Color("2b2d42"))
+	draw_circle(b + Vector2(-4, -4), 4.0, Color(1, 1, 1, 0.35))
+	draw_line(b + Vector2(8, -10), b + Vector2(14, -18), Color("c9ada7"), 3.0)
+	draw_circle(b + Vector2(15, -19), 3.0 + 2.0 * pulse, Color("ffb703"))
+	var secs := int(ceil(left))
+	draw_string(FONT_SHOUT, box.position + Vector2(48, 34), "BOMB %d:%02d" % [secs / 60, secs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 30, GOLD if urgent and pulse > 0.5 else Color("fff3d1"))
+	for i in world.level_count:
+		var k := box.position + Vector2(190 + i * 24, 22)
+		var col := GOLD if i < world.keys_found else Color(0.35, 0.35, 0.42)
+		draw_circle(k + Vector2(0, -5), 6.0, col)
+		draw_circle(k + Vector2(0, -5), 2.5, INK)
+		draw_line(k + Vector2(0, 1), k + Vector2(0, 14), col, 3.0)
+		draw_line(k + Vector2(0, 10), k + Vector2(5, 10), col, 3.0)
 
 
 ## Once a friend has been revealed he points to the nearest unfinished task.

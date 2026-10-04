@@ -35,6 +35,7 @@ Statuses: todo / doing / done / blocked. Pick only tasks with your own name as O
 | C10 | Claude | Vampires (patrol, flee from light, freeze), Reveal/Kill choice, four outcomes, villain starts sabotage himself, friend ally with growing help | done | C9 | `vampires.gd`, `vampire_choice.gd` |
 | C11 | Claude | Parkour chase minigame; 13 new task types so no task repeats in a run | done | C10 | `parkour_game.gd`, `scripts/tasks/` |
 | C12b | Claude | Cutscene system for detect/reveal/kill; level 1 warm-up (no vampires or sabotage) | done | C11 | `cutscene.gd` |
-| C15 | Claude | Final boss: three relay duels (hero 2, 3, 4) vs the Narrator, level 1 capture, sunlight and lava ending cutscenes | todo | C12b | at least 3 minutes in all |
+| C15 | Claude | Final boss: three relay duels (hero 2, 3, 4) vs the Narrator in the bomb room, bomb still ticking (at least 3:00 left guaranteed), sunlight and lava ending cutscenes | todo | C18 | at least 3 minutes in all |
 | C16 | Claude | Hero special powers for the final duels (Deduction, Light Dash, Prism Cannon / Solar Flare); scripted knock-outs for heroes 2 and 3 | todo | C15 | |
-| C17 | Claude | Opening cutscene (peaceful Earth, four heroes, masked villain covers it in darkness) and mirrored closing cutscene | todo | C12b | |
+| C17 | Claude | Opening cutscene (peaceful Earth, four heroes, masked villain, bomb) and mirrored closing cutscene | opening done (simple), closing todo | C12b | `cutscene.gd` |
+| C18 | Claude | 17:00 bomb clock for the whole run, one key per level, bomb room cutscene (unmask: it is the Narrator; he captures the level 1 hero), Earth blast ending | done | C12b | `main.gd`, `cutscene.gd`, `task_hud.gd`, `tools/bomb_flow_test.tscn` |

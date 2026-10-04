@@ -29,8 +29,17 @@ The page is the puzzle piece: panels move, so the emitter, walls and targets mov
 - **The hero:** a small caped comic hero with a torch. He walks, thinks (?), cheers (!), looks scared, and turns into the villain after the twist.
 - **The narrator** ("Mr. Caption" in town, caption boxes everywhere) and **Mr. Barter**, the shopkeeper.
 
-## Opening and closing cutscenes (planned)
-- **Opening:** the Earth lived in peace, guarded by four superheroes (the four heroes of the four levels). A masked villain covers it in darkness.
+## The bomb and the keys (built, 2026-10-04)
+- **Opening cutscene (built, simple version):** the Earth lived in peace, guarded by four superheroes (the four heroes of the four levels). A masked villain covers it in darkness **and hides a bomb set to 17:00**.
+- **Bomb clock:** one 17:00 countdown for the whole run, shown next to the hearts. It ticks while you play (levels, tasks, light puzzles, parkour) and pauses in cutscenes, the Reveal / Kill choice, score screens and the death screen. Dying does not refund time.
+- **Keys:** each finished level gives one key to the bomb room (4 keys in all, shown on the HUD and the level-complete card).
+- **Bomb room:** after level 4 the four keys open the bomb room. The masked villain unmasks: **he is the Narrator**. He captures the level 1 hero (moved here from the end of level 1), and the boss fight begins with the bomb still ticking.
+- **Boss fight vs the bomb (planned):** the clock keeps ticking during the relay duels; whatever is left becomes the fight's limit, but never less than 3:00 (a par player arrives with about 3:00 left, since the par times add up to 14:00).
+- **Out of time:** if the clock hits 0:00 anywhere, the Earth is blasted (cutscene) and the run ends. A third ending next to sunlight and lava.
+- Until the duels exist, the run ends on the final score screen after the bomb room cutscene.
+
+## Opening and closing cutscenes
+- **Opening:** built (see above); will get the full comic treatment later.
 - **Closing:** a mirrored cutscene: sunlight returns and the four heroes guard the Earth again (win), or the darkness stays (lose).
 
 ## Story, vampires and the choice (planned)
@@ -43,9 +52,9 @@ The page is the puzzle piece: panels move, so the emitter, walls and targets mov
 - **Par times:** about 2, 3, 4 and 5 minutes for levels 1 to 4 (4, 6, 8 and 10 tasks), shown on the HUD.
 - **Adaptive difficulty:** finishing a level over par makes the next one a little easier (1 or 2 steps: fewer tasks, easier mini-games, longer sabotage timers), so total playtime stays steady. Finishing on time changes nothing.
 - **Score (independent of time):** per level, tasks x100 (x1, 1.25, 1.5, 2 by level), +150 per sabotage stopped in time (+250 big), -100 per sabotage that hit you (-200 big), -50 per tampered task, +100 per heart left, +300 for no deaths (-250 per death), and up to +300 for finishing under par (never a penalty for being slow). Ranks S/A/B/C from the share of the level maximum; the vampire choices will add points. Shown on the HUD and on the level-complete card.
-- **Level 1 is a warm-up:** no vampires, no sabotage. At its end the Narrator captures the level 1 hero. Vampires and sabotage start in level 2 (1 sabotage), then 2 big in level 3, and 2 big plus a task undone in level 4.
+- **Level 1 is a warm-up:** no vampires, no sabotage (the bomb is already ticking). The level 1 hero is captured later, in the bomb room. Vampires and sabotage start in level 2 (1 sabotage), then 2 big in level 3, and 2 big plus a task undone in level 4.
 - **Among Us style cutscenes** for detecting a vampire, for revealing a friend, for revealing the villain (ending in a teleport to the parkour) and for killing a friend or the villain (ejection into space).
-- After level 4: the heroes of levels 2, 3 and 4 fight the **Narrator** one on one in turn to free the captured hero (win: sunlight evaporates him; lose: he throws the level 1 hero into lava). Each hero has a special power (level 2 noir detective: Deduction; level 3 manga ninja: Light Dash; level 4 space hero: Prism Cannon and Solar Flare). It is canon that the level 2 and 3 heroes are defeated, but each cracks a layer of the Narrator's shield; the level 4 hero faces the weakened Narrator and decides the ending (win: his Solar Flare floods the room with sunlight and the Narrator evaporates; lose: lava). The old description follows: the final boss fight against the **Narrator**, lasting **at least 3 minutes** (three phases of about a minute; a phase ends only when its timer and its damage target are both met), with torch and mirrors, surviving allies helping and three endings.
+- After level 4 and the bomb room: the heroes of levels 2, 3 and 4 fight the **Narrator** one on one in turn to free the captured hero (win: sunlight evaporates him; lose: he throws the level 1 hero into lava). Each hero has a special power (level 2 noir detective: Deduction; level 3 manga ninja: Light Dash; level 4 space hero: Prism Cannon and Solar Flare). It is canon that the level 2 and 3 heroes are defeated, but each cracks a layer of the Narrator's shield; the level 4 hero faces the weakened Narrator and decides the ending (win: his Solar Flare floods the room with sunlight and the Narrator evaporates; lose: lava). The old description follows: the final boss fight against the **Narrator**, lasting **at least 3 minutes** (three phases of about a minute; a phase ends only when its timer and its damage target are both met), with torch and mirrors, surviving allies helping and three endings.
 
 ## Content
 | Page | District | Teaches | Rule |

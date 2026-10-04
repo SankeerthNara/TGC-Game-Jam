@@ -20,7 +20,7 @@ const ROOM_POOL := [
 ## triggers. disrupt = a hidden task that undoes one of your finished tasks. big = long, harsh sabotage.
 const LEVELS := [
 	{"title": "THE STUDIO", "par": 120, "risky": 0, "disrupt": 0, "big": false, "vampires": false,
-	 "intro": "Level 1: THE STUDIO. Somebody cut the lights! A calm warm-up: finish every task to fill the progress bar. Arrow keys move (hold two for diagonals), Z interacts, M opens the map.",
+	 "intro": "Level 1: THE STUDIO. The bomb is ticking! Finish every task to earn the first key to the bomb room. Arrow keys move (hold two for diagonals), Z interacts, M opens the map.",
 	 "tasks": ["mirror:0", "wires", "bubbles", "dial"]},
 	{"title": "THE ARCHIVE WING", "par": 180, "risky": 1, "disrupt": 0, "big": false, "vampires": true,
 	 "intro": "Level 2: THE ARCHIVE WING. You are not alone: two vampires lurk in the dark, a friend and the villain who cut the lights. Hold your torch on one to catch him!",

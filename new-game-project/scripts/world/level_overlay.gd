@@ -25,6 +25,10 @@ var level_scores: Array = []
 var level_ranks: Array = []
 var overall_rank := "C"
 var easier_next := false
+var to_bomb_room := false ## the last level: Z opens the bomb room
+var keys_found := 0
+var key_total := 4
+var bomb_left := 0.0
 var _t := 0.0
 
 
@@ -71,7 +75,7 @@ func _draw() -> void:
 	draw_rect(panel, INK, false, 6.0)
 	draw_rect(Rect2(panel.position, Vector2(panel.size.x, 72)), Color("2dc653") if not final else GOLD)
 	draw_rect(Rect2(panel.position, Vector2(panel.size.x, 72)), INK, false, 6.0)
-	var head := "LEVEL COMPLETE!" if not final else "YOU SAVED THE STUDIO!"
+	var head := "LEVEL COMPLETE!" if not final else "THE BOMB ROOM IS OPEN!"
 	var hs := FONT_SHOUT.get_string_size(head, HORIZONTAL_ALIGNMENT_LEFT, -1, 50)
 	draw_string(FONT_SHOUT, panel.position + Vector2((panel.size.x - hs.x) * 0.5, 54), head, HORIZONTAL_ALIGNMENT_LEFT, -1, 50, INK)
 	var y := panel.position.y + 108.0
@@ -90,7 +94,8 @@ func _draw() -> void:
 		draw_string(FONT_SHOUT, Vector2(left + 10, y + 22), "TOTAL SCORE", HORIZONTAL_ALIGNMENT_LEFT, -1, 34, Color("c1121f"))
 		draw_string(FONT_SHOUT, Vector2(right - 200, y + 22), "%d" % total_score, HORIZONTAL_ALIGNMENT_RIGHT, 140, 40, Color("c1121f"))
 		_rank_badge(Vector2(right - 20, y + 10), 26.0, overall_rank)
-		draw_string(FONT_BODY, Vector2(left + 10, y + 56), "Total time %s" % _fmt(total_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, INK)
+		draw_string(FONT_BODY, Vector2(left + 10, y + 56), "Total time %s    Bomb time left %s" % [_fmt(total_time), _fmt(bomb_left)], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, INK)
+		draw_string(FONT_BODY, Vector2(left + 10, y + 84), "Next: the boss fight against the Narrator (coming soon).", HORIZONTAL_ALIGNMENT_LEFT, 640, 18, Color("5c5470"))
 	else:
 		for ln in lines:
 			var pts: int = ln[1]
@@ -103,11 +108,13 @@ func _draw() -> void:
 		_rank_badge(Vector2(right - 20, y + 8), 26.0, rank)
 		var under := par > 0 and level_time <= par
 		draw_string(FONT_BODY, Vector2(left + 10, y + 54), "Time %s   Par %s   %s    Total score %d" % [_fmt(level_time), _fmt(par), "under par" if under else "over par", total_score], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("2d6a4f") if under else Color("5c5470"))
-		var note := "Checkpoint saved! If you run out of hearts, you restart %s." % next_title
-		if easier_next:
+		var note := "Key %d of %d to the bomb room found! Checkpoint saved: if you run out of hearts, you restart %s." % [keys_found, key_total, next_title]
+		if to_bomb_room:
+			note = "All %d keys found with %s left on the bomb! Press Z to open the bomb room." % [key_total, _fmt(bomb_left)]
+		elif easier_next:
 			note += " The Narrator took pity: it will be a little easier."
 		draw_string(FONT_BODY, Vector2(left + 10, y + 82), note, HORIZONTAL_ALIGNMENT_LEFT, 640, 18, Color("2d6a4f"))
 	if _t > 0.7 and int(_t * 2.0) % 2 == 0:
-		var t := "PRESS Z TO CONTINUE" if not final else "PRESS Z FOR THE MENU"
+		var t := "PRESS Z FOR THE MENU" if final else ("PRESS Z: OPEN THE BOMB ROOM" if to_bomb_room else "PRESS Z TO CONTINUE")
 		var ts := FONT_SHOUT.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 30)
 		draw_string(FONT_SHOUT, Vector2(panel.position.x + (panel.size.x - ts.x) * 0.5, panel.end.y - 16), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("e63946"))
