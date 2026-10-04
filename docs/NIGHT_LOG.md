@@ -127,3 +127,26 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - Layout: the boss health bars (Ink Baron, Narrator, Static Twins) moved to the bottom right; the comms
   box (bottom left) used to cover their names and half the bar whenever the Narrator spoke in a fight.
 - New tool: `scripts/tools/moments_shots.tscn` freezes each of these moments for screenshots.
+
+## Antigravity's new character art (merged 77a41de)
+- Merged anti/work: painted 2K hero frames (idle, run, jump, attack, dash, hurt), the Narrator (unmasked,
+  ink swirling from his quill) and the masked villain, new comms portraits, true pixel-art hero frames
+  for 720p (run, punch, kick, roll, hurt) and pixel Narrator portraits, plus reference sheets.
+- Fixed a cutout artefact before use: white background trapped inside the silhouettes (between an arm
+  and the body, inside the Narrator's ink swirl) stayed opaque, so the Narrator carried big white blobs
+  and the hero white patches at the hip. New `tools/fix_enclosed_white.py` makes those pockets
+  transparent (white in a dark ink ring = trapped background; white in a bright glow = the light blade,
+  kept; the face is protected so the eyes, teeth and monocle stay). Applied to the 7 hero frames and
+  the Narrator (the masked villain was clean).
+- Checked in every scene (tour screenshots): 144p arena, 720p street and train, library, opera, the
+  Narrator fight and the finale. Bots unchanged: Ink Baron 35 s, opera 55 s, Narrator 55 s.
+
+## 144p readability (found while checking the new art)
+- In 144p the whole screen was filtered to 256x144, so the comms box, the task list and the console
+  tasks were unreadable (the speech-bubble task could not be played at all, and the Narrator's very
+  first instructions, the controls, could not be read). Decision: in the dark rooms the filter now sits
+  just above the world (the rooms stay mushy and colour-crushed; the HUD, consoles, REVEAL/KILL choice
+  and score cards are crisp). In fights, cutscenes and page turns it still covers the whole screen. The
+  comms box sits above the filter in every edition, and the Ink Baron's opening line now gives the
+  controls (his intro card is 144p). The comms line waits while a console task is open (it used to
+  cover the task's instructions) and continues when the task closes.

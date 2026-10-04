@@ -23,7 +23,7 @@ var _tex := {}
 
 
 func _ready() -> void:
-	layer = 60
+	layer = 100 # above the edition filter: the Narrator is always readable, even in 144p
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("comms")
 	_draw_node = Control.new()
@@ -69,7 +69,13 @@ func clear() -> void:
 
 
 func busy() -> bool:
-	return not _cur.is_empty()
+	return not _cur.is_empty() and not _held()
+
+
+## While a console task is open the line waits (the task panel has the player's attention).
+func _held() -> bool:
+	var d: Node = get_tree().get_first_node_in_group("editions_director")
+	return d != null and d.main != null and d.main.state == "task" and not dead
 
 
 func kill_signal() -> void:
@@ -100,7 +106,7 @@ func _next() -> void:
 func _process(delta: float) -> void:
 	_clock += delta
 	_static = maxf(0.0, _static - delta * 0.5)
-	if not _cur.is_empty():
+	if not _cur.is_empty() and not _held():
 		_t += delta
 		var full := String(_cur["text"])
 		if _t > full.length() / CPS + float(_cur["hold"]):
@@ -109,7 +115,7 @@ func _process(delta: float) -> void:
 
 
 func _draw_box() -> void:
-	if _cur.is_empty():
+	if _cur.is_empty() or _held():
 		return
 	var ci := _draw_node
 	var appear := clampf(_t / 0.18, 0.0, 1.0)
@@ -145,7 +151,8 @@ func _draw_box() -> void:
 	ci.draw_string(FONT_SHOUT, box.position + Vector2(112, 30), String(names.get(who, "")), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, GOLD if not evil else Color("ff6b6b"))
 	for k in 4:
 		var on := not dead and _static <= 0.0 or (k == 0 and _static > 0.0 and int(_clock * 8.0) % 2 == 0)
-		ci.draw_rect(Rect2(box.end - Vector2(64 - k * 12, 84 - (3 - k) * 5), Vector2(8, 10 + k * 5)), GOLD if on else Color(0.3, 0.3, 0.35))
+		var bh := 7.0 + k * 5.0
+		ci.draw_rect(Rect2(Vector2(box.end.x - 64 + k * 12, box.position.y + 32 - bh), Vector2(8, bh)), GOLD if on else Color(0.3, 0.3, 0.35))
 	# the line typing out
 	var full := String(_cur["text"])
 	var shown := full.substr(0, int(_t * CPS))

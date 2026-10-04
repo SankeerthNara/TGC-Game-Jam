@@ -23,6 +23,17 @@ func setup(m: Node) -> void:
 	main.add_child(comms)
 
 
+## 144p rooms: only the picture of the dark rooms is cheap. The filter sits just above the world, so
+## the HUD, the consoles, the REVEAL / KILL choice and the score cards stay readable. Everywhere else
+## (fights, cutscenes, page turns) it covers the whole screen.
+const WORLD_STATES := ["world", "task", "choice", "dead", "levelend", "playing"]
+
+
+func _process(_delta: float) -> void:
+	if fx != null and main != null:
+		fx.layer = 4 if act == "144p" and main.state in WORLD_STATES else 95
+
+
 # --- the book ------------------------------------------------------------------------------
 
 func start() -> void:
@@ -74,7 +85,7 @@ func _start_boss_144() -> void:
 	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "Power: V LIGHT BLADE, %s." % BossFight.POWER_TEXT_BY_KIND[0]]
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]]
 	_launch(b)
-	comms.say("Light him up, hero!", "narrator", 1.5)
+	comms.say("Light him up, hero! Z jump, X attack, C dash. V fires your light blade, F heals.", "narrator", 2.5)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
 		_twist_one())
