@@ -180,3 +180,7 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   change; 15.4 MB -> 2.7 MB) and Antigravity's reference sheets and preview composites are excluded
   from the game (`.gdignore` + export filter). index.pck 20.9 MB -> about 10 MB with all the new art.
   Web build re-exported and loaded in the browser: no console errors.
+- The masked villain conducting from the opera balcony showed only his legs with the new, taller art
+  (the curtain valance hides anything above y 140). He now floats lower, fully visible, in his spotlight.
+- Asked the watchdog to relay the next art request to Antigravity: the four 2K enemies (lancer, bat,
+  brute, Ink Baron) are still the old flat sprites and are now the biggest style clash.

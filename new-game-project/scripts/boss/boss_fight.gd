@@ -927,14 +927,16 @@ func _draw_balcony() -> void:
 	var b := Vector2(640, 150)
 	if _bg.has("arena_far"):
 		# on the painted stage he floats in a spotlight instead of standing on a drawn balcony
-		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(b - Vector2(150, 150), Vector2(300, 300)), false, Color(1, 0.8, 0.5, 0.35))
+		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(b + Vector2(0, 110) - Vector2(160, 160), Vector2(320, 320)), false, Color(1, 0.8, 0.5, 0.35))
 	else:
 		ArenaArt.poly(self, PackedVector2Array([b + Vector2(-110, 40), b + Vector2(110, 40), b + Vector2(90, 90), b + Vector2(-90, 90)]), Color("2a1a2e"), 4.0)
 		draw_line(b + Vector2(-110, 40), b + Vector2(110, 40), GOLD, 3.0)
 	if (_narrator != null and _narrator.kind == "narrator") or (_last_wave() and _phase == "wave" and boss_name == "THE NARRATOR"):
 		return
 	var beat := sin(_t * (5.0 if _phase == "wave" else 2.5))
-	if Sprites.draw(self, "masked_villain", b + Vector2(0, 70), 190.0, -1.0, Color.WHITE, 1.0 + sin(_t * 2.0) * 0.01, beat * 0.03):
+	# below the curtain's valance on the painted stage (it hides anything higher)
+	var feet := b + (Vector2(0, 200) if _bg.has("arena_far") else Vector2(0, 70))
+	if Sprites.draw(self, "masked_villain", feet, 190.0, -1.0, Color.WHITE, 1.0 + sin(_t * 2.0) * 0.01, beat * 0.03):
 		return # the masked villain conducts his choir (his face stays hidden until the reveal)
 	ComicArt.narrator(self, b + Vector2(0, -18), 0.42, 1.0, "grin", _t)
 	var hand := b + Vector2(30, 20)
