@@ -161,9 +161,9 @@ func _start_game() -> void:
 	if EDITIONS:
 		bomb_left = -1.0 # no bomb clock in the editions
 		world.bomb_left = -1.0
-		# the cheap edition is a quick prologue: one task fewer per level (3 and 5) and kinder sabotage
+		# the cheap edition is a quick prologue: 3 and 4 tasks, kinder sabotage
 		level_ease[0] = 1
-		level_ease[1] = 1
+		level_ease[1] = 2
 		director.start()
 		return
 	_set_state("cutscene")

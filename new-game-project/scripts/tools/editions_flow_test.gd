@@ -60,7 +60,7 @@ func _ready() -> void:
 	main._overlay.continue_pressed.emit()
 	await frames(5)
 	check(main.level_idx == 1, "level 2 of 144p")
-	check(main.world.tasks.size() == 5, "144p level 2: 5 tasks (%d)" % main.world.tasks.size())
+	check(main.world.tasks.size() == 4, "144p level 2: 4 tasks (%d)" % main.world.tasks.size())
 	main._level_complete()
 	await frames(3)
 	main._overlay.continue_pressed.emit()

@@ -197,3 +197,6 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - Playtime re-measured after the fix: the whole game runs end to end, 11.2 min with bots (book 21 s,
   Ink Baron 36 s, street 46 s, Twins 24 s, library 42 s, opera 43 s, reveal 18 s, Narrator 57 s, ending
   17 s, 144p levels 5 min at par). A first-time human: roughly 14-18 min.
+- Toward the 10-15 min target (watchdog): my human estimate was 14-18 min, so the 144p level 2 now
+  has 4 tasks with kinder sabotage timers (ease 2, was 5 tasks) and the Narrator has x1.3 health (was
+  x1.4). Expected first playthrough about 13-16 min. Flow test 0 fails.
