@@ -12,6 +12,7 @@ const FLOOR_Y := 600.0
 const PODIUM := Rect2(520, 505, 240, 18) ## the rim of the giant inkwell: a platform
 const TEX_GLOW := preload("res://assets/art/radial_glow.png")
 const HERO_SCALE := 1.35
+static var land_squash := 0.0 ## 0..1, set by the fight for the frame after a landing
 
 const HERO_MAIN := [Color("1d4ed8"), Color("c2a878"), Color("1f2a44"), Color("ff70a6")]
 const HERO_ACCENT := [Color("e63946"), Color("3d3f4a"), Color("f77f00"), Color("2ec4b6")]
@@ -290,25 +291,31 @@ static func hero(ci: CanvasItem, kind: int, f: Vector2, dir: float, pose: String
 ## The painted pulp hero (Antigravity's sprite frames), if they exist.
 static func _hero_sprite(ci: CanvasItem, f: Vector2, dir: float, pose: String, t: float, flash: float, sc: float) -> bool:
 	var key := "hero_idle"
-	var squash := 1.0 + sin(t * 3.0) * 0.012
+	var squash := 1.0 + sin(t * 3.0) * 0.015
 	var rot := 0.0
+	var bob := 0.0
 	match pose:
 		"run":
 			key = "hero_run1" if int(t * 9.0) % 2 == 0 else "hero_run2"
-			squash = 1.0
+			squash = 1.0 + absf(sin(t * 28.0)) * 0.03
+			bob = -absf(sin(t * 28.0)) * 4.0 * sc
+			rot = 0.07 * dir
 		"jump", "fall", "attack_down":
 			key = "hero_jump"
 		"attack", "attack_up":
 			key = "hero_attack"
-			rot = -0.2 * dir if pose == "attack_up" else 0.0
+			rot = -0.2 * dir if pose == "attack_up" else 0.1 * dir
+			squash = 0.95
 		"dash":
 			key = "hero_dash"
 		"hurt":
 			key = "hero_hurt"
 	if not Sprites.has(key):
 		key = "hero_idle"
+	if land_squash > 0.0:
+		squash *= 1.0 - 0.18 * land_squash
 	var tint := Color(1, 1, 1, 0.55) if flash > 0.0 else Color.WHITE
-	return Sprites.draw(ci, key, f + Vector2(0, 4), 128.0 * sc, dir, tint, squash, rot)
+	return Sprites.draw(ci, key, f + Vector2(0, 4 + bob), 128.0 * sc, dir, tint, squash, rot)
 
 
 static func _weapon(ci: CanvasItem, kind: int, hand: Vector2, pose: String) -> void:

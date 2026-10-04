@@ -93,6 +93,9 @@ var _invuln := 0.0
 var _heal_t := -1.0
 var _slow := 0.0
 var _hurt_flash := 0.0
+var _atk_buf := 0.0 ## X pressed just before the swing is ready: it fires as soon as it can
+var _land := 0.0 ## landing squash
+var _was_ground := true
 
 var _round := 0
 var _wave := 0
@@ -394,6 +397,10 @@ func _update_hero(delta: float) -> void:
 	_slow = maxf(0.0, _slow - delta)
 	_jump_buf = maxf(0.0, _jump_buf - delta)
 	_coyote = maxf(0.0, _coyote - delta)
+	_land = maxf(0.0, _land - delta * 6.0)
+	if _atk_buf > 0.0:
+		_atk_buf -= delta
+		_start_attack()
 	var move := 0.0
 	if Input.is_key_pressed(KEY_LEFT):
 		move -= 1.0
@@ -450,6 +457,13 @@ func _update_hero(delta: float) -> void:
 	# the camera follows in wide levels and frames the locked fight
 	var cam_target := clampf(hero_pos.x - 560.0, 0.0, level_width - 1280.0) if _exploring else clampf(center_x() - 640.0, 0.0, maxf(0.0, level_width - 1280.0))
 	_cam = lerpf(_cam, cam_target, minf(1.0, delta * 5.0))
+	if _ground and not _was_ground:
+		_land = 1.0
+		for k in 6:
+			_fx.append({"kind": "dust", "pos": hero_pos + Vector2(randf_range(-16, 16), -4), "vel": Vector2(randf_range(-160, 160), randf_range(-160, -40)), "t": 0.0, "life": 0.45, "size": randf_range(4, 8)})
+	elif _ground and absf(_vel.x) > 200.0 and int(_t * 9.0) != int((_t - delta) * 9.0):
+		_fx.append({"kind": "dust", "pos": hero_pos + Vector2(-_face * 10.0, -4), "vel": Vector2(-_face * 60.0, -60.0), "t": 0.0, "life": 0.35, "size": 4.0})
+	_was_ground = _ground
 	# the slash hits during its first frames
 	if _atk_t > 0.12:
 		var box := _attack_box()
@@ -457,6 +471,18 @@ func _update_hero(delta: float) -> void:
 			if not _atk_hit.has(e) and e.state != "enter" and e.hurt_box().intersects(box):
 				_atk_hit[e] = true
 				_hit_enemy(e, 1.0, _atk_dir == "down")
+
+
+func _start_attack() -> bool:
+	if _atk_cd > 0.0 or _heal_t >= 0.0:
+		return false
+	_atk_dir = "up" if Input.is_key_pressed(KEY_UP) else ("down" if Input.is_key_pressed(KEY_DOWN) and not _ground else "side")
+	_atk_t = 0.22
+	_atk_cd = 0.3
+	_atk_buf = 0.0
+	_atk_hit.clear()
+	EventBus.sound_requested.emit("slash")
+	return true
 
 
 func _attack_box() -> Rect2:
@@ -546,12 +572,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_Z, KEY_SPACE:
 			_jump_buf = 0.12
 		KEY_X:
-			if _atk_cd <= 0.0 and _heal_t < 0.0:
-				_atk_dir = "up" if Input.is_key_pressed(KEY_UP) else ("down" if Input.is_key_pressed(KEY_DOWN) and not _ground else "side")
-				_atk_t = 0.22
-				_atk_cd = 0.3
-				_atk_hit.clear()
-				EventBus.sound_requested.emit("slash")
+			if not _start_attack():
+				_atk_buf = 0.2
 		KEY_C:
 			if _dash_cd <= 0.0 and (_ground or _air_dash) and _heal_t < 0.0:
 				_dash(false)
@@ -933,7 +955,9 @@ func _draw_hero(off: Vector2) -> void:
 		for k in 3:
 			ArenaArt.hero(self, kind, hero_pos + off + Vector2(-_face * (k + 1) * 26.0, 0), _face, "dash", _t, 0.6, ArenaArt.HERO_SCALE)
 	if not blink:
+		ArenaArt.land_squash = _land
 		ArenaArt.hero(self, kind, hero_pos + off, _face, pose, _t, 0.0, ArenaArt.HERO_SCALE)
+		ArenaArt.land_squash = 0.0
 	draw_set_transform(off)
 	if _atk_t > 0.0:
 		var k := 1.0 - _atk_t / 0.22
@@ -954,6 +978,8 @@ func _draw_fx(f: Dictionary, off: Vector2) -> void:
 			ArenaArt.hit_spark(self, f["pos"], k, float(f["size"]))
 		"ink":
 			draw_circle(f["pos"], maxf(0.5, float(f["size"]) * (1.0 - k)), Color(0.15, 0.06, 0.2, 1.0 - k))
+		"dust":
+			draw_circle(f["pos"], maxf(0.5, float(f["size"]) * (1.0 + k)), Color(0.85, 0.78, 0.68, 0.35 * (1.0 - k)))
 		"paper":
 			draw_set_transform((f["pos"] as Vector2) + off, float(f["t"]) * 9.0, Vector2.ONE)
 			draw_rect(Rect2(-float(f["size"]), -float(f["size"]) * 0.6, float(f["size"]) * 2.0, float(f["size"]) * 1.2), Color(1, 0.97, 0.88, 1.0 - k))

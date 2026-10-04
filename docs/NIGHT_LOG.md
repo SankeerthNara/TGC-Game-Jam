@@ -53,3 +53,10 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - Twist 2: real fake credits ("THE END", the cast rolling with typewriter ticks, "THE MASKED VILLAIN
   ...still out there?") that freeze and glitch before the cursor is hijacked.
 - The comms dying: the picture tears twice and the music drops out completely until the reveal page.
+- Game feel: attack input is buffered in the brawler and the 2k fights (press X during a swing and the
+  next hit follows); each brawler punch steps forward; knocked-out goons fly back, spin and fade
+  instead of vanishing; landing and running kick up dust; the painted hero bobs and leans when running,
+  leans into attacks and squashes on landing.
+- Balance (decision): the brawler bot beat the Static Twins in 18 s, too short for a boss, so each Twin
+  has 40 HP (was 26) and a counter does 3 to them (was 4). Bot now: street 47 s, Twins 33 s, no deaths.
+  New tool: `scripts/tools/brawler_bot_test.tscn`.

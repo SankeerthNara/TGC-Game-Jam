@@ -11,8 +11,8 @@ const GROUND := 630.0
 const STATS := {
 	"thug": {"hp": 6.0, "speed": 120.0},
 	"gunner": {"hp": 4.0, "speed": 80.0},
-	"twin_a": {"hp": 26.0, "speed": 170.0},
-	"twin_b": {"hp": 26.0, "speed": 170.0},
+	"twin_a": {"hp": 40.0, "speed": 170.0},
+	"twin_b": {"hp": 40.0, "speed": 170.0},
 }
 
 var kind := "thug"
@@ -27,6 +27,8 @@ var cd := 1.0
 var flash := 0.0
 var stun := 0.0
 var dead := false
+var dying_t := -1.0 ## >= 0 while the knocked-out body tumbles away
+var _dvel := Vector2.ZERO
 var t := 0.0
 var attack := "" ## "jab" | "heavy" | "shot" | "beam" | "dash"
 var hit_done := false
@@ -167,8 +169,34 @@ func _choose(dist: float) -> void:
 
 # --- drawing (in pixel-art spirit: chunky shapes, few colours) -----------------------------------
 
+## Knocked out: the body flies back, spins and fades (instead of vanishing).
+func start_dying(from_x: float) -> void:
+	dying_t = 0.0
+	_dvel = Vector2(signf(pos.x - from_x) * 520.0 if pos.x != from_x else -dir * 520.0, -620.0)
+
+
+func update_dying(dt: float) -> bool:
+	dying_t += dt
+	pos += _dvel * dt
+	_dvel.y += 1900.0 * dt
+	if pos.y > GROUND:
+		pos.y = GROUND
+		_dvel = Vector2(_dvel.x * 0.4, -_dvel.y * 0.25)
+	return dying_t < 0.9
+
+
 func draw(ci: CanvasItem, cam: float) -> void:
 	var p := pos - Vector2(cam, 0)
+	if dying_t >= 0.0:
+		var a := clampf(1.0 - (dying_t - 0.4) / 0.5, 0.0, 1.0)
+		var spin := -signf(_dvel.x) * minf(dying_t * 7.0, 1.4)
+		var dkey := "px_thug" if kind == "thug" else ("px_gunner" if kind == "gunner" else "px_" + kind)
+		if Sprites.draw(ci, dkey, p, 170.0 if not twin() else 230.0, dir, Color(1, 0.85, 0.85, a), 1.0, spin):
+			return
+		ci.draw_set_transform(p, spin, Vector2(dir, 1.0))
+		ci.draw_rect(Rect2(Vector2(-22, -112), Vector2(44, 112)), Color(0.2, 0.2, 0.25, a))
+		ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		return
 	var key := "px_thug" if kind == "thug" else ("px_gunner" if kind == "gunner" else "px_" + kind)
 	if Sprites.has(key):
 		var h := 170.0 if not twin() else 230.0

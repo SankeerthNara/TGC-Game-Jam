@@ -63,6 +63,9 @@ var _pt := 0.0
 var _go_hint := 0.0
 var _tex := {}
 var _twin_turn := 0
+var _dying: Array[BrawlEnemy] = []
+var _atk_buf := 0.0 ## X pressed during a swing: the next hit of the combo follows right after
+var _was_ground := true
 
 
 func _ready() -> void:
@@ -234,10 +237,13 @@ func _update_world(delta: float) -> void:
 		_enemies.append(e)
 	for e in _enemies:
 		e.update(et, self)
+	_dying = _dying.filter(func(e: BrawlEnemy) -> bool: return e.update_dying(delta))
 	var dead := _enemies.filter(func(e: BrawlEnemy) -> bool: return e.dead)
 	for e: BrawlEnemy in dead:
 		_enemies.erase(e)
 		_kill_fx(e)
+		e.start_dying(hero_pos.x)
+		_dying.append(e)
 		if e.twin():
 			for o in _enemies:
 				if o.twin():
@@ -281,6 +287,9 @@ func _update_hero(delta: float) -> void:
 	_slow = maxf(0.0, _slow - delta)
 	if _combo_t <= 0.0:
 		_combo = 0
+	if _atk_buf > 0.0:
+		_atk_buf -= delta
+		_start_attack()
 	var move := 0.0
 	if Input.is_key_pressed(KEY_LEFT):
 		move -= 1.0
@@ -305,6 +314,11 @@ func _update_hero(delta: float) -> void:
 		hero_pos.y = GROUND
 		_vel.y = 0.0
 		_ground = true
+	if _ground and not _was_ground:
+		_dust(hero_pos, 6)
+	elif _ground and absf(_vel.x) > 200.0 and int(_t * 10.0) != int((_t - delta) * 10.0):
+		_dust(hero_pos, 1)
+	_was_ground = _ground
 	# punches land a moment into the swing
 	if _atk_t > 0.0 and _atk_t < 0.16:
 		var reach := 90.0 if _combo < 3 else 110.0
@@ -336,12 +350,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_ground = false
 				EventBus.sound_requested.emit("hero_jump")
 		KEY_X:
-			if _atk_t <= 0.05 and _roll_t <= 0.0 and _counter_t <= 0.0:
-				_combo = (_combo % 3) + 1
-				_combo_t = 0.55
-				_atk_t = 0.24 if _combo < 3 else 0.32
-				_atk_hit.clear()
-				EventBus.sound_requested.emit("slash")
+			if not _start_attack():
+				_atk_buf = 0.25
 		KEY_C:
 			if _roll_cd <= 0.0 and _ground:
 				_roll_t = 0.34
@@ -353,6 +363,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		_:
 			return
 	get_viewport().set_input_as_handled()
+
+
+func _start_attack() -> bool:
+	if _atk_t > 0.05 or _roll_t > 0.0 or _counter_t > 0.0:
+		return false
+	_combo = (_combo % 3) + 1
+	_combo_t = 0.55
+	_atk_t = 0.24 if _combo < 3 else 0.32
+	_atk_hit.clear()
+	_atk_buf = 0.0
+	# a small step into each punch
+	_vel.x += _face * (140.0 if _combo < 3 else 260.0)
+	EventBus.sound_requested.emit("slash")
+	return true
 
 
 ## V when an enemy flashes red: the hero blurs to him and hits back hard.
@@ -378,7 +402,7 @@ func _try_counter() -> void:
 	_inv = maxf(_inv, 0.5)
 	_face = signf(best.pos.x - hero_pos.x) if best.pos.x != hero_pos.x else _face
 	hero_pos.x = best.pos.x - _face * 70.0
-	best.take_hit(5.0 if not best.twin() else 4.0, hero_pos.x, 700.0)
+	best.take_hit(5.0 if not best.twin() else 3.0, hero_pos.x, 700.0)
 	best.state = "recover"
 	best.st = 0.0
 	_slow = 0.6
@@ -388,6 +412,11 @@ func _try_counter() -> void:
 	_hit_fx(best.center(), 2.0)
 	_fx.append({"kind": "word", "text": "COUNTER!", "pos": best.center() + Vector2(0, -80), "t": 0.0, "life": 0.9})
 	EventBus.sound_requested.emit("counter_hit")
+
+
+func _dust(at: Vector2, n: int) -> void:
+	for k in n:
+		_fx.append({"kind": "dust", "pos": at + Vector2(randf_range(-14, 14), -4), "vel": Vector2(randf_range(-120, 120), randf_range(-140, -40)), "t": 0.0, "life": 0.45})
 
 
 func _hit_fx(p: Vector2, size: float) -> void:
@@ -441,6 +470,9 @@ func _draw() -> void:
 	for e in _enemies:
 		e.draw(self, _cam)
 		draw_set_transform(off)
+	for e in _dying:
+		e.draw(self, _cam)
+		draw_set_transform(off)
 	for s in _shots:
 		var sp := (s["pos"] as Vector2) - Vector2(_cam, 0)
 		draw_line(sp - (s["vel"] as Vector2).normalized() * 30.0, sp, Color(1, 0.3, 0.3), 4.0)
@@ -460,6 +492,8 @@ func _draw() -> void:
 				ArenaArt.hit_spark(self, fp, k, float(f["size"]))
 			"px":
 				draw_rect(Rect2(fp, Vector2(6, 6)), Color(0.4, 1.0, 1.0, 1.0 - k))
+			"dust":
+				draw_rect(Rect2(fp - Vector2(4, 4), Vector2(8, 8)), Color(0.75, 0.7, 0.75, 0.5 * (1.0 - k)))
 			"word":
 				ComicArt.shout(self, String(f["text"]), fp + Vector2(0, -30.0 * k), 46, Color("ffd23f"), 10, -0.05)
 	draw_set_transform(off)
@@ -612,7 +646,7 @@ func _draw_hud() -> void:
 		var bar := Rect2(Vector2(340, 664), Vector2(600, 16))
 		draw_string(FONT_SHOUT, Vector2(340, 656), "THE STATIC TWINS", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("3ef0ff"))
 		var hp_sum := 0.0
-		var hp_max := 52.0
+		var hp_max := 80.0
 		for e in _enemies:
 			if e.twin():
 				hp_sum += maxf(0.0, e.hp)
