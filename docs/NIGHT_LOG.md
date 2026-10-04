@@ -28,3 +28,4 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   reveal → Narrator → finale → ending). Fixes: the Narrator boss floated behind the curtain valance
   (now lower, in front of the cracked mask); his entry line in the Editions is "LET ME WRITE YOUR LAST PAGE!".
 - README rewritten for the Editions (story, controls per edition, AI use).
+- Story panels now use the same sprites as gameplay (masked villain rising, the unmask crossfade, the Narrator reveal, the hero escaping and on comms), framed so faces stay in view.

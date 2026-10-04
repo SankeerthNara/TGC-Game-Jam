@@ -34,7 +34,8 @@ static func draw(ci: CanvasItem, key: String, sz: Vector2, t: float, params: Dic
 				ci.draw_polyline(PackedVector2Array([Vector2(sz.x * 0.2, 0), Vector2(sz.x * 0.28, sz.y * 0.2), Vector2(sz.x * 0.22, sz.y * 0.25), Vector2(sz.x * 0.32, sz.y * 0.5)]), Color.WHITE, 6.0)
 			var rise := clampf(t / 1.2, 0.0, 1.0)
 			var ease := 1.0 - pow(1.0 - rise, 3.0)
-			A.narrator(ci, Vector2(sz.x * 0.5, sz.y * (1.1 - 0.72 * ease)), sz.y / 330.0, 0.0, "grin", t)
+			if not Sprites.draw(ci, "masked_villain", Vector2(sz.x * 0.5, sz.y * (1.6 - 0.62 * ease)), sz.y * 0.95, 1.0):
+				A.narrator(ci, Vector2(sz.x * 0.5, sz.y * (1.1 - 0.72 * ease)), sz.y / 330.0, 0.0, "grin", t)
 		"earth_darkening":
 			A.fill_bg(ci, sz, Color("0b1d3a"), Color("07030c"))
 			A.stars(ci, sz, t, 5, 40)
@@ -75,16 +76,27 @@ static func draw(ci: CanvasItem, key: String, sz: Vector2, t: float, params: Dic
 		"masked_closeup":
 			A.fill_bg(ci, sz, Color("240046"), Color("10002b"))
 			A.halftone(ci, sz, Color(0.8, 0.5, 1.0, 0.2), 12.0, 5.0, Vector2(1, 1))
-			A.narrator(ci, Vector2(sz.x * 0.5, sz.y * 0.4), sz.y / 300.0, 0.0, "grin", t)
+			if not Sprites.draw(ci, "masked_villain", Vector2(sz.x * 0.5, sz.y * 1.35), sz.y * 1.4, 1.0):
+				A.narrator(ci, Vector2(sz.x * 0.5, sz.y * 0.4), sz.y / 300.0, 0.0, "grin", t)
 		"unmask":
 			A.burst(ci, sz, Vector2(sz.x * 0.5, sz.y * 0.4), Color("ffd23f"), Color("ffb703"), 18, t * 0.4)
 			var off := clampf((t - 0.7) / 0.7, 0.0, 1.0)
-			A.narrator(ci, Vector2(sz.x * 0.5, sz.y * 0.42), sz.y / 300.0, off, "grin", t)
+			if Sprites.has("masked_villain") and Sprites.has("narrator_boss"):
+				Sprites.draw(ci, "masked_villain", Vector2(sz.x * 0.5, sz.y * 1.35), sz.y * 1.4, 1.0, Color(1, 1, 1, 1.0 - off))
+				Sprites.draw(ci, "narrator_boss", Vector2(sz.x * 0.5, sz.y * 1.35), sz.y * 1.4, 1.0, Color(1, 1, 1, off))
+				if off > 0.0 and off < 1.0:
+					var mp := Vector2(sz.x * (0.5 + 0.4 * off), sz.y * (0.3 - 0.25 * off))
+					ci.draw_set_transform(mp, off * 5.0, Vector2.ONE)
+					A.ellipse(ci, Vector2.ZERO, sz.y * 0.09, sz.y * 0.12, Color("fbfbfb"), 3.0)
+					ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			else:
+				A.narrator(ci, Vector2(sz.x * 0.5, sz.y * 0.42), sz.y / 300.0, off, "grin", t)
 		"narrator_reveal":
 			A.burst(ci, sz, Vector2(sz.x * 0.5, sz.y * 0.5), Color("5a189a"), Color("7b2cbf"), 22, -t * 0.3)
 			A.halftone(ci, sz, Color(1, 0.85, 0.3, 0.2), 14.0, 6.0, Vector2(0.5, 0.5))
 			var zoom := 1.0 + 0.05 * t
-			A.narrator(ci, Vector2(sz.x * 0.5, sz.y * 0.48), sz.y / 280.0 * zoom, 1.0, "grin", t)
+			if not Sprites.draw(ci, "narrator_boss", Vector2(sz.x * 0.5, sz.y * 1.12), sz.y * 1.12 * minf(zoom, 1.06), 1.0):
+				A.narrator(ci, Vector2(sz.x * 0.5, sz.y * 0.48), sz.y / 280.0 * zoom, 1.0, "grin", t)
 		"grab":
 			A.fill_bg(ci, sz, Color("fff3d1"), Color("ffd6a5"))
 			A.speed_lines(ci, sz, Vector2(sz.x * 0.35, sz.y * 0.45), t, Color(0, 0, 0, 0.25))
@@ -211,10 +223,12 @@ static func draw(ci: CanvasItem, key: String, sz: Vector2, t: float, params: Dic
 			A.burst(ci, sz, Vector2(sz.x * 0.7, sz.y * 0.3), Color("0d1b2a"), Color("1b263b"), 16, t * 0.3)
 			ci.draw_colored_polygon(PackedVector2Array([Vector2(sz.x * 0.62, 0), Vector2(sz.x * 0.78, 0), Vector2(sz.x * 0.55, sz.y), Vector2(sz.x * 0.4, sz.y)]), Color(1, 0.95, 0.75, 0.5))
 			A.speed_lines(ci, sz, Vector2(sz.x * 0.5, sz.y * 0.5), t, Color(1, 1, 1, 0.12))
-			A.hero_bust(ci, 0, Vector2(sz.x * 0.48, sz.y * 0.42), sz.y / 330.0, "determined", t)
+			if not Sprites.draw(ci, "hero_jump", Vector2(sz.x * 0.5, sz.y * 0.98), sz.y * 1.0, 1.0, Color.WHITE, 1.0, -0.15):
+				A.hero_bust(ci, 0, Vector2(sz.x * 0.48, sz.y * 0.42), sz.y / 330.0, "determined", t)
 		"op_comms":
 			A.fill_bg(ci, sz, Color("0b0f14"), Color("1b2a33"))
-			A.hero_bust(ci, 0, Vector2(sz.x * 0.4, sz.y * 0.5), sz.y / 360.0, "determined", t)
+			if not Sprites.draw(ci, "hero_idle", Vector2(sz.x * 0.36, sz.y * 1.02), sz.y * 1.0, 1.0):
+				A.hero_bust(ci, 0, Vector2(sz.x * 0.4, sz.y * 0.5), sz.y / 360.0, "determined", t)
 			var dev := Rect2(Vector2(sz.x * 0.6, sz.y * 0.62), Vector2(sz.x * 0.18, sz.y * 0.24))
 			ci.draw_rect(dev, Color("2b2d42"))
 			ci.draw_rect(dev, A.INK, false, 4.0)
