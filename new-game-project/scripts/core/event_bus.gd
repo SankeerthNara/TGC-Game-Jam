@@ -25,6 +25,10 @@ signal request_skip_level ## debug builds only
 signal game_state_changed(state: String) ## "menu", "playing", "paused", "ended"
 signal level_restarted
 
+## --- sound effects ---
+## One-shot sound by name. The names are listed in docs/SOUNDS.md; the sound player maps them to files.
+signal sound_requested(sound_name: String)
+
 ## --- town events (for audio and effects) ---
 signal item_collected(type: String) ## "ink", "gear" or "shard"
 signal trade_made(key_id: String)

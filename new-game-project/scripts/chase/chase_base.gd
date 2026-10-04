@@ -81,12 +81,14 @@ func playing() -> bool:
 func win(text := "GOTCHA!") -> void:
 	if not _won and not _lost:
 		_won = true
+		EventBus.sound_requested.emit("chase_win")
 		flash(text, 3.0)
 
 
 func lose(text := "HE GOT AWAY!") -> void:
 	if not _won and not _lost:
 		_lost = true
+		EventBus.sound_requested.emit("chase_lose")
 		flash(text, 5.0, RED)
 
 

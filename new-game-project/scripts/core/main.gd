@@ -171,6 +171,7 @@ func _bomb_exploded() -> void:
 	_overlay = null
 	active_task = ""
 	_set_state("ended")
+	EventBus.sound_requested.emit("explosion")
 	EventBus.caption_changed.emit("NARRATOR: Tick... tick... BOOM. The heroes were too late.")
 	_play_cutscene("earth_blast", func() -> void:
 		EventBus.game_finished.emit()
@@ -281,6 +282,7 @@ func _on_vampire_caught(i: int) -> void:
 	if state != "world":
 		return
 	_set_state("choice")
+	EventBus.sound_requested.emit("vampire_spotted")
 	EventBus.caption_changed.emit("NARRATOR: A vampire! Hold him in the light...")
 	_play_cutscene("detected", func() -> void:
 		if world.vampires.other_resolved(i):
@@ -298,6 +300,7 @@ func _on_vampire_caught(i: int) -> void:
 func _apply_vampire_choice(i: int, reveal: bool) -> void:
 	var role := world.vampires.role_of(i)
 	var kind := ("friend_revealed" if role == "friend" else "villain_revealed") if reveal else ("friend_killed" if role == "friend" else "villain_killed")
+	EventBus.sound_requested.emit(("reveal_friend" if role == "friend" else "reveal_villain") if reveal else "kill")
 	_play_cutscene(kind, func() -> void: _after_vampire_choice(i, reveal, role))
 
 
@@ -387,6 +390,7 @@ func _level_complete() -> void:
 	for sab in world.sabotage_defs.values():
 		big_flags.append(sab.get("big", false))
 	keys_found = mini(keys_found + 1, LevelGenerator.level_count())
+	EventBus.sound_requested.emit("key_get")
 	world.keys_found = keys_found
 	var result := score.finish_level(level_idx, world.tasks.size(), level_time, world.level_par, world.hp, world.max_health, big_flags)
 	# the next level is kinder if this one took longer than par (the run should stay about the same length)

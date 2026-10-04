@@ -151,6 +151,7 @@ func _step(delta: float) -> void:
 			_hurt_t = 1.2
 			_vel = Vector2(-380.0, -420.0)
 			_hook = -1
+			EventBus.sound_requested.emit("chase_hit")
 			penalty(3.0, "OUCH! -3 s")
 	for s: Dictionary in _shots:
 		s["t"] = float(s["t"]) + delta
@@ -160,12 +161,14 @@ func _step(delta: float) -> void:
 				e["webbed"] = true
 				s["t"] = 99.0
 				_webbed += 1
+				EventBus.sound_requested.emit("web_hit")
 				flash("THWIP!", 0.5)
 	_shots = _shots.filter(func(s: Dictionary) -> bool: return float(s["t"]) < 0.8)
 	if _pos.y > DEATH_Y:
 		_pos = _flags[_flag_hit] + Vector2(0, -30)
 		_vel = Vector2.ZERO
 		_hook = -1
+		EventBus.sound_requested.emit("chase_fall")
 		penalty(2.5, "FELL! BACK TO THE FLAG")
 		return
 	for k in _flags.size():
@@ -182,6 +185,7 @@ func _attach() -> void:
 		return
 	_hook = k
 	_rope = maxf(_hooks[k].distance_to(_pos), 110.0)
+	EventBus.sound_requested.emit("web_attach")
 
 
 func _shoot() -> void:
@@ -197,6 +201,7 @@ func _shoot() -> void:
 			best = d.length()
 			aim = d.normalized()
 	_shots.append({"pos": from, "vel": aim * SHOT_SPEED, "t": 0.0})
+	EventBus.sound_requested.emit("web_shoot")
 
 
 func _unhandled_input(event: InputEvent) -> void:

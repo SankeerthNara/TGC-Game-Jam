@@ -111,13 +111,20 @@ func _process(delta: float) -> void:
 	_total += delta
 	if _wipe >= 0.0:
 		_wipe += delta
+		if _wipe - delta <= 0.0:
+			EventBus.sound_requested.emit("page_turn")
 		if _wipe >= WIPE * 0.5 and _wipe - delta < WIPE * 0.5:
 			_page += 1
 			_build_page()
 		if _wipe >= WIPE:
 			_wipe = -1.0
 	else:
+		var before := _t
 		_t += delta
+		for sfx: Dictionary in _pages[_page].get("sfx", []):
+			if before < float(sfx["at"]) and _t >= float(sfx["at"]):
+				var word := String(sfx["text"])
+				EventBus.sound_requested.emit("explosion" if "BOOM" in word else ("key_click" if "CLICK" in word else "comic_pop"))
 		var hold := float(_pages[_page].get("hold", 2.2))
 		if _t > _page_end() + hold:
 			_next()

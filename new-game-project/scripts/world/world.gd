@@ -945,6 +945,7 @@ func _assign_to_friend() -> void:
 		message.emit("NARRATOR: Your friend is already on \"%s\"." % task["name"])
 	else:
 		assigned.append(String(task["id"]))
+		EventBus.sound_requested.emit("friend_assigned")
 		var queue_note := "" if assigned.size() == 1 else " (%d tasks in his queue)" % assigned.size()
 		message.emit("NARRATOR: Your friend will do \"%s\"%s. Go do something else!" % [task["name"], queue_note])
 
@@ -959,6 +960,7 @@ func ally_complete(task_id: String) -> void:
 		if t["id"] == task_id:
 			nm = String(t["name"])
 	complete_task(task_id)
+	EventBus.sound_requested.emit("friend_done")
 	ally_helped.emit(nm)
 	if all_tasks_done():
 		tasks_all_done.emit()

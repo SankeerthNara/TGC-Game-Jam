@@ -146,6 +146,7 @@ func _step(delta: float) -> void:
 	_ground_t = maxf(0.0, _ground_t - delta)
 	if _jump_buf > 0.0 and _ground_t > 0.0:
 		_vel.y = JUMP
+		EventBus.sound_requested.emit("chase_jump")
 		_jump_buf = 0.0
 		_ground_t = 0.0
 	# moving platforms
@@ -172,6 +173,7 @@ func _step(delta: float) -> void:
 	for p in _pads:
 		if p.grow(6.0).has_point(_pos + Vector2(0, R)) and _vel.y > -80.0:
 			_vel.y = PAD_JUMP
+			EventBus.sound_requested.emit("chase_bounce")
 			_ground_t = 0.0
 			flash("BOING!", 0.6)
 	for sp in _spikes:
@@ -184,6 +186,7 @@ func _step(delta: float) -> void:
 	for k in _flags.size():
 		if k > _flag_hit and _pos.x >= _flags[k].x:
 			_flag_hit = k
+			EventBus.sound_requested.emit("chase_checkpoint")
 			flash("CHECKPOINT!", 0.9)
 	if _pos.distance_to(_goal + Vector2(0, -R)) < 70.0 or _pos.x > _goal.x:
 		win("GOTCHA!")
@@ -212,6 +215,7 @@ var deaths: Array[String] = [] ## where and why the ball was sent back (for test
 
 
 func _respawn(text: String) -> void:
+	EventBus.sound_requested.emit("chase_fall")
 	deaths.append("%s@%d" % [text.substr(0, 6), int(_pos.x)])
 	_pos = _flags[_flag_hit]
 	_vel = Vector2.ZERO

@@ -139,6 +139,7 @@ func _step(delta: float) -> void:
 					flash("SCRAMBLE!", 0.6, RED)
 	if _y > 760.0:
 		_fall_t = 0.5
+		EventBus.sound_requested.emit("chase_fall")
 		flash("MISSED THE JUMP!", 1.0, RED)
 		_shake = 10.0
 		return
@@ -155,6 +156,7 @@ func _step(delta: float) -> void:
 		elif _x > c.end.x and prev_x <= c.end.x:
 			_cleared[k] = true
 			_boost = 0.6
+			EventBus.sound_requested.emit("chase_vault")
 			flash("VAULT!", 0.5)
 	for b in _bars:
 		if body.intersects(b) and _stumble <= 0.0:
@@ -164,6 +166,7 @@ func _step(delta: float) -> void:
 
 
 func _hit(text: String) -> void:
+	EventBus.sound_requested.emit("chase_hit")
 	_stumble = 0.7
 	_shake = 8.0
 	flash(text, 0.7, RED)
@@ -174,10 +177,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.keycode in [KEY_SPACE, KEY_UP, KEY_W] and _ground and _fall_t <= 0.0:
 		_vy = JUMP
+		EventBus.sound_requested.emit("chase_jump")
 		_ground = false
 		_slide = 0.0
 	elif event.keycode in [KEY_DOWN, KEY_S]:
 		_slide = 0.65
+		EventBus.sound_requested.emit("chase_slide")
 		if not _ground:
 			_vy = maxf(_vy, 700.0) # slam down
 

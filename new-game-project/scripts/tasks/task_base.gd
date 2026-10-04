@@ -61,11 +61,13 @@ func _draw_task() -> void:
 
 func succeed() -> void:
 	if not _done:
+		EventBus.sound_requested.emit("task_success")
 		_done = true
 		_done_t = 0.0
 
 
 func flash(text: String, shake := 0.0) -> void:
+	EventBus.sound_requested.emit("task_mistake")
 	_msg = text
 	_msg_t = 1.1
 	_shake = maxf(_shake, shake)
