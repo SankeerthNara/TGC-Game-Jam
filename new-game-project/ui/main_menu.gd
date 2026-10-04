@@ -21,7 +21,8 @@ const HERO_NAMES := ["PULP", "NOIR", "NINJA", "SPACE"]
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	custom_minimum_size = Vector2(1280, 720)
+	size = Vector2(1280, 720)
 	
 	_sfx_player = AudioStreamPlayer.new()
 	_sfx_player.stream = SFX_CLICK
@@ -70,7 +71,7 @@ func _play_click() -> void:
 
 
 func _draw() -> void:
-	var sz := size
+	var sz := get_viewport_rect().size
 
 	# 1. Base Vintage Comic Paper
 	draw_rect(Rect2(Vector2.ZERO, sz), Color("fbf3db"))
@@ -100,7 +101,7 @@ func _draw() -> void:
 	var villain_pos := Vector2(680, villain_y)
 	
 	# Ominous aura burst behind villain
-	ComicArt.burst(self, Vector2(400, 300), villain_pos, Color(0.2, 0.05, 0.25, 0.35), Color(0.05, 0.02, 0.08, 0.0), 16, _time * 0.15)
+	ComicArt.disc(self, villain_pos, 160.0, Color(0.18, 0.04, 0.22, 0.35), 0.0)
 	# Draw Masked Villain: mask_off = 0.0 (masked!), mood = "grin"
 	ComicArt.narrator(self, villain_pos, 1.75, 0.0, "grin", _time)
 
@@ -167,7 +168,6 @@ func _draw() -> void:
 		var circle_r := 52.0
 		ComicArt.disc(self, hc, circle_r + 4.0, INK, 0.0)
 		ComicArt.disc(self, hc, circle_r, Color("ffe680"), 0.0)
-		ComicArt.burst(self, Vector2(circle_r * 2, circle_r * 2), hc, Color("ffe680"), Color("fff5b8"), 10, _time * 0.2)
 		ComicArt.disc(self, hc, circle_r, Color(0, 0, 0, 0), 3.5)
 
 		# Hero bust
@@ -211,12 +211,14 @@ func _create_button(text: String, bg_color: Color) -> Button:
 
 func _build_help_modal() -> void:
 	_help_modal = Control.new()
-	_help_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_help_modal.custom_minimum_size = Vector2(1280, 720)
+	size = Vector2(1280, 720)
 	_help_modal.visible = false
 	add_child(_help_modal)
 
 	var dim := ColorRect.new()
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.custom_minimum_size = Vector2(1280, 720)
+	size = Vector2(1280, 720)
 	dim.color = Color(0, 0, 0, 0.7)
 	_help_modal.add_child(dim)
 
@@ -277,12 +279,14 @@ func _build_help_modal() -> void:
 
 func _build_credits_modal() -> void:
 	_credits_modal = Control.new()
-	_credits_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_credits_modal.custom_minimum_size = Vector2(1280, 720)
+	size = Vector2(1280, 720)
 	_credits_modal.visible = false
 	add_child(_credits_modal)
 
 	var dim := ColorRect.new()
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.custom_minimum_size = Vector2(1280, 720)
+	size = Vector2(1280, 720)
 	dim.color = Color(0, 0, 0, 0.7)
 	_credits_modal.add_child(dim)
 
@@ -330,6 +334,13 @@ func _build_credits_modal() -> void:
 	btn_close.custom_minimum_size = Vector2(160, 42)
 	btn_close.pressed.connect(func() -> void: _credits_modal.visible = false)
 	vbox.add_child(btn_close)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode in [KEY_Z, KEY_SPACE, KEY_ENTER]:
+			_on_start_pressed()
+			get_viewport().set_input_as_handled()
 
 
 func _on_start_pressed() -> void:

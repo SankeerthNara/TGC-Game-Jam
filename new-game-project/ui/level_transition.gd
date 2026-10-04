@@ -108,7 +108,7 @@ func _draw_card(ci: Control) -> void:
 	var frame_r := 130.0
 	ComicArt.disc(ci, portrait_center, frame_r + 6.0, INK, 0.0)
 	ComicArt.disc(ci, portrait_center, frame_r, Color("ffe066"), 0.0)
-	ComicArt.burst(ci, Vector2(frame_r * 2, frame_r * 2), portrait_center, Color("ffe066"), Color("fff0a0"), 12, -_time * 0.4)
+	
 	ComicArt.disc(ci, portrait_center, frame_r, Color(0, 0, 0, 0), 5.0)
 
 	# Draw Hero Bust
