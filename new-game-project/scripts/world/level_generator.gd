@@ -21,16 +21,16 @@ const ROOM_POOL := [
 const LEVELS := [
 	{"title": "THE STUDIO", "par": 120, "risky": 0, "disrupt": 0, "big": false, "vampires": false,
 	 "intro": "Level 1: THE STUDIO. The bomb is ticking! Finish every task to earn the first key to the bomb room. Arrow keys move (hold two for diagonals), Z interacts, M opens the map.",
-	 "tasks": ["mirror:0", "wires", "bubbles", "dial"]},
+	 "tasks": ["wires", "bubbles", "dial", "dots"]},
 	{"title": "THE ARCHIVE WING", "par": 180, "risky": 1, "disrupt": 0, "big": false, "vampires": true,
 	 "intro": "Level 2: THE ARCHIVE WING. You are not alone: two vampires lurk in the dark, a friend and the villain who cut the lights. Hold your torch on one to catch him!",
-	 "tasks": ["mirror:1", "sort", "switches", "blots", "swipe", "panels"]},
+	 "tasks": ["sort", "switches", "blots", "swipe", "panels", "math"]},
 	{"title": "THE MACHINE FLOOR", "par": 240, "risky": 2, "disrupt": 0, "big": true, "vampires": true,
 	 "intro": "Level 3: THE MACHINE FLOOR. The sabotage is bigger now and the timers are shorter. Catch a vampire in your light!",
-	 "tasks": ["mirror:3", "logic", "simon", "sfx", "charge", "debug", "wires", "dial"]},
+	 "tasks": ["logic", "simon", "sfx", "charge", "debug", "wires", "dial", "pipes"]},
 	{"title": "THE FINAL PAGE", "par": 300, "risky": 2, "disrupt": 1, "big": true, "vampires": true,
 	 "intro": "Level 4: THE FINAL PAGE. Everything at once. Big sabotage, and something may undo your finished work. The end is near...",
-	 "tasks": ["mirror:4", "mirror:6", "mirror:7", "debug", "logic", "panels", "sort", "charge", "simon", "sfx"]},
+	 "tasks": ["debug", "logic", "panels", "sort", "charge", "simon", "sfx", "safe"]},
 ]
 
 const TASK_NAMES := {
@@ -66,13 +66,13 @@ const TASK_NAMES_NEW := {
 	"safe": ["Crack the Safe", "Open the Locker"],
 }
 
-## Task tiers: easy ones come first, hard ones last. Every non-mirror task is used at most once per run.
+## Task tiers: easy ones come first, hard ones last. Every task type is used at most once per run
+## (26 types: 4 + 6 + 8 + 8 tasks).
 const TIERS := {
 	"easy": ["dots", "whack", "memory", "unscramble", "math", "inkmix", "rain", "bubbles", "wires", "swipe"],
 	"medium": ["blots", "dial", "switches", "sort", "panels", "needle", "proofread", "lightsout", "simon", "sfx"],
 	"hard": ["logic", "debug", "safe", "pipes", "slide", "charge"],
 }
-const MIRRORS := [["mirror:0"], ["mirror:1"], ["mirror:3"], ["mirror:4", "mirror:6", "mirror:7"]]
 
 
 ## The task list of every level for this run: no task type appears twice.
@@ -85,20 +85,16 @@ static func run_plan(run_seed: int) -> Array:
 	_shuffle(easy, rng)
 	_shuffle(medium, rng)
 	_shuffle(hard, rng)
-	var l1: Array = easy.slice(0, 3)
-	var l2: Array = easy.slice(3, 5) + medium.slice(0, 3)
-	var l3: Array = medium.slice(3, 7) + hard.slice(0, 3)
-	var rest: Array = easy.slice(5) + medium.slice(7)
-	_shuffle(rest, rng)
-	var l4: Array = hard.slice(3, 6) + rest.slice(0, 4)
+	var l1: Array = easy.slice(0, 4)
+	var l2: Array = easy.slice(4, 7) + medium.slice(0, 3)
+	var l3: Array = easy.slice(7, 8) + medium.slice(3, 7) + hard.slice(0, 3)
+	var l4: Array = easy.slice(8, 10) + medium.slice(7, 10) + hard.slice(3, 6)
 	var out: Array = []
 	var lists := [l1, l2, l3, l4]
 	for i in 4:
 		var specs: Array = []
 		for t in lists[i]:
 			specs.append(t)
-		for m in MIRRORS[i]:
-			specs.append(m)
 		_shuffle(specs, rng)
 		out.append(specs)
 	return out
