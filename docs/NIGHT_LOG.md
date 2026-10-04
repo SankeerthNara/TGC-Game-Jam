@@ -150,3 +150,19 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   comms box sits above the filter in every edition, and the Ink Baron's opening line now gives the
   controls (his intro card is 144p). The comms line waits while a console task is open (it used to
   cover the task's instructions) and continues when the task closes.
+
+## The book's panels, composed from the painted art
+- The book opening's story panels (op_peace, op_heroes, op_villain, op_capture, op_escape, op_comms)
+  were flat placeholder shapes (a smiley Earth, triangle heroes), the weakest visuals in the game and
+  the first thing a judge sees after the menu. New `scripts/story/book_panels.gd` composes them from
+  the painted sprites and portraits plus drawn light and ink: a lit Earth (drifting continents and
+  clouds, night side, atmosphere) circled by the four heroes' light trails; the painted pulp hero with
+  his team in round insets; the masked villain (painted) pulling streams of light out of the sky into
+  his quill while the city below breaks into ever bigger pixel blocks ("the world began to lose its
+  detail"); the three heroes in hanging ink cages under spotlights, ink dripping; the hero dashing
+  through a crack of light with ink grabbing at him; the hero (painted portrait) listening to the comms
+  machine with the friendly Narrator's face on its screen and his voice on the wave line.
+- The reveal reuses them (the comms machine with static and NO SIGNAL, the caged heroes) and the ending
+  gets new ones: the painted hero's slash gathering the freed heroes' light, the painted Narrator
+  fading from the feet up with ink rising off him, the four heroes, and a sunlit Earth.
+- New keys (bk_*), so if painted book panels arrive later as op_*.png they can be compared and swapped.

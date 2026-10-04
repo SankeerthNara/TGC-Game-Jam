@@ -206,23 +206,23 @@ static func _book() -> Array:
 		 "sfx": [_sfx("MIRROR PAGE", 0, 0.3, Vector2(0.5, 0.42), 110, Color("ffd23f"), -0.03)],
 		 "hold": 1.4, "turn": "dive"},
 		{"panels": [
-			_p("op_peace", 0, 0, 0.58, 1, 0.0, "left"),
-			_p("op_heroes", 0.58, 0, 0.42, 1, 1.6, "right")],
+			_p("bk_peace", 0, 0, 0.58, 1, 0.0, "left"),
+			_p("bk_heroes", 0.58, 0, 0.42, 1, 1.6, "right")],
 		 "text": [
 			_cap("Once, the Earth shone with light...", 0, 0.3, "tl", 340.0),
 			_cap("...guarded by four heroes.", 1, 2.0, "bl", 300.0)],
 		 "hold": 1.6},
 		{"panels": [
-			_p("op_villain", 0, 0, 0.5, 1, 0.0, "left"),
-			_p("op_capture", 0.5, 0, 0.5, 1, 2.0, "right")],
+			_p("bk_villain", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("bk_capture", 0.5, 0, 0.5, 1, 2.0, "right")],
 		 "text": [
 			_cap("Then a masked villain drank the light from the sky. Without light, the world began to lose its detail.", 0, 0.3, "tl", 360.0),
 			_cap("He took three of the heroes.", 1, 2.4, "bl", 300.0)],
 		 "sfx": [_sfx("HA HA HA!", 0, 1.2, Vector2(0.5, 0.82), 60, Color("c77dff"), -0.1)],
 		 "hold": 1.6},
 		{"panels": [
-			_p("op_escape", 0, 0, 0.5, 1, 0.0, "left"),
-			_p("op_comms", 0.5, 0, 0.5, 1, 1.8, "right")],
+			_p("bk_escape", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("bk_comms", 0.5, 0, 0.5, 1, 1.8, "right")],
 		 "text": [
 			_cap("One hero escaped.", 0, 0.3, "tl", 260.0),
 			_say("Can you hear me, hero? I'm the Narrator. I'll guide you. Let's bring your friends home.", 1, 2.4, Vector2(0.5, 0.2), Vector2(0.62, 0.42), "narrator", 320.0)],
@@ -235,7 +235,7 @@ static func _book() -> Array:
 static func _reveal() -> Array:
 	return [
 		{"panels": [
-			_p("op_comms", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("bk_comms_dead", 0, 0, 0.5, 1, 0.0, "left"),
 			_p("masked_closeup", 0.5, 0, 0.5, 1, 1.8, "right")],
 		 "text": [
 			_cap("The comms went dead.", 0, 0.2, "tl", 260.0),
@@ -253,7 +253,7 @@ static func _reveal() -> Array:
 		 "sfx": [_sfx("RIIIP!", 0, 0.9, Vector2(0.7, 0.3), 60, Color("e63946"), 0.12)],
 		 "fx": [_fx(0.9, 18.0, 0.75, 0, "reveal_villain"), _fx(1.4, 10.0, 0.0, 1, "shockwave"), _fx(4.6, 5.0, 0.0, 1, "enemy_windup")],
 		 "hold": 2.2},
-		{"panels": [_p("op_capture", 0, 0, 1, 1, 0.0, "fade")],
+		{"panels": [_p("bk_capture", 0, 0, 1, 1, 0.0, "fade")],
 		 "text": [
 			_cap("Above the stage hung the three captured heroes.", 0, 0.2, "tl", 380.0),
 			_slow(_say("Now watch me write THE END.", 0, 1.6, Vector2(0.78, 0.8), Vector2(0.95, 0.95), "narrator", 260.0), 30.0)],
@@ -265,8 +265,8 @@ static func _reveal() -> Array:
 static func _ending_editions() -> Array:
 	return [
 		{"panels": [
-			_p("solar_flare", 0, 0, 0.5, 1, 0.0, "left"),
-			_p("narrator_melt", 0.5, 0, 0.5, 1, 1.2, "right")],
+			_p("bk_flare", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("bk_melt", 0.5, 0, 0.5, 1, 1.2, "right")],
 		 "text": [
 			_cap("Every hero's light, and the reader's hand, flooded the stage with sunlight.", 0, 0.2, "tl", 360.0),
 			_slow(_say("I guess this is how it was always meant to happen.", 1, 2.2, Vector2(0.5, 0.16), Vector2(0.5, 0.34), "narrator", 280.0), 30.0)],
@@ -274,8 +274,8 @@ static func _ending_editions() -> Array:
 		 "fx": [_fx(0.0, 0.0, 1.0), _fx(0.8, 10.0, 0.3, 0, "power_solar")],
 		 "hold": 2.4},
 		{"panels": [
-			_p("op_heroes", 0, 0, 0.5, 1, 0.0, "left"),
-			_p("earth_sunlit", 0.5, 0, 0.5, 1, 1.2, "fade")],
+			_p("bk_heroes", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("bk_sunlit", 0.5, 0, 0.5, 1, 1.2, "fade")],
 		 "text": [
 			_cap("Four heroes, together again.", 0, 0.3, "tl", 300.0),
 			_cap("And light returned to the Earth, in every detail.", 1, 1.8, "br", 340.0)],

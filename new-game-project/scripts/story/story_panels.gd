@@ -7,6 +7,9 @@ const A := preload("res://scripts/story/comic_art.gd")
 
 
 static func draw(ci: CanvasItem, key: String, sz: Vector2, t: float, params: Dictionary) -> void:
+	if BookPanels.has(key):
+		BookPanels.draw(ci, key, sz, t)
+		return
 	var c := sz * 0.5
 	match key:
 		"earth_peace":
