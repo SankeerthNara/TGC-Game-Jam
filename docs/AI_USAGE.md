@@ -55,3 +55,11 @@
 
 7. **720p Pixel Art Sprites & Portraits**
    - Downscaled using bilinear filtering to target bounding box, grounded to bottom row (y=64), hard 1-bit alpha thresholding, quantized to at most 24 colors with median-cut algorithm.
+
+## Claude Code, 2026-10-05 (overnight polish on `claude/editions`)
+- Wrote `scripts/story/book_panels.gd`: the book opening, reveal and ending panels are composed in code
+  from Antigravity's painted sprites and portraits plus drawn light, ink and backgrounds.
+- Wrote `tools/fix_enclosed_white.py` and applied it to Antigravity's hero and Narrator sprites: it
+  makes transparent the white background left trapped inside the silhouettes by the cutout step.
+- Game code for the big moments, the 144p readability fix, bug fixes and test tools; every decision is
+  logged in `docs/NIGHT_LOG.md`.
