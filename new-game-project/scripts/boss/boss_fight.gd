@@ -58,10 +58,6 @@ var level_width := 1280.0
 var platforms: Array[Rect2] = []
 var roamers: Array = [] ## [kind, Vector2]
 var arena_x := 0.0
-## Separate locked fights in a scrolling level, one per wave: [trigger x, lock left, lock right].
-## Empty: one locked arena around arena_x.
-var encounters: Array = []
-var guards := true ## guarding enemies block blows from the front (off in the 144p edition)
 var caged_heroes := false ## the three captured heroes hang in cages (the final stage)
 var _cam := 0.0
 var _lock_l := LEFT_X
@@ -89,8 +85,7 @@ var _anim := HeroAnimator.new("hero", {"idle": ["hero_idle"], "run": ["hero_run1
 	"jump": ["hero_jump"], "fall": ["hero_jump"], "attack1": ["hero_attack"], "attack2": ["hero_attack"],
 	"attack3": ["hero_attack"], "attack_up": ["hero_attack"], "attack_down": ["hero_jump"],
 	"dash": ["hero_dash"], "hurt": ["hero_hurt"], "skid": ["hero_idle"], "land": ["hero_idle"], "heal": ["hero_idle"],
-	"turn": ["hero_idle"], "blade": ["hero_attack"], "ko": ["hero_hurt"],
-	"parry": ["hero_blade_1"], "riposte": ["hero_attack3_1", "hero_attack3_2", "hero_attack3_3", "hero_attack3_4"]},
+	"turn": ["hero_idle"], "blade": ["hero_attack"], "ko": ["hero_hurt"]},
 	{"attack_up": "upslash", "attack_down": "downslash"})
 var _blade_t := 0.0 ## the Light Blade swing is playing
 var _jump_buf := 0.0
@@ -114,28 +109,6 @@ var _atk_buf := 0.0 ## X pressed just before the swing is ready: it fires as soo
 var _land := 0.0 ## landing squash
 var _was_ground := true
 var _boss_carry := -1.0 ## a retry keeps most of the damage done to the boss
-# --- the parry (tap L), the riposte, posture and the critical strike
-const PARRY_WINDOW := 0.18
-const PARRY_COOLDOWN := 0.32 ## after the window, so the parry can't be spammed
-const BLADE_HOLD := 0.3 ## hold L this long for the Light Blade
-var _parry_t := 0.0 ## > 0: the parry window is open
-var _parry_cd := 0.0
-var _parry_pose := 0.0
-var _riposte := 0.0 ## > 0 after a perfect parry: the next hit is a riposte
-var _riposting := false
-var _l_hold := -1.0
-var _blade_done := false
-var _slowmo := 0.0
-var _crit_zoom := 0.0
-var _crit_at := Vector2.ZERO
-var _clash := {} ## the last parry's flash: pos, t
-var _hint := ""
-var _hint_t := 0.0
-var _hints_seen := {}
-var _block_say := 0.0
-var parries := 0
-var ripostes := 0
-var criticals := 0
 
 var _round := 0
 var _wave := 0
@@ -293,18 +266,7 @@ func _begin_round(r: int) -> void:
 			_enemies.append(e)
 
 
-## The current locked fight of a scrolling level: [trigger x, lock left, lock right].
-func _encounter() -> Array:
-	if not encounters.is_empty():
-		return encounters[mini(_wave, encounters.size() - 1)]
-	return [arena_x, arena_x - 530.0, arena_x + 530.0]
-
-
 func _begin_wave() -> void:
-	if _wave == 0 and not encounters.is_empty() and _round == 0:
-		var comms: Node = get_tree().get_first_node_in_group("comms")
-		if comms != null:
-			comms.say("He's guarding, hero: hitting his front only bounces off. Watch his spear. When it flashes GOLD, tap L to parry, then strike back with J!", "narrator", 3.0)
 	_phase = "wave_intro"
 	_pt = 0.0
 	EventBus.sound_requested.emit("wave_start")
@@ -316,8 +278,8 @@ func _start_spawns() -> void:
 	var wave: Array = waves[_round][_wave]
 	for s: Array in wave:
 		var kind: String = s[0]
-		var where: String = s[1] if s[1] is String else ""
-		var p: Vector2 = s[1] if s[1] is Vector2 else Vector2(640, FLOOR_Y)
+		var where: String = s[1]
+		var p := Vector2(640, FLOOR_Y)
 		match where:
 			"L":
 				p = Vector2(_lock_l + 110.0, FLOOR_Y)
@@ -333,7 +295,7 @@ func _start_spawns() -> void:
 				p = Vector2(center_x(), 180)
 			"BALCONY":
 				p = Vector2(center_x(), 150)
-		_pending.append({"kind": kind, "pos": p, "delay": float(s[2]), "mark": 0.7, "opts": s[3] if s.size() > 3 else {}})
+		_pending.append({"kind": kind, "pos": p, "delay": float(s[2]), "mark": 0.7})
 	intensity = 3 if _last_wave() else (2 if _round >= 1 or _wave >= 1 else 1)
 
 
@@ -341,14 +303,7 @@ func _wave_done() -> void:
 	if _relay_round():
 		_cleared += 1
 	_wave += 1
-	if _wave < waves[_round].size() and not encounters.is_empty():
-		# a breather: the doors open and the hero walks on to the next fight
-		_exploring = true
-		_phase = "explore"
-		_pt = 0.0
-		_say("GO  >>", Vector2(1100, 300), GOLD, 48)
-		EventBus.sound_requested.emit("chase_checkpoint")
-	elif _wave < waves[_round].size():
+	if _wave < waves[_round].size():
 		_begin_wave()
 	elif _relay_round():
 		# the story: the Narrator writes THE END on this hero
@@ -386,22 +341,11 @@ func _process(delta: float) -> void:
 	_shake = maxf(0.0, _shake - delta * 40.0)
 	_white = maxf(0.0, _white - delta * 2.5)
 	_hurt_flash = maxf(0.0, _hurt_flash - delta * 2.5)
-	_hint_t = maxf(0.0, _hint_t - delta)
-	_crit_zoom = maxf(0.0, _crit_zoom - delta * 1.3)
-	if not _clash.is_empty():
-		_clash["t"] = float(_clash["t"]) + delta
-		if float(_clash["t"]) > 0.45:
-			_clash = {}
-	pivot_offset = _crit_at
-	scale = Vector2.ONE * (1.0 + 0.16 * _crit_zoom * _crit_zoom) # the camera punches in on a critical
 	_update_fx(delta)
 	if _freeze > 0.0:
 		_freeze -= delta # hit-stop: the world holds its breath
 		queue_redraw()
 		return
-	if _slowmo > 0.0:
-		_slowmo -= delta
-		delta *= 0.3 # a breath of slow motion after a perfect parry
 	match _phase:
 		"round_intro":
 			_gate = move_toward(_gate, 0.0, delta * 2.0)
@@ -413,15 +357,13 @@ func _process(delta: float) -> void:
 				else:
 					_begin_wave()
 		"explore":
-			_gate = move_toward(_gate, 0.0, delta * 2.0)
 			_update_hero(delta)
 			_update_world(delta)
-			var enc := _encounter()
-			if hero_pos.x > float(enc[0]):
-				# the doors slam: a locked fight
+			if hero_pos.x > arena_x:
+				# the doors slam: a locked fight, like the video
 				_exploring = false
-				_lock_l = float(enc[1])
-				_lock_r = float(enc[2])
+				_lock_l = arena_x - 530.0
+				_lock_r = arena_x + 530.0
 				# roamers left behind outside the doors stay behind (no teleporting into the fight)
 				_enemies = _enemies.filter(func(e: ArenaEnemy) -> bool: return e.pos.x > _lock_l and e.pos.x < _lock_r)
 				_begin_wave()
@@ -489,19 +431,6 @@ func _update_hero(delta: float) -> void:
 	_coyote = maxf(0.0, _coyote - delta)
 	_combo_t = maxf(0.0, _combo_t - delta)
 	_blade_t = maxf(0.0, _blade_t - delta)
-	_parry_t = maxf(0.0, _parry_t - delta)
-	_parry_cd = maxf(0.0, _parry_cd - delta)
-	_parry_pose = maxf(0.0, _parry_pose - delta)
-	_riposte = maxf(0.0, _riposte - delta)
-	_block_say = maxf(0.0, _block_say - delta)
-	if _l_hold >= 0.0:
-		if Input.is_action_pressed("power"):
-			_l_hold += delta
-			if _l_hold > BLADE_HOLD and not _blade_done:
-				_blade_done = true
-				_power() # hold L: the Light Blade
-		else:
-			_l_hold = -1.0
 	_land = maxf(0.0, _land - delta * 6.0)
 	if _atk_buf > 0.0:
 		_atk_buf -= delta
@@ -524,7 +453,7 @@ func _update_hero(delta: float) -> void:
 			for e in _enemies:
 				if not _atk_hit.has(e) and e.state != "enter" and e.hurt_box().grow(10.0).intersects(_hero_box()):
 					_atk_hit[e] = true
-					_hit_enemy(e, 4.0, false, true)
+					_hit_enemy(e, 4.0, false)
 		if _dash_t <= 0.0:
 			_vel.x = _face * RUN * 0.6
 			_light_dash = false
@@ -610,10 +539,6 @@ func _anim_name() -> String:
 		return "ko"
 	if _blade_t > 0.0:
 		return "blade"
-	if _parry_pose > 0.0:
-		return "parry"
-	if _atk_t > 0.0 and _riposting:
-		return "riposte"
 	if _heal_t >= 0.0:
 		return "heal"
 	if _invuln > 1.0:
@@ -658,9 +583,7 @@ func _start_attack() -> bool:
 	_combo = (_combo % 3) + 1 if _combo_t > 0.0 else 1
 	_combo_t = 0.55
 	_face_nearest()
-	_riposting = _riposte > 0.0
-	_riposte = 0.0
-	_anim.start_attack(3 if _riposting else _combo)
+	_anim.start_attack(_combo)
 	if _combo == 3 and _ground and _atk_dir == "side":
 		_vel.x += _face * 220.0 # the third hit steps in
 	_atk_hit.clear()
@@ -678,40 +601,13 @@ func _attack_box() -> Rect2:
 	return Rect2(c + Vector2(0.0 if _face > 0.0 else -115.0, -55.0), Vector2(115, 95))
 
 
-func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool, pierce := false) -> void:
+func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool) -> void:
 	if e.dead:
 		return # already beaten: hitting him again would restart the hit-stop forever (powers fire during it)
-	var riposte := _riposting and not pierce
-	if e.kind != "bomb" and e.broken > 0.0 and not pierce:
-		_critical(e)
-		if e.dead:
-			_kill_fx(e)
-		return
-	# a guard blocks the front; a riposte, the Light Blade and (on a lancer) a down-slash get through
-	if e.kind != "bomb" and not riposte and not pierce and not (pogo and e.kind == "lancer") and e.guarding(hero_pos.x):
-		_block(e)
-		return
 	if e.kind == "bomb":
 		e.dead = true # a slashed bomb fizzles out
-	elif riposte:
-		ripostes += 1
-		_riposting = false
-		e.take_hit(dmg * (3.0 if e.boss() else 4.0), hero_pos.x, 0.12 if e.boss() else 0.2)
-		if not e.dead and e.broken <= 0.0:
-			e.open(0.5 if e.boss() else 0.8) # the riposte knocks him open: the combo can follow
-		_freeze = 0.12
-		shake(8.0)
-		_say("RIPOSTE!", e.center() + Vector2(0, -125), Color("fff3d1"), 40)
-		EventBus.sound_requested.emit("punch_heavy")
-		if _hint == "riposte":
-			_hint_t = 0.0
 	else:
-		var post := 0.03 if e.boss() else 0.06
-		if pierce:
-			post = 0.2 if e.boss() else 0.3 # the Light Blade breaks through a guard and rocks the posture
-		e.take_hit(dmg, hero_pos.x, post)
-		if e.broken > 0.0:
-			_show_hint("broken", true)
+		e.take_hit(dmg, hero_pos.x)
 	_ink = mini(MAX_INK, _ink + 1)
 	_freeze = 0.05
 	_fx.append({"kind": "spark", "pos": e.center().lerp(hero_center(), 0.3), "t": 0.0, "life": 0.25, "size": 1.0})
@@ -793,107 +689,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _dash_cd <= 0.0 and (_ground or _air_dash) and _heal_t < 0.0:
 			_dash(false)
 	elif event.is_action("power"):
-		if _hero_kind() == 0:
-			_start_parry() # tap L: parry; hold L: the Light Blade (in _update_hero)
-			_l_hold = 0.0
-			_blade_done = false
-		else:
-			_power()
+		_power()
 	elif event.is_action("heal"):
 		if _ink >= 6 and _ground and _hp < max_hp and _heal_t < 0.0:
 			_heal_t = 0.0
 	else:
 		return
 	get_viewport().set_input_as_handled()
-
-
-func _start_parry() -> void:
-	if _parry_cd > 0.0 or _heal_t >= 0.0 or _dash_t > 0.0:
-		return
-	_face_nearest()
-	_parry_t = PARRY_WINDOW
-	_parry_cd = PARRY_WINDOW + PARRY_COOLDOWN
-	_parry_pose = 0.3
-	EventBus.sound_requested.emit("slash")
-
-
-## A perfect parry: clash flash, sparks, hit-stop and a breath of slow motion; the enemy reels (or
-## goes on with his combo), the hero gains ink and his next hit is a riposte.
-func _perfect_parry(e: ArenaEnemy) -> void:
-	parries += 1
-	_parry_t = 0.0
-	_parry_cd = 0.06 # ready at once for the next strike of a combo
-	_parry_pose = 0.25
-	_invuln = maxf(_invuln, 0.3)
-	_riposte = 1.6
-	_ink = mini(MAX_INK, _ink + 2)
-	var at := e.center().lerp(hero_center(), 0.45)
-	_clash = {"pos": at, "t": 0.0}
-	_freeze = 0.1
-	_slowmo = 0.35
-	_white = maxf(_white, 0.7)
-	shake(10.0)
-	for k in 18:
-		var ang := randf() * TAU
-		_fx.append({"kind": "ink", "pos": at, "vel": Vector2.from_angle(ang) * randf_range(200, 520), "t": 0.0, "life": 0.45, "size": randf_range(2, 4), "col": Color("ffe9a0")})
-	_fx.append({"kind": "spark", "pos": at, "t": 0.0, "life": 0.45, "size": 2.4})
-	_say("PARRY!", at + Vector2(0, -60), GOLD, 46)
-	EventBus.sound_requested.emit("counter_hit")
-	EventBus.sound_requested.emit("counter_flash")
-	e.parried(hero_pos.x)
-	if not e.flying():
-		_vel.x = -_face * 120.0 # the clash pushes the hero back a little
-	if e.broken > 0.0:
-		_show_hint("broken", true)
-	elif _hint == "gold" or not _hints_seen.has("riposte"):
-		_show_hint("riposte", true)
-
-
-## A blow on a guarding enemy's front: a clang, a little push back, a sliver of posture.
-func _block(e: ArenaEnemy) -> void:
-	e.posture = minf(1.0, e.posture + 0.04)
-	e.recoil = 0.4
-	e.recoil_dir = signf(e.pos.x - hero_pos.x)
-	_freeze = 0.04
-	_vel.x = -_face * 260.0
-	_fx.append({"kind": "spark", "pos": e.center().lerp(hero_center(), 0.4), "t": 0.0, "life": 0.2, "size": 0.8})
-	if _block_say <= 0.0:
-		_block_say = 1.0
-		_say("BLOCK", e.center() + Vector2(0, -70), Color("c9d1d9"), 30)
-	EventBus.sound_requested.emit("enemy_grunt")
-	_show_hint("guard")
-
-
-## The critical strike on a broken enemy: a big finisher with the camera punching in.
-func _critical(e: ArenaEnemy) -> void:
-	criticals += 1
-	var dmg := e.hp if not e.boss() else e.max_hp * 0.16 + 4.0
-	e.broken = 0.0
-	e.posture = 0.0
-	e.open(0.5)
-	e.take_hit(dmg, hero_pos.x, 0.0)
-	_ink = mini(MAX_INK, _ink + 2)
-	_freeze = 0.32
-	_white = 1.0
-	shake(20.0)
-	_crit_zoom = 1.0
-	_crit_at = e.center() - Vector2(_cam, 0)
-	_say("CRITICAL!", e.center() + Vector2(0, -90), GOLD, 64)
-	for k in 30:
-		var ang := randf() * TAU
-		_fx.append({"kind": "paper", "pos": e.center(), "vel": Vector2.from_angle(ang) * randf_range(250, 750), "t": 0.0, "life": 1.3, "size": randf_range(5, 11)})
-	_fx.append({"kind": "spark", "pos": e.center(), "t": 0.0, "life": 0.6, "size": 3.2})
-	EventBus.sound_requested.emit("punch_heavy")
-	EventBus.sound_requested.emit("shockwave")
-
-
-## A one-line tip at the top of the screen, once per kind per fight (`again` shows it every time).
-func _show_hint(k: String, again := false) -> void:
-	if _hints_seen.has(k) and not again:
-		return
-	_hints_seen[k] = true
-	_hint = k
-	_hint_t = 3.2
 
 
 func _dash(light: bool) -> void:
@@ -925,7 +727,7 @@ func _power() -> void:
 			var reach := Rect2(hero_center() + Vector2(0.0 if _face > 0.0 else -260.0, -110.0), Vector2(260, 190))
 			for e in _enemies:
 				if e.state != "enter" and e.hurt_box().intersects(reach):
-					_hit_enemy(e, 4.0, false, true)
+					_hit_enemy(e, 4.0, false)
 			shake(9.0)
 			_say("LIGHT BLADE!", hero_center() + Vector2(0, -80), GOLD, 46)
 			EventBus.sound_requested.emit("power_prism")
@@ -946,7 +748,7 @@ func _power() -> void:
 			var band := Rect2(Vector2(minf(x0, x1), y - 40.0), Vector2(absf(x1 - x0), 80.0))
 			for e in _enemies:
 				if e.state != "enter" and e.hurt_box().intersects(band):
-					_hit_enemy(e, 5.0, false, true)
+					_hit_enemy(e, 5.0, false)
 			shake(8.0)
 			_say("PRISM CANNON!", hero_center() + Vector2(0, -70), Color("2ec4b6"), 46)
 			EventBus.sound_requested.emit("power_prism")
@@ -967,14 +769,6 @@ func _update_world(delta: float) -> void:
 	for p in ready:
 		_pending.erase(p)
 		var e := ArenaEnemy.new(String(p["kind"]), p["pos"])
-		e.guards = guards
-		e.trainee = bool(p.get("opts", {}).get("trainee", false))
-		if not e.flying():
-			# standing on a ledge?
-			for rim in platforms:
-				if absf(e.pos.y - rim.position.y) < 24.0 and e.pos.x > rim.position.x and e.pos.x < rim.end.x:
-					e.perch = rim
-					e.ground_y = rim.position.y
 		if e.kind == "narrator":
 			e.hp = _narrator_hp() * boss_hp_scale
 			e.max_hp = e.hp
@@ -996,20 +790,13 @@ func _update_world(delta: float) -> void:
 				e.hp = _boss_carry
 				_boss_carry = -1.0
 		elif not e.flying():
-			e.pos.y = e.ground_y - (520.0 if e.kind == "brute" else 260.0) # drops onto the stage
+			e.pos.y = FLOOR_Y - (520.0 if e.kind == "brute" else 260.0) # drops onto the stage
 		_enemies.append(e)
 		EventBus.sound_requested.emit("enemy_spawn")
 	for e in _enemies:
 		e.update(et, self)
 		if not e.dead and e.hits(_hero_box()):
-			if _parry_t > 0.0 and e.parryable():
-				_perfect_parry(e)
-			else:
-				_hurt(e.pos.x)
-		if not e.dead:
-			var tc := e.tele()
-			if tc != "" and e.center().distance_to(hero_center()) < 520.0:
-				_show_hint(tc)
+			_hurt(e.pos.x)
 	var dead: Array[ArenaEnemy] = []
 	for e in _enemies:
 		if e.dead:
@@ -1175,7 +962,6 @@ func _draw() -> void:
 	if _white > 0.0:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, 0.5 * _white))
 	_draw_hud()
-	_draw_hints()
 	if _phase == "explore":
 		if _pt < 6.0:
 			ComicArt.shout(self, "GO  >>", Vector2(1100, 300), 48, GOLD, 10, 0.0)
@@ -1184,7 +970,7 @@ func _draw() -> void:
 		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
 		if _pt < 10.0:
-			draw_string(FONT_BODY, Vector2(210, 700), "WASD / ARROWS move   Z / SPACE jump   J attack (+W / +S)   K dash   L parry (hold: blade)   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
+			draw_string(FONT_BODY, Vector2(210, 700), "WASD / ARROWS move   Z / SPACE jump   J attack (+UP, or +DOWN in the air)   K dash   L power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
 	elif _phase == "wave" and _narrator == null:
 		# the objective while there is no boss bar: how many are left on stage
 		var left := _enemies.size() + _pending.size()
@@ -1334,21 +1120,6 @@ func _draw_hero(off: Vector2) -> void:
 			ArenaArt.slash(self, hero_center() + dir * 18.0, dir, k, _combo == 3 and _atk_dir == "side")
 	if _heal_t >= 0.0:
 		draw_arc(hero_center(), 40.0, -PI * 0.5, -PI * 0.5 + TAU * _heal_t / 0.6, 24, Color("8ef0ff"), 5.0)
-	if _parry_t > 0.0:
-		# the blade held up to catch the blow: a bright edge in front of the hero
-		var g := hero_center() + Vector2(_face * 34.0, -14.0)
-		var gk := _parry_t / PARRY_WINDOW
-		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(g - Vector2(46, 46), Vector2(92, 92)), false, Color(1, 0.95, 0.7, 0.6 * gk))
-		draw_line(g + Vector2(-_face * 6.0, 38.0), g + Vector2(_face * 10.0, -40.0), Color(1, 1, 0.92, 0.9 * gk), 5.0)
-	if not _clash.is_empty():
-		var ck := float(_clash["t"]) / 0.45
-		var cp: Vector2 = _clash["pos"]
-		var r := 20.0 + 90.0 * ck
-		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(cp - Vector2(r, r) * 1.6, Vector2(r, r) * 3.2), false, Color(1, 0.95, 0.65, 1.0 - ck))
-		for i in 8:
-			var d := Vector2.from_angle(i * TAU / 8.0 + 0.3)
-			draw_line(cp + d * r * 0.3, cp + d * r * (1.2 if i % 2 == 0 else 0.8), Color(1, 1, 0.9, 1.0 - ck), 4.0 * (1.0 - ck) + 1.0)
-		draw_arc(cp, r, 0.0, TAU, 32, Color(1, 0.9, 0.5, 1.0 - ck), 3.0)
 
 
 func _draw_fx(f: Dictionary, off: Vector2) -> void:
@@ -1357,8 +1128,7 @@ func _draw_fx(f: Dictionary, off: Vector2) -> void:
 		"spark":
 			ArenaArt.hit_spark(self, f["pos"], k, float(f["size"]))
 		"ink":
-			var ic: Color = f.get("col", Color(0.15, 0.06, 0.2))
-			draw_circle(f["pos"], maxf(0.5, float(f["size"]) * (1.0 - k)), Color(ic.r, ic.g, ic.b, 1.0 - k))
+			draw_circle(f["pos"], maxf(0.5, float(f["size"]) * (1.0 - k)), Color(0.15, 0.06, 0.2, 1.0 - k))
 		"dust":
 			draw_circle(f["pos"], maxf(0.5, float(f["size"]) * (1.0 + k)), Color(0.85, 0.78, 0.68, 0.35 * (1.0 - k)))
 		"paper":
@@ -1405,8 +1175,7 @@ func _draw_hud() -> void:
 		var r := Rect2(Vector2(126 + i * 19, 80), Vector2(15, 16))
 		draw_rect(r, INK)
 		draw_rect(r.grow(-2.0), Color("2ec4b6") if i < _ink else Color(0.15, 0.15, 0.2))
-	var power_line := "L parry   hold L: %s (3)   F heal (6)" % POWER_BY_KIND[0] if _hero_kind() == 0 else "L %s (3)   F heal (6)" % POWER_BY_KIND[_hero_kind()]
-	draw_string(FONT_BODY, Vector2(126, 116), power_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
+	draw_string(FONT_BODY, Vector2(126, 116), "L %s (3)   F heal (6)" % POWER_BY_KIND[_hero_kind()], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
 	# round, wave, bomb (top right)
 	draw_string(FONT_SHOUT, Vector2(930, 46), ("ROUND %d  -  %s" % [_round + 1, ComicArt.HERO_NAMES[kind]]) if fight_title == "" else fight_title, HORIZONTAL_ALIGNMENT_LEFT, 330, 22, GOLD)
 	if bomb_left >= 0.0:
@@ -1419,42 +1188,8 @@ func _draw_hud() -> void:
 		draw_string(FONT_SHOUT, Vector2(668, 652), boss_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("c77dff"))
 		draw_rect(bar, INK)
 		draw_rect(Rect2(bar.position + Vector2(3, 3), Vector2((bar.size.x - 6) * clampf(_narrator.hp / _narrator.max_hp, 0.0, 1.0), bar.size.y - 6)), Color("9d4edd"))
-		if _narrator.posture > 0.01 or _narrator.broken > 0.0:
-			var pb := Rect2(bar.position + Vector2(0, bar.size.y + 4), Vector2(bar.size.x, 8))
-			draw_rect(pb, INK)
-			var pcol := Color.WHITE if _narrator.broken > 0.0 and int(_t * 8.0) % 2 == 0 else Color("ffd23f").lerp(Color("ff8a00"), _narrator.posture)
-			draw_rect(Rect2(pb.position + Vector2(2, 2), Vector2((pb.size.x - 4) * clampf(_narrator.posture, 0.0, 1.0), pb.size.y - 4)), pcol)
 	elif _phase in ["wave", "wave_intro"] and _wave == 0 and _pt < 8.0:
-		draw_string(FONT_BODY, Vector2(210, 700), "WASD / ARROWS move   Z / SPACE jump   J attack (+W / +S)   K dash   L parry (hold: blade)   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
-
-
-const HINTS := {
-	"gold": "GOLD FLASH: TAP  L  AS IT HITS - PARRY!",
-	"red": "RED FLASH: YOU CAN'T PARRY THAT - DASH (K) OR JUMP AWAY",
-	"riposte": "PARRIED! NOW  J : RIPOSTE",
-	"broken": "POSTURE BROKEN!  J : CRITICAL STRIKE",
-	"guard": "HE'S GUARDING: PARRY HIS ATTACK, OR HIT HIM FROM BEHIND OR ABOVE",
-}
-
-
-## The tip of the moment, and in the parry lesson a steady prompt until the hero has parried.
-func _draw_hints() -> void:
-	var text := ""
-	var col := PAPER
-	if _phase == "wave" and _wave == 0 and _round == 0 and not encounters.is_empty() and parries == 0:
-		text = "TAP  L  THE MOMENT HIS SPEAR FLASHES GOLD"
-		col = GOLD
-	elif _hint_t > 0.0:
-		text = String(HINTS.get(_hint, ""))
-		col = Color("ff6b6b") if _hint == "red" else (GOLD if _hint in ["gold", "riposte", "broken"] else PAPER)
-	if text == "":
-		return
-	var fs := 26
-	var w := FONT_SHOUT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	var at := Vector2(640 - w * 0.5, 160)
-	draw_rect(Rect2(at + Vector2(-14, -fs - 2), Vector2(w + 28, fs + 16)), Color(0, 0, 0, 0.55))
-	draw_string_outline(FONT_SHOUT, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, INK)
-	draw_string(FONT_SHOUT, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+		draw_string(FONT_BODY, Vector2(210, 700), "WASD / ARROWS move   Z / SPACE jump   J attack (+UP, or +DOWN in the air)   K dash   L power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
 
 
 func _card(title: String, lines: Array, col: Color) -> void:
