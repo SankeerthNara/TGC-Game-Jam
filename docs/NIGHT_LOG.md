@@ -572,3 +572,15 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   scale and baseline match the other frames, no popping. Parkour test 9/9 (new: the pogo frames
   play), anim 18/18, flow 0 fails, arena bots win (Ink Baron 34 s, opera 56 s, Narrator 73 s).
   Web build re-exported. Stopping here for Sankeerth's playtest.
+
+### 14. Fights rebuilt after two reference fights (Sankeerth: "replicate these fights")
+References: a Hollow Knight Soul Master fight (library) and a Hornet fight (final boss); mechanics and
+fight structure replicated in our theme with our characters and art (no assets copied).
+- **The light is gone** (both 2K and 720p): a darkness overlay (`scripts/editions/light_overlay.*`)
+  leaves pools of light around the hero, hanging lanterns, chandelier candles, street lamps and the
+  Twins' screens; the HUD bands stay clear; cards and flashes lift the dark.
+- **The Narrator, a Hornet-style duel**: he drops from the balcony and fights on foot: gold lunge
+  (parryable), red quill throw on an ink thread that flies out and is pulled back, a leap into a gold
+  diving air-dash, a red spinning whirl of ink in the air, hops away (toward the middle when cornered);
+  a run of hits (9% of his health) staggers him; below half health he is faster and chains moves. The
+  ink flood / high phase is gone (a flat duel stage lit by four lanterns). Bot: 42 s.

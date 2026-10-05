@@ -1388,7 +1388,7 @@ func _update_world(delta: float) -> void:
 		if e.kind == "narrator":
 			e.hp = _narrator_hp() * boss_hp_scale
 			e.max_hp = e.hp
-			e.state = "hover"
+			e.state = "enter" # he drops from his balcony onto the stage: a duel on foot
 			_narrator = e
 			if _boss_carry > 0.0:
 				e.hp = _boss_carry

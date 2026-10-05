@@ -52,7 +52,7 @@ var _wind := 0.0 ## length of the current wind-up (0: none)
 var _open_t := 1.0 ## how long the current stagger lasts
 var _quiet := 0.0 ## time since he was last hit or parried (posture recovers after a while)
 ## The states in which a guarding enemy blocks blows from the front.
-const GUARDS := {"lancer": ["idle", "windup", "rewind"], "baron": ["idle", "jab_wind", "rewind"], "narrator": ["hover", "quill_wind", "rewind"]}
+const GUARDS := {"lancer": ["idle", "windup", "rewind"], "baron": ["idle", "jab_wind", "rewind"]}
 ## How much one perfect parry fills the posture.
 const PARRY_FILL := {"lancer": 0.34, "bat": 1.0, "dancer": 0.5, "brute": 0.26, "baron": 0.13, "narrator": 0.1}
 var guards := true ## the fight turns guarding off in the cheap edition
@@ -73,7 +73,7 @@ func radius() -> float:
 
 
 func flying() -> bool:
-	return kind in ["bat", "bomb", "narrator", "step", "dancer"]
+	return kind in ["bat", "bomb", "step", "dancer"]
 
 
 ## Centre of the body, for hits.
@@ -120,9 +120,11 @@ func hits(hero_box: Rect2) -> bool:
 				return false
 			box = box.merge(Rect2(pos + Vector2(dir * 30.0, -112), Vector2(dir * 130.0, 30)).abs())
 		"narrator":
-			if not state in ["quill", "dash", "slam"]:
-				return false
-			if state == "dash" and st < _wind:
+			if state == "throw":
+				return Rect2(quill - Vector2(36, 18), Vector2(72, 36)).intersects(hero_box)
+			if state == "whirl":
+				return hero_box.get_center().distance_to(center()) < 140.0
+			if not state in ["lunge", "airdash"]:
 				return false
 	return box.intersects(hero_box)
 
@@ -145,7 +147,7 @@ func parryable() -> bool:
 		"baron":
 			return state == "jab"
 		"narrator":
-			return state == "quill"
+			return state in ["lunge", "airdash"]
 	return false
 
 
@@ -167,9 +169,9 @@ func tele() -> String:
 				return "gold"
 			return "red" if state in ["sweep", "lob"] and st < _wind else ""
 		"narrator":
-			if state in ["quill_wind", "rewind"]:
+			if state in ["lunge_wind", "airdash_wind"]:
 				return "gold"
-			return "red" if state in ["dash", "slam"] and st < _wind else ""
+			return "red" if state in ["throw_wind", "whirl_wind"] else ""
 		"bomb":
 			return "red" if state == "fuse" else ""
 	return ""
@@ -196,6 +198,12 @@ func guarding(from_x: float) -> bool:
 
 func take_hit(dmg: float, from_x: float, post := 0.06) -> void:
 	hp -= dmg
+	if kind == "narrator" and broken <= 0.0 and not state in ["stagger", "stunned"]:
+		_hit_taken += dmg
+		if _hit_taken > max_hp * 0.09 and hp > 0.0:
+			_hit_taken = 0.0
+			open(1.3) # staggered: down for a moment
+			EventBus.sound_requested.emit("hero_ko")
 	flash = 1.0
 	whiteout = 0.06
 	recoil = 1.0
@@ -283,7 +291,7 @@ func update(dt: float, fight: Node) -> void:
 		vel = Vector2(cos(t * 1.3 + seed), 0.0)
 		return
 	if state == "enter":
-		var heavy := kind in ["brute", "baron"]
+		var heavy := kind in ["brute", "baron", "narrator"]
 		if not flying():
 			pos.y = minf(ground_y, pos.y + (1500.0 if heavy else 900.0) * dt)
 		if st > 0.55 and (not heavy or pos.y >= ground_y):
@@ -300,8 +308,6 @@ func update(dt: float, fight: Node) -> void:
 			pos.y = minf(pos.y + vel.y * dt, floor_y - 24.0)
 			pos.x += vel.x * dt
 			vel.x = move_toward(vel.x, 0.0, 600.0 * dt)
-		elif kind == "narrator":
-			pos = pos.move_toward(Vector2(pos.x + recoil_dir * 40.0 * dt, 470.0), 260.0 * dt)
 		else:
 			_ground(dt)
 		var done := broken <= 0.0 if state == "broken" else st > _open_t
@@ -567,94 +573,152 @@ func _baron_rest() -> void:
 
 ## The Narrator: chains of parryable quill strikes, a red dash across the stage, a red slam, ink rain
 ## and bats. He guards while he hovers; after a chain or a slam he rests, open.
-## The Narrator's three phases: 1 on the stage, 2 the stage floods with ink, 3 he floats high above it.
+## The Narrator's three phases were replaced by a ground duel; kept for the fight's checks.
 func stage_phase() -> int:
-	return 1 if hp > max_hp * 0.66 else (2 if hp > max_hp * 0.33 else 3)
+	return 1
 
 
+var quill := Vector2.ZERO ## the thrown quill's position (state "throw")
+var _quill_from := Vector2.ZERO
+var _hit_taken := 0.0 ## damage since his last stagger (enough of it staggers him)
+
+
+## The Narrator as a fast duelist on foot (like an agile sword duel): he lunges with his quill (gold),
+## throws it out on an ink thread and pulls it back (red), leaps and dives diagonally (gold), spins
+## in a whirl of ink in the air (red), and hops away. A run of hits staggers him; below half health
+## he is faster and chains his moves.
 func _narrator(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
-	phase2 = stage_phase() >= 2
-	var high := stage_phase() == 3
+	phase2 = hp < max_hp * 0.5
 	var sp: float = fight.enemy_speed() * (1.25 if phase2 else 1.0)
-	dir = signf(hero.x - pos.x) if hero.x != pos.x else dir
+	var dx := hero.x - pos.x
 	match state:
-		"hover":
-			target = Vector2(fight.center_x() + sin(t * 0.6) * 360.0, (170.0 if high else 320.0) + sin(t * 1.1) * 30.0)
-			pos = pos.move_toward(target, 220.0 * sp * dt)
+		"idle":
+			dir = signf(dx) if dx != 0.0 else dir
+			# keep a duelling distance
+			var want := 0.0
+			if absf(dx) > 380.0:
+				want = dir * 260.0
+			elif absf(dx) < 140.0 and absf(pos.x - fight.center_x()) < 380.0:
+				want = -dir * 200.0
+			vel.x = move_toward(vel.x, want * sp, 1600.0 * dt)
 			cd -= dt * sp
 			if cd <= 0.0:
-				# high above the stage he rains ink (to pogo off on the way up) and strikes from above
-				var picks := ["rain", "quill", "rain", "dash", "slam", "summon"] if high else ["quill", "quill", "dash", "slam", "rain", "summon"]
+				var d := absf(dx)
+				var picks: Array
+				if d > 420.0:
+					picks = ["throw", "jump_dash", "lunge"]
+				elif d < 170.0:
+					picks = ["whirl", "evade", "lunge"]
+				else:
+					picks = ["lunge", "throw", "jump_dash", "whirl"]
 				var pick: String = picks[randi() % picks.size()]
-				target = hc
 				EventBus.sound_requested.emit("narrator_attack")
 				match pick:
-					"quill":
-						chain = 2 if phase2 else 1
-						_wind_up("quill_wind", 0.7 / sp)
-					"dash":
-						_wind_up("dash", 0.75 / sp)
-					"slam":
-						_wind_up("slam", 0.6 / sp)
-					"rain":
-						_go("rain")
-						fight.ink_rain(6 if not phase2 else 9)
-					"summon":
-						_go("summon")
-						fight.spawn("bat", pos + Vector2(-60, 0))
-						fight.spawn("bat", pos + Vector2(60, 0))
-						if phase2:
-							fight.spawn("bomb", pos + Vector2(0, 40))
-		"quill_wind", "rewind":
-			# he glides in beside the hero, quill raised, and flashes gold before he strikes
-			var side := signf(pos.x - hero.x) if pos.x != hero.x else 1.0
-			pos = pos.move_toward(Vector2(hero.x + side * 150.0, clampf(hc.y - 30.0, 300.0, 540.0)), 520.0 * dt)
+					"lunge":
+						_wind_up("lunge_wind", 0.42 / sp)
+					"throw":
+						_wind_up("throw_wind", 0.45 / sp)
+					"jump_dash":
+						_go("jump")
+						vel = Vector2(dir * 120.0, -980.0)
+						target = Vector2(1.0, 0.0)
+					"whirl":
+						_go("jump")
+						vel = Vector2(dir * 60.0, -900.0)
+						target = Vector2(2.0, 0.0)
+					"evade":
+						_go("evade")
+						var away := -dir
+						if absf(pos.x - fight.center_x()) > 380.0:
+							away = signf(fight.center_x() - pos.x) # cornered: hop over toward the middle
+						vel = Vector2(away * 520.0, -620.0)
+		"lunge_wind", "throw_wind":
+			vel.x = 0.0
 			if st > _wind:
-				_go("quill")
-				vel = (hc - pos).normalized() * 720.0
-		"quill":
-			pos += vel * dt
-			if st > 0.24:
-				if chain > 0:
-					chain -= 1
-					_wind_up("rewind", 0.5 / sp)
+				if state == "lunge_wind":
+					_go("lunge")
+					vel.x = dir * 1100.0
+					EventBus.sound_requested.emit("dash")
 				else:
-					_rest()
-		"dash":
-			# telegraph a line at the hero's height, then sweep across the stage
-			if st < _wind:
-				var cx: float = fight.center_x()
-				pos = pos.move_toward(Vector2(cx - 700.0 if hero.x > cx else cx + 700.0, clampf(target.y, 300.0, 560.0)), 900.0 * dt)
-			else:
-				var cx2: float = fight.center_x()
-				var goal_x := cx2 + 700.0 if target.x > cx2 or pos.x < cx2 else cx2 - 700.0
-				pos.x = move_toward(pos.x, goal_x, 1300.0 * dt)
-				if absf(pos.x - goal_x) < 1.0 or st > 2.2:
-					pos.x = clampf(pos.x, fight.bound_l(), fight.bound_r())
-					_rest()
-		"slam":
-			if st < _wind:
-				pos = pos.move_toward(Vector2(target.x, 280.0), 700.0 * dt)
-			else:
-				pos.y = move_toward(pos.y, FLOOR_Y - 70.0, 1500.0 * dt)
-				if pos.y >= FLOOR_Y - 71.0 and state == "slam":
-					fight.shockwave(Vector2(pos.x, FLOOR_Y), 1.0)
-					fight.shockwave(Vector2(pos.x, FLOOR_Y), -1.0)
-					fight.shake(12.0)
-					_rest()
-		"rain", "summon":
-			if st > 1.0:
-				_rest()
-		"rest":
-			# tired and low: the moment to strike
-			pos = pos.move_toward(Vector2(pos.x, 470.0), 200.0 * dt)
-			if st > 1.3 / sp:
-				_go("hover")
-				cd = randf_range(0.6, 1.2)
+					_go("throw")
+					_quill_from = pos + Vector2(dir * 50.0, -120.0)
+					quill = _quill_from
+					EventBus.sound_requested.emit("slash")
+		"lunge":
+			if st > 0.3 or (dir > 0.0 and pos.x >= fight.bound_r() - 20.0) or (dir < 0.0 and pos.x <= fight.bound_l() + 20.0):
+				vel.x = 0.0
+				_after_move()
+		"throw":
+			# out along the thread, then pulled back to his hand
+			var reach := 560.0
+			var k := st / 0.45 if st < 0.45 else 1.0 - (st - 0.45) / 0.4
+			quill = _quill_from + Vector2(dir * reach * clampf(k, 0.0, 1.0), 0.0)
+			if st > 0.85:
+				_after_move()
+		"jump":
+			vel.y = minf(vel.y + 2700.0 * dt, 1400.0)
+			if vel.y > -120.0:
+				# the top of the leap: the dive (gold) or the whirl (red)
+				if target.x == 1.0:
+					_wind_up("airdash_wind", 0.28 / sp)
+				else:
+					_wind_up("whirl_wind", 0.3 / sp)
+				vel = Vector2.ZERO
+		"airdash_wind", "whirl_wind":
+			vel = Vector2.ZERO
+			dir = signf(dx) if dx != 0.0 else dir
+			if st > _wind:
+				if state == "airdash_wind":
+					_go("airdash")
+					vel = (hc - center()).normalized() * 1050.0
+					if vel.y < 200.0:
+						vel.y = 200.0
+					EventBus.sound_requested.emit("dash")
+				else:
+					_go("whirl")
+		"airdash":
+			if pos.y >= ground_y:
+				vel = Vector2.ZERO
+				fight.shake(6.0)
+				_after_move()
+		"whirl":
+			vel = Vector2.ZERO
+			if st > 0.7:
+				_go("fall")
+		"fall", "evade":
+			vel.x = move_toward(vel.x, 0.0, 400.0 * dt)
+			vel.y = minf(vel.y + 2700.0 * dt, 1400.0)
+			if pos.y >= ground_y and st > 0.1:
+				vel = Vector2.ZERO
+				_after_move()
+		"recover":
+			vel.x = move_toward(vel.x, 0.0, 2400.0 * dt)
+			if st > (0.45 if phase2 else 0.6):
+				_go("idle")
+				cd = randf_range(0.25, 0.6) if phase2 else randf_range(0.5, 1.0)
+	if not state in ["jump", "airdash_wind", "whirl_wind", "whirl", "airdash", "fall", "evade"] and pos.y < ground_y:
+		vel.y = minf(vel.y + 2700.0 * dt, 1400.0) # on his feet: gravity
+	pos += vel * dt
+	# keep the duel in view (the stage's sides are behind the curtains)
+	pos.x = clampf(pos.x, fight.bound_l() + 110.0, fight.bound_r() - 110.0)
+	if pos.y >= ground_y:
+		pos.y = ground_y
+		if not state in ["jump", "evade", "fall"]:
+			vel.y = 0.0
+
+
+## After a move: a short open moment; in phase 2 he sometimes chains straight into another.
+func _after_move() -> void:
+	if phase2 and randf() < 0.35:
+		_go("idle")
+		cd = 0.0
+		return
+	_go("recover")
 
 
 func _rest() -> void:
-	_go("rest")
+	_go("recover")
+
 
 
 ## The aerial dancer: circles high under the ceiling, then spins down at the hero and swirls back up.
@@ -725,6 +789,8 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 	_draw_tele(ci, time)
 	_draw_posture(ci, time)
+	if kind == "narrator":
+		_draw_duel(ci, time)
 	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
@@ -755,6 +821,22 @@ func _draw_tele(ci: CanvasItem, time: float) -> void:
 
 ## A small posture bar over regular enemies (the bosses' is on the HUD); a broken posture flashes
 ## the critical-strike prompt.
+## The Narrator's quill on its ink thread, and the ink whirl around him.
+func _draw_duel(ci: CanvasItem, time: float) -> void:
+	if state == "throw":
+		var hand := pos + Vector2(dir * 50.0, -120.0) + _o
+		ci.draw_line(hand, quill + _o, Color(0.12, 0.04, 0.2), 4.0)
+		ci.draw_line(hand, quill + _o, Color(0.7, 0.45, 1.0, 0.6), 1.5)
+		var q := quill + _o
+		ci.draw_colored_polygon(PackedVector2Array([q + Vector2(dir * 46.0, 0), q + Vector2(-dir * 30.0, -10), q + Vector2(-dir * 40.0, 0), q + Vector2(-dir * 30.0, 10)]), Color("f3e7c9"))
+		ci.draw_polyline(PackedVector2Array([q + Vector2(dir * 46.0, 0), q + Vector2(-dir * 30.0, -10), q + Vector2(-dir * 40.0, 0), q + Vector2(-dir * 30.0, 10), q + Vector2(dir * 46.0, 0)]), INK, 2.0)
+	if state == "whirl":
+		var c := center() + _o
+		for k in 10:
+			var a0 := time * 14.0 + k * TAU / 10.0
+			ci.draw_arc(c, 90.0 + (k % 3) * 22.0, a0, a0 + 1.4, 12, Color(0.75, 0.45, 1.0, 0.75), 4.0)
+
+
 func _draw_posture(ci: CanvasItem, time: float) -> void:
 	if dead or boss() or kind == "bomb":
 		return
@@ -799,9 +881,16 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 			face = 1.0 if vel.x >= 0.0 else -1.0
 			squash = 1.0 + sin(t * 24.0) * 0.08
 		"narrator":
-			feet = pos + _o + Vector2(0, 110)
-			face = 1.0 if pos.x < 640.0 else -1.0
-			rot = sin(time * 1.5) * 0.04
+			feet = pos + _o
+			face = dir
+			if state == "whirl":
+				rot = st * 22.0
+			elif state in ["lunge", "airdash"]:
+				rot = 0.25 * dir
+			elif tele() != "":
+				rot = -0.12 * dir
+			elif state in ["stagger", "stunned"]:
+				rot = -0.5 * dir
 		_:
 			squash = 1.0 + sin(t * 6.0) * 0.015
 			if tele() != "":
@@ -812,7 +901,7 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 	var fk := flash_k()
 	if fk > 0.0:
 		var tcol := GOLD_FLASH if tele() == "gold" else RED_FLASH
-		tint = Color(lerpf(tint.r, tcol.r * 1.4, 0.55 * fk), lerpf(tint.g, tcol.g * 1.4, 0.55 * fk), lerpf(tint.b, tcol.b * 1.4, 0.55 * fk), a)
+		tint = Color(lerpf(tint.r, tcol.r, 0.35 * fk), lerpf(tint.g, tcol.g, 0.35 * fk), lerpf(tint.b, tcol.b, 0.35 * fk), a)
 	if broken > 0.0:
 		tint = tint.darkened(0.25)
 		rot += 0.12 * dir # sagging, off balance

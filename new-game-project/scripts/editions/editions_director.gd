@@ -247,14 +247,15 @@ func _final_boss() -> void:
 	_current = _final_boss
 	var b := _arena("dark")
 	b.caged_heroes = true
-	b.chandeliers = [[Rect2(200, 400, 150, 14), 0.0], [Rect2(930, 400, 150, 14), 0.0], [Rect2(565, 310, 150, 14), 90.0]]
+	# a flat stage for a duel on foot, lit by a few lanterns
+	b.lamps.assign([Vector2(150, 400), Vector2(470, 330), Vector2(810, 330), Vector2(1130, 400)])
 	b.waves = [[[["narrator", "BALCONY", 0.0]]]]
 	b.boss_name = "THE NARRATOR"
 	b.fight_title = "THE NARRATOR"
 	b.boss_hp_scale = 1.3
 	b.narrator_line = "LET ME WRITE YOUR LAST PAGE!"
 	b.win_text = ""
-	b.intro_lines = ["The Narrator. The one who guided you all along.", "When his ink floods the stage, live on the podium, the chandeliers and the walls."]
+	b.intro_lines = ["The Narrator. The one who guided you all along.", "A duel: parry his gold lunges and dives, dodge the red quill and whirl."]
 	_launch(b)
 	comms.say("I wrote every page of you, hero. Even this one.", "narrator_evil", 2.0)
 	b.finished.connect(func(_result: String) -> void:
