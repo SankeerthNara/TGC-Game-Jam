@@ -230,3 +230,17 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - Story bug fixed: the level-intro card of the 144p level 2 showed the Noir Detective ("SHADOWS IN THE
   RAINY PRECINCT"), one of the captured heroes; the card picked the hero by level (old relay design).
   In the Editions it is always the pulp hero, with his painted portrait.
+
+## Final polish pass (Monday morning; freeze is Tuesday 12 pm)
+- Pause menu bugs fixed (found by reading the code, then tested):
+  1. RESTART LEVEL during any fight reloaded the last 144p dark room (it called the world loader), so
+     restarting the Opera dropped you into a 144p room under the 2K filter. Now it restarts the fight on
+     screen (each fight's start is remembered by the director); in the rooms it still reloads the room.
+  2. QUIT TO MENU left the abandoned run running: the edition filter (a pixelated menu after quitting in
+     720p), the comms, the frozen fight behind the menu, and the director's timers and page turns, which
+     could start the next scene over the menu or inside a new run. The director now has reset(): a run
+     counter makes old timers and page turns do nothing, and the filter, audio, comms and fourth-wall
+     windows are reset; the scene layer is cleared.
+- New `scripts/tools/menu_restart_test.tscn`: RESTART in all six fights (Ink Baron, street, train,
+  library, opera, Narrator) restarts that fight; quit to menu in the opera leaves a clean menu (no
+  filter, no scene, quiet comms, nothing starts in 12 s); a new run then plays to the end. 11/11 pass.

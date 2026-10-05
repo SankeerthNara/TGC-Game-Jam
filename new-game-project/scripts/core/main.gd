@@ -134,6 +134,13 @@ func _to_menu() -> void:
 		get_tree().paused = false
 	GameState.restart_game()
 	busy = false
+	if director != null:
+		# the Editions: nothing of the abandoned run may keep running behind the menu
+		director.reset()
+		for c in _task_layer.get_children():
+			c.queue_free()
+		_overlay = null
+		active_task = ""
 	_set_state("menu")
 	if ResourceLoader.exists(MENU_SCENE):
 		var layer := CanvasLayer.new()
@@ -552,6 +559,9 @@ func _restart_level() -> void:
 	if not paused and not state in PAUSABLE_STATES:
 		return
 	_set_paused(false)
+	if director != null and state == "boss" and director.restart_fight():
+		EventBus.level_restarted.emit()
+		return # a fight restarts itself (the 144p rooms reload below)
 	for c in _task_layer.get_children():
 		c.queue_free()
 	_overlay = null

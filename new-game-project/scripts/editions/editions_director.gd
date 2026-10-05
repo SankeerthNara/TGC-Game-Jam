@@ -12,6 +12,8 @@ var fx: EditionFX
 var comms: CommsBox
 var act := ""
 var _stale: Node = null ## the finished scene, kept on screen until the next page turn covers it
+var _run := 0 ## goes up when a run ends (quit to menu): timers and page turns of the old run do nothing
+var _current := Callable() ## starts the fight on screen again (pause menu: RESTART)
 
 
 func setup(m: Node) -> void:
@@ -73,6 +75,7 @@ func after_144_levels() -> void:
 
 
 func _start_boss_144() -> void:
+	_current = _start_boss_144
 	main._set_state("boss")
 	var b := BossFight.new()
 	b.heroes = [0]
@@ -112,6 +115,7 @@ func _twist_one() -> void:
 # --- 720p ----------------------------------------------------------------------------------
 
 func start_720() -> void:
+	_current = start_720
 	act = "720p"
 	main._set_state("boss")
 	comms.say("New look, same mission. The Static Twins guard the line to the villain's tower. Their goons are on this street. Watch their eyes: when they glow RED, hit V and turn it around!", "narrator", 2.5)
@@ -125,6 +129,7 @@ func start_720() -> void:
 
 
 func _start_twins() -> void:
+	_current = _start_twins
 	var g := BrawlerGame.new()
 	g.stage = "train"
 	_launch(g)
@@ -162,6 +167,7 @@ func _twist_two() -> void:
 # --- 2k ------------------------------------------------------------------------------------
 
 func start_2k() -> void:
+	_current = start_2k
 	act = "2k"
 	main._set_state("boss")
 	comms.say("The villain's tower. A library first, then his opera. Your friends are close, hero. I can feel it.", "narrator", 2.0)
@@ -182,6 +188,7 @@ func start_2k() -> void:
 
 
 func _opera() -> void:
+	_current = _opera
 	var b := _arena("opera")
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.3], ["bat", "AC", 3.0], ["lancer", "C", 6.0]],
 		[["brute", "C", 0.0], ["bat", "AL", 3.0], ["bomb", "AR", 5.0], ["lancer", "L", 7.0], ["lancer", "R", 9.0]]]]
@@ -212,6 +219,7 @@ func _reveal() -> void:
 
 
 func _final_boss() -> void:
+	_current = _final_boss
 	var b := _arena("dark")
 	b.caged_heroes = true
 	b.waves = [[[["narrator", "BALCONY", 0.0]]]]
@@ -276,10 +284,13 @@ func _free_stale() -> void:
 
 ## Turns the page: an ink wipe covers the screen, the old scene goes and `next` starts underneath.
 func _swap(next: Callable, title := "") -> void:
+	var run := _run
 	var w := EditionWipe.new()
 	w.title = title
 	main.add_child(w)
 	w.covered.connect(func() -> void:
+		if run != _run:
+			return
 		_free_stale()
 		next.call())
 
@@ -287,8 +298,39 @@ func _swap(next: Callable, title := "") -> void:
 # --- helpers -------------------------------------------------------------------------------
 
 func _later(secs: float, f: Callable) -> void:
+	var run := _run
 	var t := get_tree().create_timer(secs, false)
-	t.timeout.connect(f)
+	t.timeout.connect(func() -> void:
+		if run == _run:
+			f.call())
+
+
+## Quit to menu: everything of this run goes (its timers, the frozen scene, the overlays, the filter).
+func reset() -> void:
+	_run += 1
+	act = ""
+	_current = Callable()
+	_free_stale()
+	comms.clear()
+	comms.dead = false
+	fx.set_edition("2k")
+	_set_audio("2k")
+	for c in main.get_children():
+		if c is EditionWipe or c is SettingsTwist or c is BrightnessFinale:
+			c.queue_free()
+
+
+## Pause menu RESTART during a fight: the same fight from its start. False if no fight is on.
+func restart_fight() -> bool:
+	if not _current.is_valid() or main.state != "boss":
+		return false
+	if main._overlay != null and is_instance_valid(main._overlay):
+		main._overlay.queue_free()
+	main._overlay = null
+	_free_stale()
+	comms.clear()
+	_current.call()
+	return true
 
 
 ## The cheap edition sounds cheap: muffled and crushed. The others sound clean.
