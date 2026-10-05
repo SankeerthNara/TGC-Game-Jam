@@ -35,7 +35,10 @@ The web build is exported with the preset "Web" (Project > Export) to `build/web
 
 **2K edition (the deluxe fights)**
 - **WASD / arrows** move, **Z** or **Space** jump, **J** attack (hold **W / Up** for an up-slash), **K** dash,
-  **L** Light Blade (3 ink), **F** heal (6 ink). Hits fill the ink meter.
+  **L** parry (tap as an attack flashes **gold**; **red** attacks can't be parried: dash or jump), hold **L**
+  for the Light Blade (3 ink), **F** heal (6 ink). A parry earns ink and makes the next hit a riposte;
+  guarding enemies open up to parries and to blows from behind or above (pogo, dive); a full posture
+  bar opens a **critical strike** (J). Hits fill the ink meter.
 - Parkour: hold toward a wall in the air to **wall slide**, **Z** on a wall to **wall jump**; **K** in the air
   is one **air dash** (landing, a wall or a pogo gives it back); **S + J** in the air **pogoes** off enemies,
   paper bats, books and falling ink; **S + K** in the air is a **dive strike**. The brass brute's front is

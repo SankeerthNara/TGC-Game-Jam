@@ -85,10 +85,11 @@ func _start_boss_144() -> void:
 	b.boss_name = "THE INK BARON"
 	b.fight_title = "THE INK BARON"
 	b.win_text = "BARON BUSTED!"
-	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "Power: L LIGHT BLADE, %s." % BossFight.POWER_TEXT_BY_KIND[0]]
+	b.guards = false # the cheap edition: nobody guards yet (the library teaches the parry properly)
+	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "L parry (tap as his cane flashes GOLD)   hold L: Light Blade"]
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]]
 	_launch(b)
-	comms.say("Light him up, hero! Z or SPACE jump, J attack, K dash. L fires your light blade, F heals.", "narrator", 2.5)
+	comms.say("Light him up, hero! Z or SPACE jump, J attack, K dash, F heals. Tap L as his cane flashes GOLD to parry; hold L for your light blade.", "narrator", 2.5)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
 		_twist_one())
@@ -192,7 +193,7 @@ func start_2k() -> void:
 		{"at": Rect2(1100, -560, 180, 150), "text": "POGO: S + J IN THE AIR BOUNCES YOU OFF BATS AND BOOKS", "say": "Those paper bats are stepping stones. Slash down on them, S and J, and bounce!"},
 		{"at": Rect2(380, -1000, 760, 150), "text": "DIVE STRIKE: S + K IN THE AIR", "say": "The reading room is full of them. Strike down from the air with S and K!"}]
 	b.waves = [[
-		[["lancer", "L", 0.0], ["lancer", "R", 0.5], ["bat", "AL", 2.5]],
+		[["lancer", "R", 0.0, {"trainee": true}], ["lancer", "L", 7.0]],
 		[["lancer", "L", 0.0], ["bat", "AR", 1.0], ["lancer", "R", 2.0], ["bat", "AL", 4.0], ["lancer", "C", 5.5]]]]
 	b.win_text = "TO THE OPERA!"
 	b.fight_title = "THE LIBRARY"

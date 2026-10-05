@@ -64,7 +64,9 @@ func _ready() -> void:
 	b._ink = 3
 	key(KEY_L, true)
 	await frames(2)
-	ok(b._ink == 0, "2K: L fires the Light Blade (ink %d)" % b._ink)
+	ok(b._parry_t > 0.0 and b._ink == 3, "2K: tap L opens the parry window")
+	await frames(25)
+	ok(b._ink == 0, "2K: hold L fires the Light Blade (ink %d)" % b._ink)
 	key(KEY_L, false)
 	await frames(40)
 	b._atk_cd = 0.0

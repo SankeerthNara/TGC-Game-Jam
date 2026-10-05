@@ -26,6 +26,14 @@ static func drive(b: BossFight, press: Callable, tap: Callable) -> void:
 		return
 	press.call(KEY_DOWN, false)
 	var hero := b.hero_pos
+	# parry: a gold strike about to land, or one already flying in
+	for e in b._enemies:
+		if e.dead or b._parry_cd > 0.0:
+			continue
+		var pd := e.center().distance_to(b.hero_center())
+		if (e.tele() == "gold" and e.strike_in() < 0.08 and pd < 240.0) or (e.parryable() and pd < (150.0 if e.kind != "narrator" else 190.0)):
+			tap.call(KEY_L)
+			return
 	var best: ArenaEnemy = null
 	var best_d := 1e9
 	for e in b._enemies:
@@ -40,7 +48,8 @@ static func drive(b: BossFight, press: Callable, tap: Callable) -> void:
 		want = best.pos.x - signf(best.pos.x - hero.x) * 70.0
 	var danger := false
 	for e in b._enemies:
-		if e.state in ["windup", "charge_wind", "fuse", "dive", "lunge", "charge", "dash"] and e.center().distance_to(b.hero_center()) < 200.0:
+		var red := e.tele() == "red" or e.state in ["charge", "dash", "slam", "fuse"]
+		if red and e.center().distance_to(b.hero_center()) < 240.0:
 			danger = true
 			want = hero.x + signf(hero.x - e.pos.x) * 200.0
 	press.call(KEY_LEFT, want < hero.x - 12.0)
@@ -76,6 +85,14 @@ static func drive(b: BossFight, press: Callable, tap: Callable) -> void:
 			press.call(KEY_DOWN, true)
 			tap.call(KEY_J)
 		return
+	if best != null and best.guarding(hero.x) and b._riposte <= 0.0 and best.broken <= 0.0 and absf(best.pos.x - hero.x) < 160.0:
+		# a raised guard: wait for his attack to parry it, or go over the top and pogo
+		if b._ground and not b.get_meta("z_held", false) and randf() < 0.02:
+			_jump(b, press)
+		elif not b._ground and (best.center() - b.hero_center()).y > 40.0 and b._atk_cd <= 0.0:
+			press.call(KEY_DOWN, true)
+			tap.call(KEY_J)
+		return
 	if best != null and b._atk_cd <= 0.0:
 		var dv := best.center() - b.hero_center()
 		if not b._ground and dv.y > 60.0 and absf(dv.x) < 220.0 and signf(dv.x) == b._face and b._air_dash and randf() < 0.3:
@@ -92,8 +109,6 @@ static func drive(b: BossFight, press: Callable, tap: Callable) -> void:
 			tap.call(KEY_Z)
 	else:
 		press.call(KEY_UP, false)
-	if b._ink >= 3 and best != null and best_d < 300.0 and (b._ink >= 7 or b._hp > 2):
-		tap.call(KEY_L)
 	if b._hp <= 2 and b._ink >= 6 and not danger:
 		tap.call(KEY_F)
 

@@ -503,3 +503,20 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   via `scripts/tools/bot_gif.tscn`). Full game with bots 12.1 min (library 70 s with 5 assists, opera
   72 s, Narrator 61 s); a first-time player will take longer on the climb (estimate 2-3 min). Chaos
   test reaches the end. Web build re-exported.
+
+### 9. Parry restored alongside the parkour (Sankeerth: keep both)
+- `git revert ff0b588` conflicted in 12 files (the parkour work rewrote the same functions), so parry
+  was ported by hand onto the parkour code instead (same behaviour as 698d040): tap L parry (0.18 s
+  window, 0.32 s cooldown, reset on success), hold L Light Blade, gold/red telegraphs with the flaring
+  glint, riposte, posture bars, critical strikes, guarding lancers / Ink Baron / Narrator, the parry
+  hints, lancer thrust combos, brute gold punch, Ink Baron jab chains, Narrator quill chains.
+- Working with the parkour: a parry in the air gives back the air dash and a jump and lifts the hero
+  a little (parries chain into wall jumps and pogos); a pogo or a dive gets past any guard and rocks
+  the posture like the Light Blade; the dancer's spin dive is parryable (gold); the brute keeps its
+  armoured front (riposte, pogo, dive, behind or the Light Blade); the Narrator keeps his three phases
+  and also throws quill chains from high above. A critical strike uses the parkour camera nudge.
+- The library's ground-floor fight is the parry lesson (comms + steady prompt + a slow trainee lancer,
+  then a normal one); the 144p Ink Baron has gold jabs but no guard (decision kept).
+- Bots parry and pogo over guards: Ink Baron 33 s (3 parries), opera 53 s (3 parries, 2 criticals),
+  Narrator 36 s (4 parries). Flow 0, controls 12/12, parkour 8/8, face 0, anim 18/18. Text updated:
+  fight control line, HUD, pause guide, How to Play, README, ITCH_PAGE.
