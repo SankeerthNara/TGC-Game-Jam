@@ -1,14 +1,14 @@
 class_name VoPlayer
 extends Node
 ## Voice-over: plays a recorded clip when a cutscene caption or speech bubble appears (or a comms line
-## starts). Clips are looked up in res://assets/vo/vo_lines.json, either by the line's exact text or
+## starts). Clips are looked up in res://assets/audio/vo/vo_lines.json, either by the line's exact text or
 ## by an id ("book/1/0" = cutscene "book", page 1, the first caption/bubble on it):
 ##   { "Once, the Earth shone with light...": "book_01.mp3", "reveal/1/2": "reveal_03.ogg" }
-## Files live in res://assets/vo/ (.mp3, .ogg or .wav). A line without a clip, or a missing file,
+## Files live in res://assets/audio/vo/ (.mp3, .ogg or .wav). A line without a clip, or a missing file,
 ## simply stays silent. The music dips while a clip plays; volume is set from the pause menu.
 
-const DIR := "res://assets/vo/"
-const MAP := "res://assets/vo/vo_lines.json"
+const DIR := "res://assets/audio/vo/"
+const MAP := "res://assets/audio/vo/vo_lines.json"
 
 var volume := 1.0 ## 0..1 (pause menu: VOICE 100% / 50% / OFF)
 var _map := {}
@@ -103,6 +103,15 @@ func stop() -> void:
 
 func busy() -> bool:
 	return _player.playing or not _queue.is_empty()
+
+
+## The file playing now ("" when silent) and how far into it the voice is.
+func current_file() -> String:
+	return _player.stream.resource_path.get_file() if _player.playing and _player.stream != null else ""
+
+
+func position() -> float:
+	return _player.get_playback_position() if _player.playing else 0.0
 
 
 func set_volume(v: float) -> void:

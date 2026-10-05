@@ -188,3 +188,10 @@
    - `hero_run_2k.gif` (12 frames @ 16 FPS / 60ms, seamless loop, no blade jump, no size pop).
    - `hero_run_720.gif` (10 frames @ 16 FPS / 60ms, 3x scale).
    - Updated `preview_movement_2k.png` and `preview_movement_720.png`.
+
+## ElevenLabs, 2026-10-05 (cutscene voice-overs)
+- Text-to-speech (model eleven_v3) for the 15 cutscene lines of the book opening, the reveal and the
+  ending; the lines are the game's own script. Voices: "George" (premade storyteller) for the
+  Narrator, an original voice created with ElevenLabs Voice Design for the villain (the Narrator after
+  the unmasking), "Jett" (library voice) for the hero. Files: `assets/audio/vo/`; manifest:
+  `assets/audio/vo/vo_lines.json` (generated and approved by Sankeerth; wired in by Claude Code).

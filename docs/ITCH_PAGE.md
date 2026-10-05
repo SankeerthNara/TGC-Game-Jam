@@ -83,3 +83,9 @@ Created in 72 hours for the **TGC Game Jam** (Godot 4.7 GDScript, Compatibility 
   - Procedural sound effects and adaptive music synthesized with Python numpy scripts (	ools/make_music.py, 	ools/make_sfx.py, 	ools/make_synthwave.py). CC0 1.0 Universal.
 - **AI Art Disclosure:**
   - Background layers and visual concepts generated with AI tooling, logged in full transparency in docs/AI_USAGE.md.
+
+## AI disclosure
+Made with AI help, disclosed in full in the repository (docs/AI_USAGE.md, CREDITS.md): game code with
+Claude Code; background art, character sprites and animation frames with Antigravity; sound effects
+and synthwave with ChatGPT/Codex scripts; cutscene voice-overs with ElevenLabs text-to-speech and
+Voice Design. Story and design by the team.

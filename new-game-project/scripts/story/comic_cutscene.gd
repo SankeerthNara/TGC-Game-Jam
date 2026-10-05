@@ -18,6 +18,9 @@ const CPS := 55.0 ## typing speed of captions and bubbles
 const DIVE := 1.5 ## the cover page: the camera pushes in, the cover swings open, pages flick, light
 
 var kind := "opening"
+## Lines spoken inside another line's clip: [the clip's line id, seconds into it]. When voiced, the
+## line appears when the speaker reaches it.
+const COVERED := {"book/1/1": ["book/1/0", 2.2], "book/2/1": ["book/2/0", 7.6], "reveal/1/2": ["reveal/1/1", 5.2], "ending_editions/1/1": ["ending_editions/1/0", 2.6]}
 var bomb_left := 17 * 60.0
 var _pages: Array = []
 var _page := 0
@@ -79,7 +82,34 @@ func _panel_rect(i: int) -> Rect2:
 	return Rect2(a.position + r.position * a.size + Vector2(GUTTER, GUTTER) * 0.5, r.size * a.size - Vector2(GUTTER, GUTTER))
 
 
+## The Narrator's long laugh at the unmasking shakes the panel and glitches the picture.
+func _laugh_fx(_delta: float) -> void:
+	var vo := VoPlayer.get_vo(get_tree())
+	if vo == null or vo.current_file() != "vo_reveal_4.mp3" or vo.position() < 8.0:
+		return
+	_shake = maxf(_shake, 3.0 + 2.5 * absf(sin(_total * 9.0)))
+	var d: Node = get_tree().get_first_node_in_group("editions_director")
+	if d != null and d.fx != null and fposmod(_total, 1.1) < 0.02:
+		d.fx.glitch(0.5, 0.25)
+		EventBus.sound_requested.emit("glitch")
+
+
+func _sync_covered() -> void:
+	var vo := VoPlayer.get_vo(get_tree()) if is_inside_tree() else null
+	if vo == null:
+		return
+	var texts: Array = _pages[_page].get("text", [])
+	for i in texts.size():
+		var id := "%s/%d/%d" % [kind, _page, i]
+		if COVERED.has(id):
+			var parent: Array = COVERED[id]
+			var pi := int(String(parent[0]).get_slice("/", 2))
+			if pi < texts.size() and vo.has_clip("", String(parent[0])):
+				texts[i]["at"] = float(texts[pi]["at"]) + float(parent[1])
+
+
 func _build_page() -> void:
+	_sync_covered()
 	for p in _panels:
 		p.queue_free()
 	_panels.clear()
@@ -161,6 +191,15 @@ func _process(delta: float) -> void:
 					EventBus.sound_requested.emit(String(f["sound"]))
 		# voice-over: each caption or bubble speaks as it appears (queued, never cut off)
 		var texts: Array = _pages[_page].get("text", [])
+		var vo0 := VoPlayer.get_vo(get_tree())
+		if vo0 != null and vo0.busy():
+			# a voiced line waits for the voice before it: the page follows the speech
+			for i in texts.size():
+				var at3 := float(texts[i]["at"])
+				if before < at3 and _t >= at3 and vo0.has_clip(String(texts[i]["text"]), "%s/%d/%d" % [kind, _page, i]):
+					_t = at3 - 0.001
+					break
+		_laugh_fx(delta)
 		for i in texts.size():
 			var at2 := float(texts[i]["at"])
 			if (before < at2 or (before == 0.0 and at2 <= 0.0)) and _t >= at2:

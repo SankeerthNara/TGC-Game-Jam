@@ -319,7 +319,7 @@ func _build_credits_modal() -> void:
 	vbox.add_child(title)
 
 	var text := Label.new()
-	text.text = "GLITCHED OUT\nCreated for TGC Game Jam (100 Hours)\n\nStory, design & team lead: Sankeerth Nara (team Game it)\nEngine: Godot 4.7 (Compatibility Renderer)\nFonts: Bangers, Comic Neue (SIL OFL)\nArt: drawn in code + AI-generated backgrounds and sprites (Antigravity)\nMusic & sounds: synthesised by our own scripts (CC0)\nAI tools used (disclosed): Claude Code, Antigravity, ChatGPT/Codex\n\nFull attribution: CREDITS.md and docs/AI_USAGE.md."
+	text.text = "GLITCHED OUT\nCreated for TGC Game Jam (100 Hours)\n\nStory, design & team lead: Sankeerth Nara (team Game it)\nEngine: Godot 4.7 (Compatibility Renderer)\nFonts: Bangers, Comic Neue (SIL OFL)\nArt: drawn in code + AI-generated backgrounds and sprites (Antigravity)\nMusic & sounds: synthesised by our own scripts (CC0)\nAI tools used (disclosed): Claude Code, Antigravity, ChatGPT/Codex, ElevenLabs (voices)\n\nFull attribution: CREDITS.md and docs/AI_USAGE.md."
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_theme_font_override("font", FONT_BODY)

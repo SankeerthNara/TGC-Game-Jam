@@ -539,3 +539,24 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
 - Checked every other story page of the book, the reveal and the ending at their final moment: all
   heads and faces are inside their panels (the masked villain's and the unmasking close-ups are tight
   on purpose and keep the whole face).
+
+### 12. Voice-overs (ElevenLabs, generated and approved by Sankeerth)
+- New `scripts/story/vo_player.gd` (VoPlayer, in the main scene): plays the clip for a caption, a
+  speech bubble or a comms line when it appears, queued (overlapping lines never cut each other off),
+  looked up by line id (`book/3/1` = scene, page, line) or exact text in
+  `assets/audio/vo/vo_lines.json`; a missing clip or file stays silent. The page holds until its voice
+  ends; Z cuts the voice and turns the page, Esc skips the scene; the music dips under the voice; the
+  pause menu has VOICE 100% / 50% / OFF.
+- The 15 clips (book 5, reveal 6, ending 4) are in `assets/audio/vo/`. Sync: a voiced line waits for
+  the voice before it, and lines spoken inside another clip appear when the speaker reaches them
+  ("You fell into my trap perfectly." 5 s into vo_reveal_4). The Narrator's long laugh at the
+  unmasking shakes the panel and glitches the picture. The friendly comms line is the storyteller
+  voice; after the unmasking his lines use the villain voice (the twist is in the voice too).
+- Probe (`scripts/tools/vo_probe.tscn`): every voiced line appears together with its clip; the book
+  now runs 33 s, the reveal 38 s, the ending 23 s (about 38 s more in total). VO test (generated clip:
+  hold, music dip, Z cut, VOICE OFF, missing file, comms wait): 9/9. Flow test 0 fails.
+- Web: index.pck 20.2 MB (+1.6 MB of MP3); MP3 is decoded by the engine, so it works in the HTML5
+  build; the browser's audio starts on the first click (Start Reading), checked in the browser with
+  no console errors.
+- Disclosed: CREDITS.md (voices George, a Voice Design original, Jett), docs/AI_USAGE.md, the itch
+  page text (new "AI disclosure" section) and the in-game credits.
