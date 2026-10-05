@@ -174,7 +174,15 @@ func _start_game() -> void:
 		level_ease[1] = 2
 		world.station_dark = Color(0.1, 0.095, 0.18) # the 240p rooms: dark, but readable outside the torch
 		world.station_torch = 2.6
-		director.start()
+		# first: tell testers to play until the THE END card (there are false endings)
+		_set_state("cutscene")
+		var notice := NoticeCard.new()
+		notice.mode = "start"
+		_overlay = notice
+		_task_layer.add_child(notice)
+		notice.done.connect(func() -> void:
+			_overlay = null
+			director.start())
 		return
 	_set_state("cutscene")
 	EventBus.caption_changed.emit("NARRATOR: Once upon a time...")

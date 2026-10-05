@@ -270,7 +270,20 @@ func _finale(hero := Vector2(640, 520)) -> void:
 	main.add_child(f)
 	f.finished.connect(func() -> void:
 		_free_stale()
-		main._play_cutscene("ending_editions", func() -> void: main._final_screen(true)))
+		main._play_cutscene("ending_editions", _the_end))
+
+
+## The true ending: a THE END card (testers were told to play until they see it), then the score.
+func _the_end() -> void:
+	main._set_state("cutscene")
+	comms.clear()
+	var card := NoticeCard.new()
+	card.mode = "end"
+	main._overlay = card
+	main._task_layer.add_child(card)
+	card.done.connect(func() -> void:
+		main._overlay = null
+		main._final_screen(true))
 
 
 func _arena(stage: String) -> BossFight:

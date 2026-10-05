@@ -46,6 +46,11 @@ func _ready() -> void:
 	EventBus.request_start_game.emit()
 	for i in 5:
 		await get_tree().process_frame
+	if main._overlay is NoticeCard:
+		main._overlay._t = 50.0
+		main._overlay._close()
+		for i in 3:
+			await get_tree().process_frame
 	var cs: ComicCutscene = main._overlay
 	cs._page = 1
 	cs._build_page()

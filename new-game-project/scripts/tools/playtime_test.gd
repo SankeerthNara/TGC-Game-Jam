@@ -74,6 +74,9 @@ func _process(delta: float) -> void:
 	_total += delta
 	_wait = maxf(0.0, _wait - delta)
 	var ov: Variant = main._overlay
+	if ov is NoticeCard and ov._t > 1.0 and ov._t < 50.0:
+		ov._t = 50.0
+		ov._close() # the reader dismisses the notice / the THE END card
 	# 240p levels: skip them (their par time is added at the end)
 	if main.state == "world" and _wait <= 0.0:
 		main._level_complete()

@@ -38,6 +38,10 @@ func _ready() -> void:
 	await frames(5)
 	EventBus.request_start_game.emit()
 	await frames(3)
+	check(main._overlay is NoticeCard and main._overlay.mode == "start", "first: the notice (play until THE END, false endings)")
+	main._overlay._t = 50.0
+	main._overlay._close()
+	await frames(3)
 	var d: EditionsDirector = main.director
 	check(d != null and d.act == "book" and main._overlay is ComicCutscene and main._overlay.kind == "book", "the book opens first")
 	main._overlay.skip()
@@ -101,6 +105,9 @@ func _ready() -> void:
 	find_child_of(main, BrightnessFinale)._value = 1.0
 	check(await wait_until(func() -> bool: return main._overlay is ComicCutscene and main._overlay.kind == "ending_editions"), "the ending")
 	main._overlay.skip()
+	check(await wait_until(func() -> bool: return main._overlay is NoticeCard and main._overlay.mode == "end"), "the THE END card")
+	main._overlay._t = 50.0
+	main._overlay._close()
 	check(await wait_until(func() -> bool: return main._overlay is LevelOverlay and main._overlay.final), "the final screen")
 	print("FAILS: %d" % fails)
 	Engine.time_scale = 1.0
