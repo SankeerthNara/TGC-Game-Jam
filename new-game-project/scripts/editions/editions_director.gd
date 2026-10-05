@@ -179,7 +179,7 @@ func start_2k() -> void:
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AL", 2.0], ["bat", "AR", 3.5], ["lancer", "C", 5.0]]]]
 	b.win_text = "THE HALL IS CLEAR!"
 	b.fight_title = "THE LIBRARY"
-	b.intro_lines = ["The deluxe edition. Light blade ready.", "X slash (+UP / +DOWN in the air)   C dash   V LIGHT BLADE   F heal"]
+	b.intro_lines = ["The deluxe edition. Light blade ready.", "Z jump   X attack (+UP / +DOWN)   C dash   V blade   F heal"]
 	_launch(b)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)

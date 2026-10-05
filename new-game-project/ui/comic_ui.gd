@@ -445,8 +445,9 @@ func _build_pause_modal(parent: Control) -> void:
 	sep.add_theme_constant_override("separation", 10)
 	ctrl_vbox.add_child(sep)
 
+	var editions: bool = load("res://scripts/core/main.gd").get_script_constant_map().get("EDITIONS", false)
 	var chase_title := Label.new()
-	chase_title.text = "CHASE CONTROLS"
+	chase_title.text = "CHASE & FIGHT CONTROLS" if editions else "CHASE CONTROLS"
 	chase_title.add_theme_font_override("font", FONT_TITLE)
 	chase_title.add_theme_font_size_override("font_size", 16)
 	chase_title.add_theme_color_override("font_color", Color("18151d"))
@@ -457,6 +458,12 @@ func _build_pause_modal(parent: Control) -> void:
 		["LEVEL 3 RUN", "Up jump, Down slide"],
 		["LEVEL 4 SWING", "Space swing, Shift reel, X web"]
 	]
+	if editions:
+		chase_entries = [
+			["VILLAIN CHASE", "Arrows lean/roll, Space jump"],
+			["720p BRAWL", "X punch, Z jump, C roll, V counter"],
+			["2K FIGHTS", "X attack, Z jump, C dash, V blade, F heal"]
+		]
 
 	for entry in chase_entries:
 		var row := HBoxContainer.new()
@@ -558,6 +565,8 @@ func _on_game_state_changed(state: String) -> void:
 	_info_box.visible = in_puzzle
 	_action_bar.visible = in_puzzle
 	_pause_modal.visible = state == "paused"
+	# the pause menu must sit above everything (fights and tasks are on layer 18, the edition filter 95)
+	layer = 110 if state == "paused" else 10
 	_end_modal.visible = false # the run's end screens are drawn by main (bomb room, Earth blast)
 
 

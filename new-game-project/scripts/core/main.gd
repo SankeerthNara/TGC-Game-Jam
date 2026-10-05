@@ -428,6 +428,7 @@ func _on_player_died() -> void:
 	var kept: Dictionary = world.tasks_done.duplicate()
 	if EDITIONS:
 		overlay.message = "Back to the start of Level %d. Your finished tasks stay finished." % (level_idx + 1)
+		overlay.bomb = false
 	overlay.restart.connect(func() -> void:
 		overlay.queue_free()
 		_retrying = true

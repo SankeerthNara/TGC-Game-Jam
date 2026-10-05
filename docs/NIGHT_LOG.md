@@ -244,3 +244,16 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - New `scripts/tools/menu_restart_test.tscn`: RESTART in all six fights (Ink Baron, street, train,
   library, opera, Narrator) restarts that fight; quit to menu in the opera leaves a clean menu (no
   filter, no scene, quiet comms, nothing starts in 12 s); a new run then plays to the end. 11/11 pass.
+- Pause menu was invisible in every fight and console task: the comic UI (and its pause menu) sits on
+  canvas layer 10, the fights and tasks on 18. Pressing P froze the game with no menu: it looked like a
+  hang. While paused the UI now moves to layer 110 (above the fights, the edition filter and the comms).
+  The comms no longer keep typing while paused.
+- Proofreading (every comms line, card, twist, finale, menu help, credits, score and death screens):
+  the Editions lines read cleanly; fixed leftovers of the classic game: the death screen said "The
+  station won this round" and always added "The bomb clock is still running!" (no bomb in the
+  Editions); the pause screen's guide listed the classic chase controls of levels 3 and 4 and no fight
+  controls: in the Editions it now lists the villain chase, the 720p brawl and the 2K fights. The
+  library card's control line was unlike every other one ("X slash", no jump) and, once fixed, too long
+  for the card: now "Z jump  X attack (+UP / +DOWN)  C dash  V blade  F heal". The fight intro cards
+  draw the (taller) painted hero a little smaller so he no longer covers the title.
+- Tests: flow 0 fails; menu/restart 0 fails and the run reaches the end.

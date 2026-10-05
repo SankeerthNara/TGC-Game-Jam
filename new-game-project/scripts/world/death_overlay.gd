@@ -14,7 +14,8 @@ const GOLD := Color("ffd23f")
 const RED := Color("e63946")
 
 var _t := 0.0
-var message := "The station won this round. Back to the checkpoint!"
+var message := "The dark won this round. Back to the checkpoint!"
+var bomb := true ## remind the player that the bomb clock keeps running
 
 
 func _ready() -> void:
@@ -90,7 +91,8 @@ func _draw() -> void:
 	draw_string(FONT_BODY, cap_rect.position + Vector2(14, 52), message, HORIZONTAL_ALIGNMENT_LEFT, int(cap_rect.size.x - 28), 18, INK)
 
 	# Subtitle reminder: bomb keeps ticking
-	draw_string(FONT_BODY, Vector2(-220, 75), "The bomb clock is still running! Hurry back!", HORIZONTAL_ALIGNMENT_CENTER, 440, 16, Color("6c757d"))
+	if bomb:
+		draw_string(FONT_BODY, Vector2(-220, 75), "The bomb clock is still running! Hurry back!", HORIZONTAL_ALIGNMENT_CENTER, 440, 16, Color("6c757d"))
 
 	# Blinking Respawn Prompt
 	if _t > 0.6 and int(_t * 2.5) % 2 == 0:

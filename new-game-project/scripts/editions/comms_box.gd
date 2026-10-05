@@ -106,7 +106,7 @@ func _next() -> void:
 func _process(delta: float) -> void:
 	_clock += delta
 	_static = maxf(0.0, _static - delta * 0.5)
-	if not _cur.is_empty() and not _held():
+	if not _cur.is_empty() and not _held() and not get_tree().paused:
 		_t += delta
 		var full := String(_cur["text"])
 		if _t > full.length() / CPS + float(_cur["hold"]):

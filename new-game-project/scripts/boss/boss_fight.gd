@@ -1123,7 +1123,7 @@ func _draw_round_card() -> void:
 				lines = ["His shield is cracked %d%%: he is weaker now." % int(crack_share() * 100.0), "Power: V PRISM CANNON, %s." % POWER_TEXT[2]]
 	_card(("ROUND %d: %s" % [_round + 1, ComicArt.HERO_NAMES[kind]]) if fight_title == "" else fight_title, lines, GOLD)
 	var k := clampf(_pt / 0.4, 0.0, 1.0)
-	ArenaArt.hero(self, kind, Vector2(640 - 120 * (1.0 - k), 440), 1.0, "idle", _t, 0.0, 2.2)
+	ArenaArt.hero(self, kind, Vector2(640 - 120 * (1.0 - k), 440), 1.0, "idle", _t, 0.0, 1.85)
 
 
 func _draw_the_end() -> void:
