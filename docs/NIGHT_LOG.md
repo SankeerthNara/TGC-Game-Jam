@@ -610,3 +610,11 @@ fight structure replicated in our theme with our characters and art (no assets c
   cutscenes look endless; the test now plays the VO in game time. Full run 13.5 min (Ink Baron 41 s,
   street 46 s, Twins 36 s, library 51 s, Ink Scribe 97 s, opera 45 s, Narrator 38 s). Flow, menu,
   controls, parkour, anim, vo tests: 0 fails.
+
+### 15. Fake credits without "THE END" (Sankeerth)
+- The big "THE END" title over the fake credits after the Static Twins is gone, so the only THE END
+  in the game is the real card at the true ending. The twist is unchanged: the credits roll, freeze,
+  glitch, and the cursor hijacks the game into 2K.
+- Start notice: false endings still exist (the credits roll after the Twins and the Ink Scribe fakes
+  his death), so the warning stays but now says what to expect: "Credits may roll and bosses may
+  fall before then. Don't stop there!" Flow test: 0 fails.

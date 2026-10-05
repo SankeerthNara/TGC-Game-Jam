@@ -1,7 +1,7 @@
 class_name NoticeCard
 extends Control
 ## A full-screen comic card that waits for the player: mode "start" tells testers to play on until
-## the THE END card (the story has false endings); mode "end" is that card, the true ending.
+## the THE END card (credits roll and a boss fakes his death before it); mode "end" is that card, the true ending.
 ## Z / Enter / Space / click (after a moment) closes it and emits `done`.
 
 signal done
@@ -91,6 +91,6 @@ func _draw() -> void:
 	_center("Keep playing until you see the", 280, FONT_BODY, 32, INK)
 	ComicArt.shout(self, "THE END", Vector2(640, 345), 72, GOLD, 12, -0.03)
 	_center("card. Only that card means the game is over.", 415, FONT_BODY, 32, INK)
-	_center("The story has a few FALSE ENDINGS along the way. Don't stop at them!", 475, FONT_BODY, 24, RED)
+	_center("Credits may roll and bosses may fall before then. Don't stop there!", 475, FONT_BODY, 24, RED)
 	if _t > 0.8 and int(_t * 2.0) % 2 == 0:
 		_center("PRESS Z OR CLICK TO START", 560, FONT_SHOUT, 28, INK)

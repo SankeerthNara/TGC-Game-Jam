@@ -1,6 +1,6 @@
 class_name FakeCredits
 extends Control
-## The fake ending of the 720p edition: "THE END", then credits rolling... until they freeze and
+## The fake ending of the 720p edition: credits rolling... until they freeze and
 ## glitch (the Narrator takes the mouse). The director calls freeze() when the hijack begins.
 
 const FONT_SHOUT := preload("res://assets/fonts/Bangers-Regular.ttf")
@@ -43,8 +43,6 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color("07060a"))
-	var k := clampf(_t / 1.2, 0.0, 1.0)
-	ComicArt.shout(self, "THE END", Vector2(640, 220 - maxf(0.0, _t - 2.0) * 50.0), int(110 * k) + 1, Color("ffd23f"), 14, -0.03)
 	var scroll := maxf(0.0, _t - 2.0) * 60.0
 	for i in LINES.size():
 		var y := 520.0 + i * 90.0 - scroll
