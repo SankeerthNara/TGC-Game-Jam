@@ -584,3 +584,15 @@ fight structure replicated in our theme with our characters and art (no assets c
   diving air-dash, a red spinning whirl of ink in the air, hops away (toward the middle when cornered);
   a run of hits (9% of his health) staggers him; below half health he is faster and chains moves. The
   ink flood / high phase is gone (a flat duel stage lit by four lanterns). Bot: 42 s.
+- **The Ink Scribe, a Soul Master-style boss** (new, between the library climb and the opera; the
+  library climb keeps only its parry-lesson fight): a floating ink sorcerer in the library's sealed
+  sanctum who teleports between attacks: homing ink orbs (red; a slash pops them, a down-slash on
+  one is a pogo), a charge across the room at the hero's height (gold, parryable), a slam from above
+  with shockwaves (red, he is dazed after it: the moment to hit him). At half health he fakes his
+  death ("THE INK SCRIBE IS DEFEATED!", music drops), laughs, and crashes through the floor: the
+  second half is fought in the archive below (its own lanterns), faster, with spiral orb rings and
+  double slams. Placeholder art: the villain sprite tinted ink-blue until Antigravity's frames land
+  (prompts in `build/prompts/`). Opera trimmed to 3 waves to keep the run length.
+- Checked in frames (`scripts/tools/duel_shot.tscn -- scribe late`): orbs, teleports, fake death,
+  laugh, floor break, archive. Flow 0 fails; arena bots win (Ink Baron 31 s, opera 58 s, Ink Scribe
+  45 s, Narrator 33 s).

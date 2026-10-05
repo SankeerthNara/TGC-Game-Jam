@@ -27,6 +27,7 @@ func _ready() -> void:
 	var configs := [
 		{"name": "ink baron (240p)", "guards": false, "stage": "opera", "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]], "scale": 1.0},
 		{"name": "opera (2k)", "stage": "opera", "chandeliers": [[Rect2(230, 360, 160, 14), 0.0], [Rect2(890, 360, 160, 14), 0.0], [Rect2(565, 220, 150, 14), 110.0]], "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AC", 2.5]], [["dancer", "AL", 0.0], ["dancer", "AR", 1.5]], [["brute", "C", 0.0], ["bat", "AL", 1.0], ["bat", "AR", 1.6], ["bat", "AC", 2.4]], [["brute", "L", 0.0], ["dancer", "AR", 1.5], ["lancer", "R", 3.0]]]], "scale": 1.0},
+		{"name": "ink scribe (2k library boss)", "stage": "hall", "waves": [[[["scribe", Vector2(640, 300), 0.0]]]], "scale": 1.0},
 		{"name": "narrator (2k final)", "stage": "dark", "waves": [[[["narrator", "BALCONY", 0.0]]]], "scale": 1.6},
 	]
 	var runs := configs.size()

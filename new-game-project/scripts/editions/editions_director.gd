@@ -183,8 +183,7 @@ func start_2k() -> void:
 		Rect2(840, -960, 170, 20), Rect2(110, -1080, 1060, 20), Rect2(640, -1200, 180, 20), Rect2(960, -1320, 230, 20)]
 	b.steppers = [Vector2(990, -540), Vector2(800, -700)]
 	b.book_columns = [[1020.0, 2.4], [430.0, 3.1]]
-	b.encounters = [{"at": Rect2(380, 300, 1000, 400), "l": 110.0, "r": 1170.0, "floor": 600.0},
-		{"at": Rect2(0, -1200, 1280, 125), "l": 110.0, "r": 1170.0, "floor": -1080.0}]
+	b.encounters = [{"at": Rect2(380, 300, 1000, 400), "l": 110.0, "r": 1170.0, "floor": 600.0}]
 	b.exit_rect = Rect2(1000, -1440, 150, 120)
 	b.lamps.assign([Vector2(240, 380), Vector2(1040, 380), Vector2(760, -130), Vector2(220, -260), Vector2(1180, -640), Vector2(400, -1240), Vector2(1100, -1500)])
 	b.route = [Vector2(490, 600), Vector2(620, -360), Vector2(850, -360), Vector2(1180, -420), Vector2(1010, -640), Vector2(820, -800), Vector2(620, -860), Vector2(925, -960), Vector2(640, -1080), Vector2(730, -1200), Vector2(1075, -1320)]
@@ -194,12 +193,30 @@ func start_2k() -> void:
 		{"at": Rect2(1100, -560, 180, 150), "text": "POGO: S + J IN THE AIR BOUNCES YOU OFF BATS AND BOOKS", "say": "Those paper bats are stepping stones. Slash down on them, S and J, and bounce!"},
 		{"at": Rect2(380, -1000, 760, 150), "text": "DIVE STRIKE: S + K IN THE AIR", "say": "The reading room is full of them. Strike down from the air with S and K!"}]
 	b.waves = [[
-		[["lancer", "R", 0.0, {"trainee": true}], ["lancer", "L", 7.0]],
-		[["lancer", "L", 0.0], ["bat", "AR", 1.0], ["lancer", "R", 2.0], ["bat", "AL", 4.0], ["lancer", "C", 5.5]]]]
-	b.win_text = "TO THE OPERA!"
+		[["lancer", "R", 0.0, {"trainee": true}], ["lancer", "L", 7.0]]]]
+	b.win_text = "THE SANCTUM"
 	b.fight_title = "THE LIBRARY"
 	b.intro_lines = ["The deluxe edition: climb the library to the opera.", "Z on a wall: wall jump   K in the air: dash   S+J: pogo   S+K: dive"]
 	_launch(b)
+	b.finished.connect(func(_result: String) -> void:
+		_retire(b)
+		comms.say("A sealed door at the top... someone is waiting in there. Careful, hero.", "narrator", 1.5)
+		_later(1.8, func() -> void: _swap(_scribe, "THE INK SCRIBE")))
+
+
+## The library's boss: the Ink Scribe, a teleporting ink sorcerer in his sealed sanctum. He fakes his
+## death at half health and crashes through the floor into the archive below.
+func _scribe() -> void:
+	_current = _scribe
+	var b := _arena("hall")
+	b.lamps.assign([Vector2(180, 380), Vector2(500, 300), Vector2(780, 300), Vector2(1100, 380)])
+	b.waves = [[[["scribe", Vector2(640, 300), 0.0]]]]
+	b.boss_name = "THE INK SCRIBE"
+	b.fight_title = "THE INK SCRIBE"
+	b.win_text = "SCRIBE ERASED!"
+	b.intro_lines = ["The Ink Scribe, the villain's archivist.", "Dodge his orbs (or slash them), parry his gold charge, punish the slam."]
+	_launch(b)
+	comms.say("The villain's archivist! He teleports, hero. Watch where he appears.", "narrator", 2.0)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
 		comms.say("Beautiful! Through those doors: his opera house. Stay sharp.", "narrator", 1.5)
@@ -214,8 +231,7 @@ func _opera() -> void:
 	# swarm while the armoured brute charges -> a final mix
 	b.chandeliers = [[Rect2(230, 360, 160, 14), 0.0], [Rect2(890, 360, 160, 14), 0.0], [Rect2(565, 220, 150, 14), 110.0]]
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AC", 2.5]],
-		[["dancer", "AL", 0.0], ["dancer", "AR", 1.5]],
-		[["brute", "C", 0.0], ["bat", "AL", 1.0], ["bat", "AR", 1.6], ["bat", "AC", 2.4]],
+		[["brute", "C", 0.0], ["dancer", "AL", 1.0], ["bat", "AR", 1.6], ["bat", "AC", 2.4]],
 		[["brute", "L", 0.0], ["dancer", "AR", 1.5], ["lancer", "R", 3.0]]]]
 	b.win_text = "ENCORE!"
 	b.fight_title = "THE OPERA"

@@ -87,6 +87,8 @@ var _light: LightOverlay
 var glows: Array = [] ## extra lights this frame: [world pos, radius, intensity] (orbs, quills)
 var _chand_idx: Array[int] = []
 var _chand_base: Array[Rect2] = []
+var _base_floor := FLOOR_Y ## the solid floor under everything (lower once the Scribe breaks it)
+var _floor_broken := false
 var _flood := 0.0 ## 0..1: the Narrator's ink flooding the stage floor (his second and third phases)
 var _boss_phase := 1
 var _cam_y := 0.0
@@ -367,6 +369,47 @@ func _entered_fight() -> bool:
 
 
 ## The climb between the fights: stepping bats, falling books, tips, a safe spot to come back to.
+## The Ink Scribe's fake death: a false victory banner, the music drops; then he laughs and breaks the floor.
+func scribe_fake_death(e: ArenaEnemy) -> void:
+	_say("THE INK SCRIBE IS DEFEATED!", Vector2(640, 250), GOLD, 64)
+	_white = 0.8
+	shake(14.0)
+	intensity = 0
+	_invuln = maxf(_invuln, 3.0)
+	_waves.clear()
+	EventBus.sound_requested.emit("power_solar")
+
+
+func scribe_laugh(e: ArenaEnemy) -> void:
+	_say("...HA. HA HA HA!", e.center() + Vector2(0, -120), Color("c77dff"), 52)
+	shake(8.0)
+	var d: Node = get_tree().get_first_node_in_group("editions_director")
+	if d != null and d.fx != null:
+		d.fx.glitch(0.8, 1.2)
+	EventBus.sound_requested.emit("glitch")
+	var comms: Node = get_tree().get_first_node_in_group("comms")
+	if comms != null:
+		comms.say("Did you think a story ends that easily? Down we go!", "narrator_evil", 1.5)
+
+
+## He crashes through the floor: everyone falls into the archive below, and the fight goes on there.
+func scribe_break_floor(e: ArenaEnemy) -> void:
+	_floor_broken = true
+	floor_y = FLOOR_Y + 300.0
+	_base_floor = floor_y
+	for x in [_lock_l + 160.0, 640.0, _lock_r - 160.0]:
+		lamps.append(Vector2(x, FLOOR_Y + 170.0)) # the archive's own lanterns
+	_ground = false
+	intensity = 3
+	_white = 1.0
+	shake(24.0)
+	_big_hit(e.center(), 0.8)
+	for k in 40:
+		_fx.append({"kind": "paper", "pos": Vector2(randf_range(_lock_l, _lock_r), FLOOR_Y), "vel": Vector2(randf_range(-300, 300), randf_range(-500, 100)), "t": 0.0, "life": 1.6, "size": randf_range(6, 14)})
+	_say("THE FLOOR GIVES WAY!", Vector2(640, 220), PAPER, 48)
+	EventBus.sound_requested.emit("explosion")
+
+
 ## The Narrator's phases: the ink flood (the stage floor hurts and throws the hero up, so he lives on
 ## the podium, the chandeliers and the walls), then the Narrator rises high above the stage.
 func _update_flood(delta: float) -> void:
@@ -781,8 +824,8 @@ func _update_hero(delta: float) -> void:
 	hero_pos += _vel * delta
 	hero_pos.x = clampf(hero_pos.x, bound_l(), bound_r())
 	_ground = false
-	if hero_pos.y >= FLOOR_Y:
-		hero_pos.y = FLOOR_Y
+	if hero_pos.y >= _base_floor:
+		hero_pos.y = _base_floor
 		_vel.y = 0.0
 		_ground = true
 	if not _exploring and floor_y < FLOOR_Y and hero_pos.y >= floor_y and prev_y <= floor_y + 1.0:
@@ -802,6 +845,8 @@ func _update_hero(delta: float) -> void:
 	if level_top < 0.0:
 		var cam_y_target := clampf(hero_pos.y - 450.0, level_top, 0.0) if _exploring else clampf(floor_y - 600.0, level_top, 0.0)
 		_cam_y = lerpf(_cam_y, cam_y_target, minf(1.0, delta * 5.0))
+	elif floor_y > FLOOR_Y:
+		_cam_y = lerpf(_cam_y, floor_y - FLOOR_Y, minf(1.0, delta * 3.0)) # down into the archive
 	if _ground and not _was_ground:
 		_land = 1.0
 		_anim.landed(fall_v)
@@ -821,7 +866,16 @@ func _update_hero(delta: float) -> void:
 			if not _atk_hit.has(e) and e.state != "enter" and e.hurt_box().intersects(box):
 				_atk_hit[e] = true
 				_hit_enemy(e, 1.0, _atk_dir == "down")
-		if _atk_dir == "down" and not _ground and _pogo_props(box):
+		var popped := false
+		for e in _enemies:
+			if e.kind == "scribe" and e.pop_orb(box):
+				popped = true
+				_fx.append({"kind": "spark", "pos": box.get_center(), "t": 0.0, "life": 0.25, "size": 1.0})
+				EventBus.sound_requested.emit("hit")
+				_ink = mini(MAX_INK, _ink + 1)
+		if popped and _atk_dir == "down" and not _ground:
+			_bounce_up(box.get_center())
+		elif _atk_dir == "down" and not _ground and _pogo_props(box):
 			pass
 		elif _atk_dir == "down" and not _ground:
 			# a down-slash bounces off falling ink too
@@ -1059,6 +1113,8 @@ func _attack_box() -> Rect2:
 func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool, pierce := false) -> void:
 	if e.dead:
 		return # already beaten: hitting him again would restart the hit-stop forever (powers fire during it)
+	if e.kind == "scribe" and e.state in ["tele_out", "tele_in", "fake_death", "laugh", "crash"]:
+		return # mid-teleport or playing dead: the blow passes through ink
 	var riposte := _riposting and not pierce
 	if e.kind != "bomb" and e.broken > 0.0 and not pierce:
 		_critical(e)
@@ -1397,6 +1453,16 @@ func _update_world(delta: float) -> void:
 			_white = maxf(_white, 0.6)
 			shake(14.0)
 			EventBus.sound_requested.emit("narrator_attack")
+		elif e.kind == "scribe":
+			e.hp *= boss_hp_scale
+			e.max_hp = e.hp
+			e.state = "hover"
+			_narrator = e
+			if _boss_carry > 0.0:
+				e.hp = _boss_carry
+				_boss_carry = -1.0
+			_white = maxf(_white, 0.5)
+			EventBus.sound_requested.emit("narrator_attack")
 		elif e.kind in ["baron", "twin"]:
 			e.hp *= boss_hp_scale
 			e.max_hp = e.hp
@@ -1528,6 +1594,7 @@ func _draw() -> void:
 	elif not art:
 		ArenaArt.stage_floor(self, size)
 	_draw_climb(off)
+	_draw_archive(off)
 	_draw_chandeliers(off)
 	_draw_lamps(off)
 	for c in _corpses:
@@ -1701,11 +1768,34 @@ func _draw_climb(off: Vector2) -> void:
 			draw_set_transform(off)
 
 
+func _draw_archive(off: Vector2) -> void:
+	if not _floor_broken:
+		return
+	draw_set_transform(off)
+	draw_rect(Rect2(Vector2(_lock_l - 200.0, FLOOR_Y + 20.0), Vector2(_lock_r - _lock_l + 400.0, 300.0)), Color("0b0807"))
+	for k in 9:
+		var x := _lock_l + k * 130.0
+		draw_rect(Rect2(Vector2(x, FLOOR_Y + 60.0), Vector2(110.0, 220.0)), Color("1c130e"))
+		for r in 4:
+			draw_rect(Rect2(Vector2(x + 4, FLOOR_Y + 80.0 + r * 52.0), Vector2(102.0, 6.0)), Color("2e2017"))
+	draw_rect(Rect2(Vector2(_lock_l - 200.0, floor_y), Vector2(_lock_r - _lock_l + 400.0, 140.0)), Color("0e1416"))
+	draw_line(Vector2(_lock_l - 200.0, floor_y), Vector2(_lock_r + 200.0, floor_y), Color("c79a55"), 3.0)
+	for side: float in [-1.0, 1.0]:
+		var edge: float = 640.0 + side * 330.0
+		var x0: float = _lock_l - 200.0 if side < 0.0 else edge
+		var x1: float = edge if side < 0.0 else _lock_r + 200.0
+		draw_rect(Rect2(Vector2(x0, FLOOR_Y), Vector2(x1 - x0, 24.0)), Color("23302f"))
+		for k in 6:
+			var jx: float = edge - side * k * 14.0
+			draw_colored_polygon(PackedVector2Array([Vector2(jx, FLOOR_Y), Vector2(jx + side * 14.0, FLOOR_Y), Vector2(jx + side * 6.0, FLOOR_Y + 30.0 + (k % 3) * 10.0)]), Color("23302f"))
+
+
 ## The library hall's stone floor and ledges.
 func _draw_hall_floor(off: Vector2) -> void:
 	draw_set_transform(Vector2(0, off.y))
-	draw_rect(Rect2(0, FLOOR_Y, 1280, 120), Color("0e1416"))
-	draw_line(Vector2(0, FLOOR_Y), Vector2(1280, FLOOR_Y), Color("c79a55"), 3.0)
+	if not _floor_broken:
+		draw_rect(Rect2(0, FLOOR_Y, 1280, 120), Color("0e1416"))
+		draw_line(Vector2(0, FLOOR_Y), Vector2(1280, FLOOR_Y), Color("c79a55"), 3.0)
 	draw_set_transform(off)
 	for r in platforms:
 		var ledge := Rect2(r.position, Vector2(r.size.x, 22))

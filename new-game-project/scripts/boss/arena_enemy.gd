@@ -18,6 +18,7 @@ const STATS := {
 	"baron": {"hp": 40.0, "r": 62.0, "h": 170.0, "s": 1.0},
 	"step": {"hp": 999.0, "r": 30.0, "h": 50.0, "s": 1.3},
 	"dancer": {"hp": 4.0, "r": 32.0, "h": 80.0, "s": 1.2},
+	"scribe": {"hp": 55.0, "r": 46.0, "h": 150.0, "s": 1.0},
 }
 
 var kind := "lancer"
@@ -54,7 +55,7 @@ var _quiet := 0.0 ## time since he was last hit or parried (posture recovers aft
 ## The states in which a guarding enemy blocks blows from the front.
 const GUARDS := {"lancer": ["idle", "windup", "rewind"], "baron": ["idle", "jab_wind", "rewind"]}
 ## How much one perfect parry fills the posture.
-const PARRY_FILL := {"lancer": 0.34, "bat": 1.0, "dancer": 0.5, "brute": 0.26, "baron": 0.13, "narrator": 0.1}
+const PARRY_FILL := {"scribe": 0.15, "lancer": 0.34, "bat": 1.0, "dancer": 0.5, "brute": 0.26, "baron": 0.13, "narrator": 0.1}
 var guards := true ## the fight turns guarding off in the cheap edition
 var _o := Vector2.ZERO ## drawing origin (the camera offset)
 
@@ -73,7 +74,7 @@ func radius() -> float:
 
 
 func flying() -> bool:
-	return kind in ["bat", "bomb", "step", "dancer"]
+	return kind in ["bat", "bomb", "step", "dancer", "scribe"]
 
 
 ## Centre of the body, for hits.
@@ -98,6 +99,11 @@ func hits(hero_box: Rect2) -> bool:
 		return false
 	var box := hurt_box().grow(-6.0)
 	match kind:
+		"scribe":
+			if _orb_hits(hero_box):
+				return true
+			if not state in ["charge", "slam"]:
+				return false
 		"dancer":
 			if state != "spin":
 				return false
@@ -130,7 +136,7 @@ func hits(hero_box: Rect2) -> bool:
 
 
 func boss() -> bool:
-	return kind in ["baron", "narrator"]
+	return kind in ["baron", "narrator", "scribe"]
 
 
 ## The attack hitting now can be parried (gold).
@@ -148,6 +154,8 @@ func parryable() -> bool:
 			return state == "jab"
 		"narrator":
 			return state in ["lunge", "airdash"]
+		"scribe":
+			return state == "charge"
 	return false
 
 
@@ -168,6 +176,10 @@ func tele() -> String:
 			if state in ["jab_wind", "rewind"]:
 				return "gold"
 			return "red" if state in ["sweep", "lob"] and st < _wind else ""
+		"scribe":
+			if state == "charge_wind":
+				return "gold"
+			return "red" if state in ["cast_wind", "ring_wind", "slam_wind"] else ""
 		"narrator":
 			if state in ["lunge_wind", "airdash_wind"]:
 				return "gold"
@@ -330,6 +342,8 @@ func update(dt: float, fight: Node) -> void:
 			_bat(dt, hc)
 		"dancer":
 			_dancer(dt, hc, fight)
+		"scribe":
+			_scribe(dt, hero, hc, fight)
 		"bomb":
 			_bomb(dt, hc, fight)
 		"brute":
@@ -791,6 +805,8 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 	_draw_posture(ci, time)
 	if kind == "narrator":
 		_draw_duel(ci, time)
+	if kind == "scribe":
+		_draw_scribe_extras(ci, time)
 	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
@@ -854,8 +870,8 @@ func _draw_posture(ci: CanvasItem, time: float) -> void:
 	ci.draw_rect(Rect2(bar.position, Vector2(bar.size.x * posture, bar.size.y)), Color("ffd23f").lerp(Color("ff8a00"), posture))
 
 
-const SPRITE_KEYS := {"dancer": "enemy_lancer", "step": "enemy_bat", "lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
-const SPRITE_H := {"dancer": 120.0, "step": 90.0, "lancer": 160.0, "bat": 96.0, "brute": 220.0, "baron": 255.0, "narrator": 260.0}
+const SPRITE_KEYS := {"scribe": "masked_villain", "dancer": "enemy_lancer", "step": "enemy_bat", "lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
+const SPRITE_H := {"scribe": 230.0, "dancer": 120.0, "step": 90.0, "lancer": 160.0, "bat": 96.0, "brute": 220.0, "baron": 255.0, "narrator": 260.0}
 
 
 func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
@@ -880,6 +896,19 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 				ci.draw_line(r0, r0 + Vector2.from_angle(ang + 1.2) * 46.0 - vel.normalized() * 30.0, Color(0.75, 0.4, 1.0, 0.7 * a), 5.0)
 			face = 1.0 if vel.x >= 0.0 else -1.0
 			squash = 1.0 + sin(t * 24.0) * 0.08
+		"scribe":
+			feet = pos + _o + Vector2(0, h * 0.55)
+			face = dir
+			var frame := _scribe_frame()
+			if frame != "":
+				key = frame
+			if state in ["tele_out", "tele_in"]:
+				a *= (1.0 - st / 0.22) if state == "tele_out" else st / 0.18
+			if state == "charge":
+				rot = 0.5 * dir
+			elif state in ["fake_death"]:
+				rot = 1.4 * dir
+				feet.y += 40.0
 		"narrator":
 			feet = pos + _o
 			face = dir
@@ -898,6 +927,8 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 			elif state in ["lunge", "slam", "charge", "sweep", "jab", "punch"]:
 				rot = 0.12 * dir
 	var tint := Color(1, 1.0 - flash * 0.6, 1.0 - flash * 0.6, a)
+	if kind == "scribe" and key == "masked_villain":
+		tint = Color(tint.r * 0.55, tint.g * 0.7, tint.b, tint.a) # ink-blue until his own art arrives
 	var fk := flash_k()
 	if fk > 0.0:
 		var tcol := GOLD_FLASH if tele() == "gold" else RED_FLASH
@@ -1091,3 +1122,208 @@ func _draw_narrator(ci: CanvasItem, white: float, a: float, time: float) -> void
 	ci.draw_line(hand, tip, Color("fff3d1"), 2.5)
 	if phase2:
 		ci.draw_arc(c + Vector2(0, 20), 80.0, 0.0, TAU, 32, Color(0.8, 0.3, 1.0, 0.4), 4.0)
+
+
+# --- the Ink Scribe ---------------------------------------------------------------------------
+
+var orbs: Array[Dictionary] = [] ## his ink orbs: pos, vel, t, wait (hover before homing), ring (no homing)
+var fake_dead := false ## the fake death has happened (second phase)
+var _slams := 0
+
+
+func _scribe_tele(fight: Node, to: Vector2, then: String, wind: float) -> void:
+	_go("tele_out")
+	target = to
+	_next_state = then
+	_next_wind = wind
+	EventBus.sound_requested.emit("dash")
+
+
+var _next_state := ""
+var _next_wind := 0.0
+
+
+## The Ink Scribe: a floating ink sorcerer who teleports between attacks: homing ink orbs (red), a
+## charge across the room at the hero's height (gold), a slam from above with shockwaves (red; he is
+## dazed after it). At half health he fakes his death, then crashes through the floor: the second
+## half is fought in the archive below, faster, with spiralling orb rings and double slams.
+func _scribe(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
+	var sp := 1.35 if fake_dead else 1.0
+	var cx: float = fight.center_x()
+	_update_orbs(dt, hc, fight)
+	if not fake_dead and hp <= max_hp * 0.5 and not state in ["fake_death", "laugh", "crash"]:
+		_go("fake_death")
+		vel = Vector2.ZERO
+		orbs.clear()
+		fight.scribe_fake_death(self)
+		return
+	match state:
+		"hover":
+			dir = signf(hero.x - pos.x) if hero.x != pos.x else dir
+			target = Vector2(cx + sin(t * 0.7) * 280.0, floor_y - 300.0 + sin(t * 1.6) * 24.0)
+			pos = pos.move_toward(target, 160.0 * dt)
+			cd -= dt * sp
+			if cd <= 0.0:
+				var picks: Array = ["orbs", "charge", "slam"]
+				if fake_dead:
+					picks = ["ring", "charge", "slam", "orbs", "slam"]
+				var pick: String = picks[randi() % picks.size()]
+				match pick:
+					"orbs":
+						_scribe_tele(fight, Vector2(cx + randf_range(-300, 300), floor_y - 330.0), "cast_wind", 0.6 / sp)
+					"ring":
+						_scribe_tele(fight, Vector2(cx, floor_y - 260.0), "ring_wind", 0.6 / sp)
+					"charge":
+						var side := -1.0 if hero.x > cx else 1.0
+						_scribe_tele(fight, Vector2(cx + side * 470.0, clampf(hc.y, floor_y - 300.0, floor_y - 60.0)), "charge_wind", 0.55 / sp)
+					"slam":
+						_slams = 2 if fake_dead else 1
+						_scribe_tele(fight, Vector2(hero.x, floor_y - 420.0), "slam_wind", 0.45 / sp)
+		"tele_out":
+			if st > 0.22:
+				pos = Vector2(clampf(target.x, fight.bound_l() + 60.0, fight.bound_r() - 60.0), target.y)
+				dir = signf(hero.x - pos.x) if hero.x != pos.x else dir
+				_go("tele_in")
+				EventBus.sound_requested.emit("enemy_spawn")
+		"tele_in":
+			if st > 0.18:
+				_wind_up(_next_state, _next_wind)
+		"cast_wind", "ring_wind":
+			if st > _wind:
+				var n := 5 if fake_dead else 3
+				if state == "ring_wind":
+					for k in 10:
+						var a := k * TAU / 10.0
+						orbs.append({"pos": pos, "vel": Vector2.from_angle(a) * 230.0, "t": 0.0, "wait": 0.0, "ring": true})
+				else:
+					for k in n:
+						var a := -PI * 0.5 + (k - (n - 1) * 0.5) * 0.7
+						orbs.append({"pos": pos + Vector2.from_angle(a) * 90.0, "vel": Vector2.ZERO, "t": 0.0, "wait": 0.5 + k * 0.22, "ring": false})
+				EventBus.sound_requested.emit("power_prism")
+				_go("after")
+		"charge_wind":
+			dir = signf(cx - pos.x)
+			if st > _wind:
+				_go("charge")
+				vel = Vector2(dir * 1150.0, 0.0)
+				EventBus.sound_requested.emit("dash")
+		"charge":
+			pos += vel * dt
+			if (dir > 0.0 and pos.x >= fight.bound_r() - 40.0) or (dir < 0.0 and pos.x <= fight.bound_l() + 40.0):
+				vel = Vector2.ZERO
+				_go("after")
+		"slam_wind":
+			pos.x = move_toward(pos.x, hero.x, 260.0 * dt) # tracks the hero a little
+			if st > _wind:
+				_go("slam")
+				vel = Vector2(0, 1500.0)
+		"slam":
+			pos += vel * dt
+			if pos.y >= floor_y - 70.0:
+				pos.y = floor_y - 70.0
+				fight.shockwave(Vector2(pos.x, floor_y), 1.0)
+				fight.shockwave(Vector2(pos.x, floor_y), -1.0)
+				fight.shake(12.0)
+				EventBus.sound_requested.emit("shockwave")
+				_slams -= 1
+				if _slams > 0:
+					_scribe_tele(fight, Vector2(hero.x, floor_y - 420.0), "slam_wind", 0.35)
+				else:
+					_go("dazed")
+		"dazed":
+			# the moment to hit him
+			if st > 0.9:
+				_scribe_tele(fight, Vector2(cx + randf_range(-250, 250), floor_y - 300.0), "hover_in", 0.0)
+		"hover_in", "after":
+			if st > (0.35 if state == "after" else 0.0):
+				_go("hover")
+				cd = randf_range(0.4, 0.8) if fake_dead else randf_range(0.8, 1.4)
+		"fake_death":
+			# he drops to the floor and lies still: THE END?
+			pos.y = move_toward(pos.y, floor_y - 40.0, 900.0 * dt)
+			if st > 3.0:
+				_go("laugh")
+				fight.scribe_laugh(self)
+		"laugh":
+			pos.y = move_toward(pos.y, floor_y - 160.0, 300.0 * dt)
+			if st > 1.6:
+				_go("crash")
+				vel = Vector2(0, 1800.0)
+		"crash":
+			pos += vel * dt
+			if pos.y >= floor_y - 60.0:
+				fake_dead = true
+				fight.scribe_break_floor(self)
+				floor_y = fight.floor_y
+				pos.y = floor_y - 300.0
+				_go("hover")
+				cd = 1.2
+
+
+func _update_orbs(dt: float, hc: Vector2, fight: Node) -> void:
+	for o in orbs:
+		o["t"] = float(o["t"]) + dt
+		if bool(o["ring"]):
+			o["vel"] = (o["vel"] as Vector2).rotated(0.9 * dt) # a spiral
+		elif float(o["t"]) < float(o["wait"]):
+			o["pos"] = (o["pos"] as Vector2) + Vector2(0, sin(float(o["t"]) * 8.0) * 0.6)
+			continue
+		else:
+			var want := ((hc - (o["pos"] as Vector2)).normalized()) * 250.0
+			o["vel"] = (o["vel"] as Vector2).lerp(want, minf(1.0, 2.2 * dt))
+		o["pos"] = (o["pos"] as Vector2) + (o["vel"] as Vector2) * dt
+		fight.glows.append([o["pos"], 150.0, 0.7])
+	orbs = orbs.filter(func(o: Dictionary) -> bool: return float(o["t"]) < 5.5 and absf((o["pos"] as Vector2).x - hc.x) < 1400.0 and (o["pos"] as Vector2).y < floor_y + 40.0)
+
+
+## An orb touching this box (the hero's slash, a pogo): it bursts. True if one did.
+func pop_orb(box: Rect2) -> bool:
+	for o in orbs:
+		if box.grow(16.0).has_point(o["pos"]):
+			orbs.erase(o)
+			return true
+	return false
+
+
+func _orb_hits(hero_box: Rect2) -> bool:
+	for o in orbs:
+		if hero_box.grow(10.0).has_point(o["pos"]):
+			orbs.erase(o)
+			return true
+	return false
+
+
+func _draw_scribe_extras(ci: CanvasItem, time: float) -> void:
+	for o in orbs:
+		var p: Vector2 = (o["pos"] as Vector2) + _o
+		ci.draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(p - Vector2(34, 34), Vector2(68, 68)), false, Color(0.75, 0.5, 1.0, 0.8))
+		if not Sprites.draw(ci, "ink_orb", p + Vector2(0, 22), 44.0):
+			ci.draw_circle(p, 15.0, Color("1b0a2e"))
+			ci.draw_arc(p, 15.0, 0.0, TAU, 20, Color(1, 0.9, 0.6), 3.0)
+			ci.draw_circle(p + Vector2(-4, -4), 4.0, Color(1, 1, 1, 0.8))
+	if state in ["tele_out", "tele_in"]:
+		var k := st / 0.22 if state == "tele_out" else 1.0 - st / 0.18
+		for i in 8:
+			var a := i * TAU / 8.0 + time * 6.0
+			ci.draw_circle(pos + _o + Vector2.from_angle(a) * (30.0 + 60.0 * k), 6.0 * (1.0 - k) + 2.0, Color(0.2, 0.1, 0.35, 0.8))
+
+
+## His painted frame for the state (Antigravity's boss_scribe_* when they exist).
+func _scribe_frame() -> String:
+	var set_name := "float"
+	match state:
+		"cast_wind", "ring_wind":
+			set_name = "cast"
+		"charge_wind", "charge":
+			set_name = "charge"
+		"slam_wind", "slam", "dazed":
+			set_name = "slam"
+		"tele_out", "tele_in":
+			set_name = "tele"
+		"fake_death", "laugh":
+			set_name = "fall"
+	for n in [2, 1]:
+		var k := "boss_scribe_%s_%d" % [set_name, n]
+		if Sprites.has(k) and (n == 1 or int(t * 8.0) % 2 == 0):
+			return k
+	return ""
