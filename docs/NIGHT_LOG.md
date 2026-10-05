@@ -416,3 +416,12 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   three-hit combo, dash/roll, up-slash, Light Blade) and their strips `hero_moves_*_strip.png`.
 - Tests: anim sets 17/17, flow 0 fails, face 0 fails, controls 11/11, bots win. Web build
   re-exported (index.pck 18.6 MB with all the frames).
+
+### 6. Run frames 3 and 6 redrawn (merged 1294b30)
+- Antigravity redrew hero_run_3 / hero_run_6 and px_hero_run_3 / px_hero_run_6: run_3 now has the
+  glowing blade and run_6 is full size (2K figure heights now 424-440 px, 720p 53-55 px across the
+  cycle). Cleanup tools found nothing. Both are back in the loop: full 12-frame (2K) and 10-frame
+  (720p) runs. In-game GIFs re-captured (`docs/captures/hero_moves_2k.gif`, `hero_moves_720p.gif`,
+  cycle strip `run_cycles_full.png`): no blade flicker, no size pop, no seam at the wrap.
+- Tests: anim sets 18/18 (new check: 720p run uses all 10 frames), flow 0 fails. Web build re-exported.
+  No frames left to redraw.

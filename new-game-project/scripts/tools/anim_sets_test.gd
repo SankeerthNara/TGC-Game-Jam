@@ -67,6 +67,7 @@ func _ready() -> void:
 	# 720p names
 	var g := BrawlerGame.new()
 	var p: HeroAnimator = g._anim
+	ok(p.frames("run").size() == 10, "720p run: all 10 frames in the loop (%d)" % p.frames("run").size())
 	ok(p.frames("attack2").size() == 3 and p.frames("attack2")[0] == "px_hero_punch2_1", "720p attack2 uses px_hero_punch2_1..3")
 	ok(p.frames("attack1").size() == 3 and p.frames("attack3").size() == 4 and p.frames("attack1")[0] == "px_hero_punch1_1", "720p punches 3/3/4 via px_hero_punch1..3")
 	ok(p.frames("roll").size() == 4 and p.frames("counter").size() == 3 and p.frames("idle").size() == 4, "720p roll 4, counter 3, idle 4")
