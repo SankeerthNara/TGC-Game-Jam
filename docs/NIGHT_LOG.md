@@ -642,3 +642,16 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
   -- book reveal ending_editions at=0.25,0.5,1.0`): no cut-off heads or faces (the unmasking is a
   deliberate face close-up). Flow 0 fails, VO 0 fails. Web build re-exported.
 - New lines needing VO: none.
+
+### 17. Antigravity's boss frames (merged anti/work c9e4657)
+- Merged the Ink Scribe frames (float 1-4, cast 1-3, charge, slam, tele, fall 1-2), the Narrator's
+  duel frames (idle, run, lunge, throw, jump, airdash, whirl, stagger), ink_orb, quill_spear and the
+  ink_scribe portrait. CREDITS conflict: kept both rows. The new PNGs needed a `--import` before
+  headless runs could see them.
+- Wired with one frame picker (`ArenaEnemy._anim_frame`: <prefix>_<set>_1..N): wind-ups hold frame 1
+  (the telegraph pose), the move plays the rest; the Narrator runs when moving, idles otherwise. The
+  old sprite tilts/spins (whirl spin, charge tilt, fake-death roll) only apply when a set is missing.
+  ink_orb is drawn for the Scribe's orbs. quill_spear and the portrait are not used yet.
+- Checked in-game (`duel_shot.tscn`, both fights): same 768 px canvas with feet on the bottom edge as
+  the old sprites, so scale and baseline match the hero; no popping between sets. Flow 0 fails;
+  bots: Ink Scribe 70 s, Narrator 35 s. Web build re-exported.

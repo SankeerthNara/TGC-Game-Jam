@@ -900,11 +900,11 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 			feet = pos + _o + Vector2(0, h * 0.55)
 			face = dir
 			var frame := _scribe_frame()
-			if frame != "":
-				key = frame
 			if state in ["tele_out", "tele_in"]:
 				a *= (1.0 - st / 0.22) if state == "tele_out" else st / 0.18
-			if state == "charge":
+			if frame != "":
+				key = frame
+			elif state == "charge":
 				rot = 0.5 * dir
 			elif state in ["fake_death"]:
 				rot = 1.4 * dir
@@ -912,7 +912,10 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 		"narrator":
 			feet = pos + _o
 			face = dir
-			if state == "whirl":
+			var nframe := _narrator_frame()
+			if nframe != "":
+				key = nframe
+			elif state == "whirl":
 				rot = st * 22.0
 			elif state in ["lunge", "airdash"]:
 				rot = 0.25 * dir
@@ -1308,22 +1311,66 @@ func _draw_scribe_extras(ci: CanvasItem, time: float) -> void:
 			ci.draw_circle(pos + _o + Vector2.from_angle(a) * (30.0 + 60.0 * k), 6.0 * (1.0 - k) + 2.0, Color(0.2, 0.1, 0.35, 0.8))
 
 
-## His painted frame for the state (Antigravity's boss_scribe_* when they exist).
+static var _frame_counts := {}
+
+
+## A painted animation frame: <prefix>_<set>_1..N (Antigravity's frames). Frames `from`..N loop at
+## `fps`; "" when the set has no frames (the single sprite is drawn instead).
+func _anim_frame(prefix: String, set_name: String, from := 1, fps := 8.0) -> String:
+	var base := "%s_%s" % [prefix, set_name]
+	if not _frame_counts.has(base):
+		var n := 0
+		while Sprites.has("%s_%d" % [base, n + 1]):
+			n += 1
+		_frame_counts[base] = n
+	var count: int = _frame_counts[base]
+	if count == 0:
+		return ""
+	from = mini(from, count)
+	return "%s_%d" % [base, from + int(st * fps) % (count - from + 1)]
+
+
+## His painted frame for the state: wind-ups hold frame 1, the move plays the rest.
 func _scribe_frame() -> String:
-	var set_name := "float"
 	match state:
 		"cast_wind", "ring_wind":
-			set_name = "cast"
-		"charge_wind", "charge":
-			set_name = "charge"
-		"slam_wind", "slam", "dazed":
-			set_name = "slam"
+			return _anim_frame("boss_scribe", "cast", 1, 6.0)
+		"charge_wind":
+			return _anim_frame("boss_scribe", "charge", 1, 0.0)
+		"charge":
+			return _anim_frame("boss_scribe", "charge", 2, 0.0)
+		"slam_wind":
+			return _anim_frame("boss_scribe", "slam", 1, 0.0)
+		"slam", "dazed":
+			return _anim_frame("boss_scribe", "slam", 2, 0.0)
 		"tele_out", "tele_in":
-			set_name = "tele"
-		"fake_death", "laugh":
-			set_name = "fall"
-	for n in [2, 1]:
-		var k := "boss_scribe_%s_%d" % [set_name, n]
-		if Sprites.has(k) and (n == 1 or int(t * 8.0) % 2 == 0):
-			return k
-	return ""
+			return _anim_frame("boss_scribe", "tele", 1, 10.0)
+		"fake_death", "crash":
+			return _anim_frame("boss_scribe", "fall", 2 if st > 0.25 else 1, 0.0)
+	return _anim_frame("boss_scribe", "float", 1, 6.0)
+
+
+## The Narrator's duel frames (narrator_<set>_N).
+func _narrator_frame() -> String:
+	match state:
+		"lunge_wind":
+			return _anim_frame("narrator", "lunge", 1, 0.0)
+		"lunge":
+			return _anim_frame("narrator", "lunge", 2, 10.0)
+		"throw_wind":
+			return _anim_frame("narrator", "throw", 1, 0.0)
+		"throw":
+			return _anim_frame("narrator", "throw", 2, 4.0)
+		"jump", "fall", "evade":
+			return _anim_frame("narrator", "jump", 1 if vel.y < 0.0 else 2, 0.0)
+		"airdash_wind":
+			return _anim_frame("narrator", "airdash", 1, 0.0)
+		"airdash":
+			return _anim_frame("narrator", "airdash", 2, 0.0)
+		"whirl_wind", "whirl":
+			return _anim_frame("narrator", "whirl", 1, 12.0)
+		"stagger", "stunned":
+			return _anim_frame("narrator", "stagger", 1, 3.0)
+	if absf(vel.x) > 40.0:
+		return _anim_frame("narrator", "run", 1, 10.0)
+	return _anim_frame("narrator", "idle", 1, 3.0)
