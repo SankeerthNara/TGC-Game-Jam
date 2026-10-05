@@ -108,6 +108,6 @@ Notes from doing T1-T5:
 - Watch the duel_shot frames next to the reference videos (Hollow Knight Soul Master / Hornet). Fix
   whatever still reads worse: camera framing, hit-stop, screen shake, enemy telegraph readability.
 
-## T8. Zip: Status: TODO
+## T8. Zip: Status: DONE (v2 before this plan; v3 after T1-T5, made early on request; v4 after T6-T7, in `D:\Infinium\TGC-Game-Jamuild\`)
 - Export the web build, copy it into `build/playtest/game`, and zip as `GlitchedOut_v3.zip` (after
   T1-T6), then `GlitchedOut_v4.zip` (after T7).
