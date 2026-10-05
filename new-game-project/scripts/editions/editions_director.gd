@@ -186,6 +186,7 @@ func start_2k() -> void:
 	b.encounters = [{"at": Rect2(380, 300, 1000, 400), "l": 110.0, "r": 1170.0, "floor": 600.0},
 		{"at": Rect2(0, -1200, 1280, 125), "l": 110.0, "r": 1170.0, "floor": -1080.0}]
 	b.exit_rect = Rect2(1000, -1440, 150, 120)
+	b.lamps.assign([Vector2(240, 380), Vector2(1040, 380), Vector2(760, -130), Vector2(220, -260), Vector2(1180, -640), Vector2(400, -1240), Vector2(1100, -1500)])
 	b.route = [Vector2(490, 600), Vector2(620, -360), Vector2(850, -360), Vector2(1180, -420), Vector2(1010, -640), Vector2(820, -800), Vector2(620, -860), Vector2(925, -960), Vector2(640, -1080), Vector2(730, -1200), Vector2(1075, -1320)]
 	b.tips = [
 		{"at": Rect2(390, -360, 200, 830), "text": "WALL JUMP: HOLD TOWARD A WALL TO SLIDE, Z TO KICK OFF", "say": "Up the shelves, hero! Cling to a wall and kick off it with Z, side to side."},

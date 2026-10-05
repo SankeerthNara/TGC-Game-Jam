@@ -81,6 +81,10 @@ var bot_assists := 0
 ## Chandeliers to stand on: [Rect2, swing amplitude in px]. Added to the platforms; a swinging one
 ## carries the hero standing on it.
 var chandeliers: Array = []
+## Hanging lanterns (world positions): the few light sources left; the rest of the stage is dark.
+var lamps: Array[Vector2] = []
+var _light: LightOverlay
+var glows: Array = [] ## extra lights this frame: [world pos, radius, intensity] (orbs, quills)
 var _chand_idx: Array[int] = []
 var _chand_base: Array[Rect2] = []
 var _flood := 0.0 ## 0..1: the Narrator's ink flooding the stage floor (his second and third phases)
@@ -205,6 +209,10 @@ var _paper: Array[Vector3] = []
 func _ready() -> void:
 	position = Vector2.ZERO
 	size = get_viewport_rect().size
+	_light = LightOverlay.new()
+	add_child(_light)
+	if lamps.is_empty() and level_top >= 0.0:
+		lamps.assign([Vector2(170, 410), Vector2(1110, 410)] if stage != "hall" else [Vector2(300, 400), Vector2(980, 400)])
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_ALL
 	grab_focus()
@@ -513,6 +521,37 @@ func _narrator_hp() -> float:
 	return maxf(50.0, 110.0 * (1.0 - 0.4 * crack_share()) * (1.0 - 0.06 * friends_revealed) * (1.0 + 0.15 * friends_killed))
 
 
+## The light is gone: only the hero's glow, the lanterns, the candles and glowing things light the dark.
+func _update_lights() -> void:
+	if _light == null:
+		return
+	var off := Vector2(_cam, _cam_y)
+	var ls: Array = [[hero_center() - off, 330.0, 1.0]]
+	for lp in lamps:
+		ls.append([lp - off, 250.0, 0.85 + 0.08 * sin(_t * 7.0 + lp.x)])
+	for i in _chand_idx.size():
+		var r: Rect2 = platforms[_chand_idx[i]]
+		ls.append([r.get_center() - off + Vector2(0, -16), 210.0, 0.8])
+	for g: Array in glows:
+		ls.append([(g[0] as Vector2) - off, float(g[1]), float(g[2])])
+	glows.clear()
+	var dark := 0.62
+	if _phase in ["round_intro", "won", "lost", "ko", "the_end"]:
+		dark = 0.62 * clampf((_pt - 3.0) / 0.6, 0.0, 1.0) if _phase == "round_intro" else 0.15
+	dark *= 1.0 - clampf(_white, 0.0, 1.0)
+	_light.set_lights(ls, dark)
+
+
+func _draw_lamps(off: Vector2) -> void:
+	draw_set_transform(off)
+	for lp in lamps:
+		draw_line(lp + Vector2(0, -160), lp + Vector2(0, -22), Color("120d08"), 3.0)
+		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(lp - Vector2(70, 70), Vector2(140, 140)), false, Color(1, 0.75, 0.4, 0.55))
+		draw_colored_polygon(PackedVector2Array([lp + Vector2(-14, -22), lp + Vector2(14, -22), lp + Vector2(18, 16), lp + Vector2(-18, 16)]), Color("2a1d10"))
+		draw_rect(Rect2(lp + Vector2(-10, -14), Vector2(20, 24)), Color(1, 0.85, 0.5, 0.9 + 0.1 * sin(_t * 9.0 + lp.x)))
+		draw_rect(Rect2(lp + Vector2(-20, 14), Vector2(40, 6)), Color("120d08"))
+
+
 func _swing_chandeliers() -> void:
 	for i in _chand_idx.size():
 		var amp := float(chandeliers[i][1])
@@ -530,6 +569,7 @@ func _swing_chandeliers() -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	_swing_chandeliers()
+	_update_lights()
 	_pt += delta
 	_shake = maxf(0.0, _shake - delta * 40.0)
 	_white = maxf(0.0, _white - delta * 2.5)
@@ -1489,6 +1529,7 @@ func _draw() -> void:
 		ArenaArt.stage_floor(self, size)
 	_draw_climb(off)
 	_draw_chandeliers(off)
+	_draw_lamps(off)
 	for c in _corpses:
 		_draw_corpse(c, off)
 	draw_set_transform(off)

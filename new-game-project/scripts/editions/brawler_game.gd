@@ -75,6 +75,30 @@ var _anim := HeroAnimator.new("px_hero", {"idle": ["px_hero"], "run": ["px_hero_
 var _land := 0.0
 
 
+var _light: LightOverlay
+
+
+## The light is gone here too: the hero's glow, street lamps and the Twins' screens light the night.
+func _update_lights() -> void:
+	if _light == null:
+		_light = LightOverlay.new()
+		add_child(_light)
+		_light.set_hud_bands(90.0, 645.0)
+	var ls: Array = [[hero_pos - Vector2(_cam, 70.0), 300.0, 1.0]]
+	if stage == "street":
+		var first := floorf((_cam - 200.0) / 560.0)
+		for k in 4:
+			var lx := (first + k) * 560.0 + 280.0
+			ls.append([Vector2(lx - _cam, 330.0), 260.0, 0.85])
+	else:
+		for e in _enemies:
+			if e.twin():
+				ls.append([e.pos - Vector2(_cam, 190.0), 220.0, 0.9])
+	var flash := 1.0 if stage == "train" and int(_t * 0.5) % 5 == 0 and fposmod(_t, 2.0) < 0.08 else 0.0
+	var dark := 0.0 if _phase == "intro" and _pt < 1.6 else 0.58 * (1.0 - flash)
+	_light.set_lights(ls, dark)
+
+
 func _ready() -> void:
 	position = Vector2.ZERO
 	size = Vector2(1280, 720)
@@ -161,6 +185,7 @@ func _alive_twins() -> int:
 # --- flow ---------------------------------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	_update_lights()
 	_t += delta
 	_pt += delta
 	_shake = maxf(0.0, _shake - delta * 40.0)
@@ -672,6 +697,14 @@ func _draw_street() -> void:
 	draw_line(Vector2(0, GROUND), Vector2(1280, GROUND), Color("5a1a22"), 3.0)
 	# fog over the street
 	draw_texture_rect(TEX_GLOW, Rect2(-200, 380, 1700, 420), false, Color(1, 0.25, 0.3, 0.12))
+	# street lamps: the few lights left on the street
+	var first := floorf((_cam - 200.0) / 560.0)
+	for k in 4:
+		var lx := (first + k) * 560.0 + 280.0 - _cam
+		draw_rect(Rect2(Vector2(lx - 4, 330), Vector2(8, GROUND - 330)), Color("140c10"))
+		draw_rect(Rect2(Vector2(lx - 26, 318), Vector2(52, 12)), Color("140c10"))
+		draw_texture_rect(TEX_GLOW, Rect2(Vector2(lx - 90, 250), Vector2(180, 180)), false, Color(1, 0.7, 0.4, 0.5))
+		draw_rect(Rect2(Vector2(lx - 14, 330), Vector2(28, 8)), Color(1, 0.85, 0.55))
 	# the "GO" arrow when a fight is cleared
 	if _go_hint > 0.0 and int(_t * 3.0) % 2 == 0:
 		ComicArt.shout(self, "GO  >>", Vector2(1120, 300), 54, Color("ffd23f"), 10, 0.0)
