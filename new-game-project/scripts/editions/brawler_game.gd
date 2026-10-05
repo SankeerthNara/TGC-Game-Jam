@@ -76,6 +76,8 @@ var _land := 0.0
 
 
 func _ready() -> void:
+	# run frames 3 and 6 lose the blade (and 6 is drawn smaller): left out until redrawn
+	_anim.skip = {"run": [3, 6]}
 	position = Vector2.ZERO
 	size = Vector2(1280, 720)
 	mouse_filter = Control.MOUSE_FILTER_STOP

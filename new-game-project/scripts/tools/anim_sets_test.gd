@@ -65,7 +65,7 @@ func _ready() -> void:
 	var p: HeroAnimator = g._anim
 	ok(p.frames("attack2").size() == 3 and p.frames("attack2")[0] == "px_hero_punch2_1", "720p attack2 uses px_hero_punch2_1..3")
 	ok(p.frames("attack1") == ["px_hero_punch"], "720p attack1 without a set falls back to px_hero_punch")
-	ok(p.frames("run") == ["px_hero_run1", "px_hero_run2"], "720p run without a set falls back to the two run frames")
+	ok(p.frames("roll") == ["px_hero_roll"], "720p roll without a set falls back to px_hero_roll")
 	b.free()
 	g.free()
 	print("ANIM SET FAILS: ", fails)

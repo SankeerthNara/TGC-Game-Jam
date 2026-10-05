@@ -21,8 +21,10 @@ var prefix := "hero"
 var fallback := {}
 ## anim -> the name of its frame set when it differs (attack_up -> upslash, attack1 -> punch1)
 var aliases := {}
+## set name -> frame numbers to leave out (frames that break a loop until they are redrawn)
+var skip := {}
 ## anim -> frames per second
-var rates := {"idle": 8.0, "run": 14.0, "runstart": 18.0, "jump": 10.0, "fall": 10.0, "attack1": 24.0, "attack2": 24.0,
+var rates := {"idle": 8.0, "run": 16.0, "runstart": 18.0, "jump": 10.0, "fall": 10.0, "attack1": 24.0, "attack2": 24.0,
 	"attack3": 18.0, "attack_up": 22.0, "attack_down": 22.0, "dash": 16.0, "roll": 16.0, "hurt": 12.0,
 	"skid": 20.0, "land": 16.0, "heal": 8.0, "counter": 20.0, "turn": 18.0, "blade": 14.0, "ko": 8.0}
 
@@ -50,6 +52,7 @@ var _last_face := 1.0
 var _last_want := "idle"
 var _landed_now := false
 static var _sets := {}
+static var _foot_gap := {} ## texture -> empty rows under the figure (airborne frames are drawn higher in their canvas)
 static var _full := {}
 
 
@@ -66,7 +69,8 @@ func _frame_set(name: String) -> Array:
 		var list: Array = []
 		var n := 1
 		while Sprites.has("%s_%d" % [id, n]):
-			list.append("%s_%d" % [id, n])
+			if not n in skip.get(name, []):
+				list.append("%s_%d" % [id, n])
 			n += 1
 		_full[id] = list
 	return _full[id]
@@ -251,6 +255,12 @@ func draw(ci: CanvasItem, feet: Vector2, height: float, tint := Color.WHITE) -> 
 func _mesh(ci: CanvasItem, k: String, feet: Vector2, height: float, col: Color) -> void:
 	var tex := Sprites.get_tex(k)
 	var ts := tex.get_size()
+	# every frame stands on the feet point: frames whose figure does not reach the bottom edge
+	# (the jump arc) would otherwise pop up by that gap
+	if not _foot_gap.has(k):
+		var img := tex.get_image()
+		_foot_gap[k] = ts.y - float(img.get_used_rect().end.y) if img != null else 0.0
+	feet.y += float(_foot_gap[k]) * height / ts.y
 	var sq := squash
 	if anim == "idle":
 		sq *= 1.0 + sin(_clock * 2.6) * 0.012 # breathing

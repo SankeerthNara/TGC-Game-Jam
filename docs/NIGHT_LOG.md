@@ -369,3 +369,23 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   screen in the scene and its _ready also set the size. The size call is gone (the anchors already fill
   1280x720); the warning no longer appears and the menu is unchanged.
 - Flow test 0 fails; web build re-exported.
+
+### 4. Antigravity's movement frames, group 1 (merged fff810d)
+- Merged: 2K run 1-12, runstart 1-3, skid 1-3, turn 1-3, jump 1-6, land 1-2; 720p run 1-10,
+  runstart 1-2, skid 1-2, turn 1-2, jump 1-4, land 1-2. Conflict: Antigravity also changed
+  hero_run1/run2 (which I had cleaned): took theirs and re-ran `tools/fix_enclosed_white.py` on all
+  new frames (specks removed from hero_jump_1, hero_run_5, hero_run_10).
+- Checked in game and as cycle strips (`docs/captures/run_cycles_group1.png`, GIFs
+  `docs/captures/hero_run_2k.gif`, `hero_run_720p.gif`, strips `hero_2k_group1.png`,
+  `hero_720p_group1.png`):
+  - Feet: the airborne jump frames (2K 3-5, 720p 2-4) are drawn higher in their canvas, so the hero
+    popped up mid-jump. Fixed in HeroAnimator: every frame is placed by its lowest painted row (found
+    once per texture), not by the canvas edge.
+  - Popping: run frames 3 and 6 lose the glowing blade (and 6 is drawn smaller, in another style), in
+    both editions, so the blade flickered twice per cycle. Those two are left out of the loop (2K
+    10 frames, 720p 8) until they are redrawn; asked the watchdog to pass that to Antigravity.
+  - The loop seam (last frame back to the first) is clean; the scale matches the other frames.
+  - Stride: run playback raised from 14 to 16 fps (scaled with speed), which keeps the stride
+    (about 0.8 of the hero's height per step) in line with the run speed.
+- Tests: anim set test 14/14 (one check moved to a set not yet delivered), flow 0 fails, bots win.
+  Web build re-exported (index.pck 15.0 MB with the new frames).
