@@ -392,7 +392,7 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 
 
 const SPRITE_KEYS := {"lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
-const SPRITE_H := {"lancer": 120.0, "bat": 64.0, "brute": 190.0, "baron": 230.0, "narrator": 260.0}
+const SPRITE_H := {"lancer": 160.0, "bat": 96.0, "brute": 220.0, "baron": 255.0, "narrator": 260.0}
 
 
 func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
@@ -420,6 +420,11 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 			elif state in ["lunge", "slam", "charge", "sweep"]:
 				rot = 0.12 * dir
 	var tint := Color(1, 1.0 - flash * 0.6, 1.0 - flash * 0.6, a)
+	if kind != "narrator":
+		# the painted enemies are dark: a warm aura behind them keeps them readable on dark stages
+		var c := feet - Vector2(0, h * (0.45 if kind != "bat" else 0.5))
+		var r := h * 0.62
+		ci.draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false, Color(1.0, 0.45, 0.32, 0.8 * a))
 	Sprites.draw(ci, key, feet, h, face, tint, squash, rot)
 	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 	return true

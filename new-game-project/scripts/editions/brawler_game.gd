@@ -198,6 +198,9 @@ func _train_intro(delta: float) -> void:
 	if before < 0.75 and _pt >= 0.75:
 		EventBus.sound_requested.emit("static")
 	if before < 1.6 and _pt >= 1.6:
+		var comms: Node = get_tree().get_first_node_in_group("comms")
+		if comms != null:
+			comms.say("Two channels. One signal. Zero chance.", "static_twins", 2.0)
 		_shake = 18.0
 		_flash = 1.0
 		EventBus.sound_requested.emit("counter_flash")

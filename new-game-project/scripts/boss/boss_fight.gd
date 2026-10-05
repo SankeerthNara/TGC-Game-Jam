@@ -206,6 +206,10 @@ func explode(p: Vector2, r: float) -> void:
 
 ## A brute or the Ink Baron crashes onto the stage.
 func heavy_landing(e: ArenaEnemy) -> void:
+	if e.kind == "baron":
+		var comms: Node = get_tree().get_first_node_in_group("comms")
+		if comms != null:
+			comms.say("Ah, fresh paper! I'll blot you out, hero!", "ink_baron", 2.0)
 	shake(16.0)
 	_freeze = maxf(_freeze, 0.08)
 	EventBus.sound_requested.emit("shockwave")
@@ -756,7 +760,7 @@ func _say(text: String, at: Vector2, col: Color, fs := 44) -> void:
 
 # --- drawing ---------------------------------------------------------------------------------
 
-func _bg_layer(key: String, par: float, off: Vector2) -> bool:
+func _bg_layer(key: String, par: float, off: Vector2, mod := Color.WHITE) -> bool:
 	if not _bg.has(key):
 		return false
 	var tex: Texture2D = _bg[key]
@@ -764,10 +768,10 @@ func _bg_layer(key: String, par: float, off: Vector2) -> bool:
 	var w := tex.get_width() * sc
 	var x := -_cam * par + off.x
 	if w <= 1281.0:
-		draw_texture_rect(tex, Rect2(Vector2(off.x * 0.5, off.y * 0.5), Vector2(1280, 720)), false)
+		draw_texture_rect(tex, Rect2(Vector2(off.x * 0.5, off.y * 0.5), Vector2(1280, 720)), false, mod)
 		return true
 	x = -fposmod(_cam * par, maxf(w - 1280.0, 1.0)) if par < 1.0 else -_cam * par
-	draw_texture_rect(tex, Rect2(Vector2(x, 0) + off, Vector2(w, 720)), false)
+	draw_texture_rect(tex, Rect2(Vector2(x, 0) + off, Vector2(w, 720)), false, mod)
 	return true
 
 
@@ -853,7 +857,8 @@ func _draw() -> void:
 	var near := false
 	match stage:
 		"hall":
-			near = _bg_layer("hall_near", 1.15, shake_off)
+			# see-through foreground drapes: nothing in the fight may hide behind them
+			near = _bg_layer("hall_near", 1.15, shake_off, Color(1, 1, 1, 0.55))
 		_:
 			near = _bg_layer("arena_near", 0.0, shake_off)
 	if not near:

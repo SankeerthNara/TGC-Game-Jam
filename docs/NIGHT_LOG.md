@@ -261,3 +261,20 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   the end (same-frame clash: hero on 1 heart, the win stands), menu/restart 0 fails, flow 0 fails. Web
   build re-exported (index.pck about 10.2 MB). CREDITS.md and docs/AI_USAGE.md now also list the
   code-composed story panels and the sprite cleanup tool. Now waiting for Sankeerth's playtest.
+
+## Antigravity's painted enemies (merged 4bb00e1)
+- Merged anti/work: painted 2K lancer, paper bat, brass brute and Ink Baron, plus the Ink Baron and
+  Static Twins comms portraits (conflicts in CREDITS.md and docs/AI_USAGE.md: kept both sides). The new
+  reference sheets stay out of the game (`.gdignore`). The sprite cleanup found no trapped white in
+  them; edge bleed is already handled for every sprite in Sprites.draw.
+- In-game check (stage shots, a Baron/Twins probe `scripts/tools/baron_shot.tscn`, the tour): the new
+  art is dark and drew small next to the hero, so the lancer nearly vanished on the dark stages.
+  Decisions: draw heights raised (lancer 120 -> 160, bat 64 -> 96, brute 190 -> 220, Ink Baron
+  230 -> 255; hitboxes unchanged), a warm aura behind every enemy (not the Narrator) so they read as
+  hostile on dark backgrounds, and the library's foreground drapes are drawn see-through (55%) so no
+  enemy hides behind them. Hit flashes and deaths still read (tint flash, paper burst).
+- The two new portraits were loaded but never used: the Ink Baron now taunts on the comms when he lands
+  ("Ah, fresh paper! I'll blot you out, hero!") and the Twins as they tune in ("Two channels. One
+  signal. Zero chance.").
+- Tests: flow 0 fails; bots: Ink Baron 31 s, opera 35 s, Narrator 55 s, street 50 s, Twins 26 s.
+  Web build re-exported (index.pck 11.5 MB). Back to waiting for Sankeerth's playtest.
