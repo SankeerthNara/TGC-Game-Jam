@@ -257,3 +257,7 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   for the card: now "Z jump  X attack (+UP / +DOWN)  C dash  V blade  F heal". The fight intro cards
   draw the (taller) painted hero a little smaller so he no longer covers the title.
 - Tests: flow 0 fails; menu/restart 0 fails and the run reaches the end.
+- Final checks on 51797c4: chaos test reaches the end (11.4 min with random mashing), edge test reaches
+  the end (same-frame clash: hero on 1 heart, the win stands), menu/restart 0 fails, flow 0 fails. Web
+  build re-exported (index.pck about 10.2 MB). CREDITS.md and docs/AI_USAGE.md now also list the
+  code-composed story panels and the sprite cleanup tool. Now waiting for Sankeerth's playtest.
