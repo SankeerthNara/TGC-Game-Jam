@@ -66,6 +66,12 @@ var _twin_turn := 0
 var _dying: Array[BrawlEnemy] = []
 var _atk_buf := 0.0 ## X pressed during a swing: the next hit of the combo follows right after
 var _was_ground := true
+var _skid := 0.0 ## turning at speed: a short skid
+var _anim := HeroAnimator.new("px_hero", {"idle": ["px_hero"], "run": ["px_hero_run1", "px_hero_run2"],
+	"jump": ["px_hero"], "fall": ["px_hero"], "attack1": ["px_hero_punch"], "attack2": ["px_hero_punch"],
+	"attack3": ["px_hero_kick"], "roll": ["px_hero_roll"], "hurt": ["px_hero_hurt"], "skid": ["px_hero"],
+	"land": ["px_hero"], "counter": ["px_hero_punch"]})
+var _land := 0.0
 
 
 func _ready() -> void:
@@ -118,6 +124,7 @@ func hurt_hero(e: BrawlEnemy, dmg: int) -> void:
 	_freeze = 0.12
 	_shake = 10.0
 	_flash = 0.6
+	_anim.hurt()
 	_vel = Vector2(signf(hero_pos.x - e.pos.x) * 360.0, -380.0)
 	_ground = false
 	EventBus.sound_requested.emit("hero_hurt")
@@ -358,8 +365,21 @@ func _update_hero(delta: float) -> void:
 		if move != 0.0 and _atk_t <= 0.0:
 			_face = move
 		var target := move * RUN * (0.35 if _atk_t > 0.0 else 1.0)
-		_vel.x = move_toward(_vel.x, target, (3200.0 if _ground else 2000.0) * delta)
+		# speed builds and runs out with a short slide; turning at speed skids; the air keeps momentum
+		_skid = maxf(0.0, _skid - delta)
+		if _ground and move != 0.0 and absf(_vel.x) > RUN * 0.55 and signf(move) != signf(_vel.x) and _skid <= 0.0 and _atk_t <= 0.0:
+			_skid = 0.14
+			_dust(hero_pos, 4)
+		var rate := 3000.0
+		if not _ground:
+			rate = 2100.0 if move != 0.0 else 600.0
+		elif move == 0.0:
+			rate = 3200.0
+		elif _skid > 0.0:
+			rate = 4600.0
+		_vel.x = move_toward(_vel.x, target, rate * delta)
 	_vel.y = minf(_vel.y + GRAV * delta, 1200.0)
+	var fall_v := _vel.y
 	hero_pos += _vel * delta
 	hero_pos.x = clampf(hero_pos.x, lock_left + 30.0, lock_right - 30.0)
 	_ground = false
@@ -367,11 +387,17 @@ func _update_hero(delta: float) -> void:
 		hero_pos.y = GROUND
 		_vel.y = 0.0
 		_ground = true
+	_land = maxf(0.0, _land - delta * 6.0)
 	if _ground and not _was_ground:
 		_dust(hero_pos, 6)
+		_anim.landed(fall_v)
+		_land = 1.0
 	elif _ground and absf(_vel.x) > 200.0 and int(_t * 10.0) != int((_t - delta) * 10.0):
 		_dust(hero_pos, 1)
 	_was_ground = _ground
+	var atk_len := 0.24 if _combo < 3 else 0.32
+	_anim.attack = 1.0 - _atk_t / atk_len if _atk_t > 0.0 else (1.0 - _counter_t / 0.25 if _counter_t > 0.0 else -1.0)
+	_anim.update(delta, _anim_name(), _vel, _face, RUN, _ground)
 	# punches land a moment into the swing
 	if _atk_t > 0.0 and _atk_t < 0.16:
 		var reach := 90.0 if _combo < 3 else 110.0
@@ -401,6 +427,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			if _ground and _roll_t <= 0.0:
 				_vel.y = -860.0
 				_ground = false
+				_anim.jumped()
 				EventBus.sound_requested.emit("hero_jump")
 		KEY_X:
 			if not _start_attack():
@@ -424,6 +451,8 @@ func _start_attack() -> bool:
 	_combo = (_combo % 3) + 1
 	_combo_t = 0.55
 	_atk_t = 0.24 if _combo < 3 else 0.32
+	_face_nearest()
+	_anim.start_attack(_combo)
 	_atk_hit.clear()
 	_atk_buf = 0.0
 	# a small step into each punch
@@ -433,6 +462,40 @@ func _start_attack() -> bool:
 
 
 ## V when an enemy flashes red: the hero blurs to him and hits back hard.
+## Turns to the closest enemy within reach, in front or behind, before a punch.
+func _face_nearest(reach := 260.0) -> void:
+	var best := reach
+	for e in _enemies:
+		if e.dead or e.state == "enter":
+			continue
+		var d := absf(e.pos.x - hero_pos.x)
+		if d < best:
+			best = d
+			if d > 4.0:
+				_face = signf(e.pos.x - hero_pos.x)
+
+
+## Which animation the hero's state asks for.
+func _anim_name() -> String:
+	if _counter_t > 0.0:
+		return "counter"
+	if _roll_t > 0.0:
+		return "roll"
+	if _inv > 0.8 and _roll_t <= 0.0:
+		return "hurt"
+	if _atk_t > 0.0:
+		return "attack%d" % maxi(_combo, 1)
+	if not _ground:
+		return "jump" if _vel.y < 0.0 else "fall"
+	if _skid > 0.0:
+		return "skid"
+	if absf(_vel.x) > 30.0:
+		return "run"
+	if _land > 0.5:
+		return "land"
+	return "idle"
+
+
 func _try_counter() -> void:
 	if _counter_cd > 0.0:
 		return
@@ -669,7 +732,7 @@ func _draw_hero() -> void:
 	if _inv > 0.0 and _roll_t <= 0.0 and int(_t * 18.0) % 2 == 0:
 		return
 	# a pixel sprite if there is one; else the painted hero frames, which the 720p filter turns into pixel art
-	if not Sprites.draw(self, _px_frame(pose), p + Vector2(0, 4), 180.0, _face, Color.WHITE, 1.0 + (sin(_t * 3.0) * 0.015 if pose == "idle" else 0.0), 0.18 * _face if pose == "dash" and _px_frame(pose) == "px_hero" else 0.0):
+	if not _anim.draw(self, p + Vector2(0, 4), 180.0) and not Sprites.draw(self, _px_frame(pose), p + Vector2(0, 4), 180.0, _face, Color.WHITE, 1.0 + (sin(_t * 3.0) * 0.015 if pose == "idle" else 0.0), 0.18 * _face if pose == "dash" and _px_frame(pose) == "px_hero" else 0.0):
 		ArenaArt.hero(self, 0, p, _face, pose, _t, 0.0, 1.25)
 	draw_set_transform(Vector2.ZERO)
 	if _atk_t > 0.12:

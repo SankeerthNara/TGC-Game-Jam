@@ -77,6 +77,14 @@ var _vel := Vector2.ZERO
 var _ground := true
 var _face := 1.0
 var _coyote := 0.0
+var _combo := 0 ## 1, 2, 3: the hit of the combo in progress
+var _combo_t := 0.0 ## time left to chain the next hit
+var _skid := 0.0 ## turning at speed: a short skid
+var _land_lock := 0.0 ## a hard landing slows the first steps
+var _anim := HeroAnimator.new("hero", {"idle": ["hero_idle"], "run": ["hero_run1", "hero_run2"],
+	"jump": ["hero_jump"], "fall": ["hero_jump"], "attack1": ["hero_attack"], "attack2": ["hero_attack"],
+	"attack3": ["hero_attack"], "attack_up": ["hero_attack"], "attack_down": ["hero_jump"],
+	"dash": ["hero_dash"], "hurt": ["hero_hurt"], "skid": ["hero_idle"], "land": ["hero_idle"], "heal": ["hero_idle"]})
 var _jump_buf := 0.0
 var _dash_t := 0.0
 var _dash_cd := 0.0
@@ -417,6 +425,7 @@ func _update_hero(delta: float) -> void:
 	_slow = maxf(0.0, _slow - delta)
 	_jump_buf = maxf(0.0, _jump_buf - delta)
 	_coyote = maxf(0.0, _coyote - delta)
+	_combo_t = maxf(0.0, _combo_t - delta)
 	_land = maxf(0.0, _land - delta * 6.0)
 	if _atk_buf > 0.0:
 		_atk_buf -= delta
@@ -450,7 +459,7 @@ func _update_hero(delta: float) -> void:
 	else:
 		if move != 0.0 and _atk_t <= 0.1:
 			_face = move
-		_vel.x = move_toward(_vel.x, move * RUN, (4200.0 if _ground else 2800.0) * delta)
+		_vel.x = _run_physics(move, delta)
 		_vel.y = minf(_vel.y + GRAV * delta, 1150.0)
 	if _ground:
 		_coyote = 0.1
@@ -460,7 +469,9 @@ func _update_hero(delta: float) -> void:
 		_ground = false
 		_coyote = 0.0
 		_jump_buf = 0.0
+		_anim.jumped()
 		EventBus.sound_requested.emit("hero_jump")
+	var fall_v := _vel.y
 	var prev_y := hero_pos.y
 	hero_pos += _vel * delta
 	hero_pos.x = clampf(hero_pos.x, bound_l(), bound_r())
@@ -479,11 +490,16 @@ func _update_hero(delta: float) -> void:
 	_cam = lerpf(_cam, cam_target, minf(1.0, delta * 5.0))
 	if _ground and not _was_ground:
 		_land = 1.0
+		_anim.landed(fall_v)
+		if fall_v > 700.0:
+			_land_lock = 0.09 # a hard landing: the knees take it
 		for k in 6:
 			_fx.append({"kind": "dust", "pos": hero_pos + Vector2(randf_range(-16, 16), -4), "vel": Vector2(randf_range(-160, 160), randf_range(-160, -40)), "t": 0.0, "life": 0.45, "size": randf_range(4, 8)})
 	elif _ground and absf(_vel.x) > 200.0 and int(_t * 9.0) != int((_t - delta) * 9.0):
 		_fx.append({"kind": "dust", "pos": hero_pos + Vector2(-_face * 10.0, -4), "vel": Vector2(-_face * 60.0, -60.0), "t": 0.0, "life": 0.35, "size": 4.0})
 	_was_ground = _ground
+	_anim.attack = 1.0 - _atk_t / 0.22 if _atk_t > 0.0 else -1.0
+	_anim.update(delta, _anim_name(), _vel, _face, RUN, _ground)
 	# the slash hits during its first frames
 	if _atk_t > 0.12:
 		var box := _attack_box()
@@ -493,6 +509,64 @@ func _update_hero(delta: float) -> void:
 				_hit_enemy(e, 1.0, _atk_dir == "down")
 
 
+## Ground and air feel: speed builds up and runs out with a short slide, turning at speed skids,
+## the air keeps the momentum of the jump, and a hard landing slows the first steps.
+func _run_physics(move: float, delta: float) -> float:
+	_skid = maxf(0.0, _skid - delta)
+	_land_lock = maxf(0.0, _land_lock - delta)
+	var v := _vel.x
+	var target := move * RUN * (0.5 if _land_lock > 0.0 else 1.0)
+	if _ground and move != 0.0 and absf(v) > RUN * 0.55 and signf(move) != signf(v) and _skid <= 0.0:
+		_skid = 0.14
+		for k in 5:
+			_fx.append({"kind": "dust", "pos": hero_pos + Vector2(signf(v) * 14.0, -4), "vel": Vector2(signf(v) * randf_range(60, 200), randf_range(-140, -40)), "t": 0.0, "life": 0.4, "size": randf_range(4, 7)})
+	var rate := 0.0
+	if not _ground:
+		rate = 2300.0 if move != 0.0 else 650.0
+	elif move == 0.0:
+		rate = 3200.0
+	elif _skid > 0.0:
+		rate = 4600.0
+	else:
+		rate = 3000.0
+	return move_toward(v, target, rate * delta)
+
+
+## Which animation the hero's state asks for.
+func _anim_name() -> String:
+	if _heal_t >= 0.0:
+		return "heal"
+	if _invuln > 1.0:
+		return "hurt"
+	if _dash_t > 0.0:
+		return "dash"
+	if _atk_t > 0.0:
+		return ("attack%d" % maxi(_combo, 1)) if _atk_dir == "side" else ("attack_up" if _atk_dir == "up" else "attack_down")
+	if not _ground:
+		return "jump" if _vel.y < 0.0 else "fall"
+	if _skid > 0.0:
+		return "skid"
+	if absf(_vel.x) > 30.0:
+		return "run"
+	if _land > 0.5:
+		return "land"
+	return "idle"
+
+
+## Turns to the closest enemy within reach, in front or behind, before a hit lands.
+func _face_nearest(reach := 300.0) -> void:
+	var best := reach
+	for e in _enemies:
+		if e.dead or e.state == "enter":
+			continue
+		var c := e.center()
+		var d := absf(c.x - hero_pos.x)
+		if d < best and absf(c.y - hero_center().y) < 220.0:
+			best = d
+			if d > 4.0:
+				_face = signf(c.x - hero_pos.x)
+
+
 func _start_attack() -> bool:
 	if _atk_cd > 0.0 or _heal_t >= 0.0:
 		return false
@@ -500,6 +574,13 @@ func _start_attack() -> bool:
 	_atk_t = 0.22
 	_atk_cd = 0.3
 	_atk_buf = 0.0
+	# a combo: each hit in a row moves differently; the hero always turns to the enemy he is hitting
+	_combo = (_combo % 3) + 1 if _combo_t > 0.0 else 1
+	_combo_t = 0.55
+	_face_nearest()
+	_anim.start_attack(_combo)
+	if _combo == 3 and _ground and _atk_dir == "side":
+		_vel.x += _face * 220.0 # the third hit steps in
 	_atk_hit.clear()
 	EventBus.sound_requested.emit("slash")
 	return true
@@ -555,6 +636,7 @@ func _kill_fx(e: ArenaEnemy) -> void:
 func _hurt(from_x: float) -> void:
 	if _invuln > 0.0 or _dash_t > 0.0 or not _phase in ["wave", "wave_intro", "explore"]:
 		return
+	_anim.hurt()
 	_hp -= 1
 	if _hp <= 0 and _narrator != null and _narrator.dead:
 		_hp = 1 # the boss fell on this very frame: the hero's blow counts, he stays on his feet
@@ -624,6 +706,7 @@ func _dash(light: bool) -> void:
 
 
 func _power() -> void:
+	_face_nearest()
 	if _ink < 3:
 		_say("NEED 3 INK", hero_center() + Vector2(0, -70), Color("8d99ae"), 30)
 		return
@@ -1013,19 +1096,20 @@ func _draw_hero(off: Vector2) -> void:
 	if _dash_t > 0.0:
 		for k in 3:
 			ArenaArt.hero(self, kind, hero_pos + off + Vector2(-_face * (k + 1) * 26.0, 0), _face, "dash", _t, 0.6, ArenaArt.HERO_SCALE)
-	if not blink:
+	if not blink and (kind != 0 or not _anim.draw(self, hero_pos + off + Vector2(0, 4), 128.0 * ArenaArt.HERO_SCALE)):
 		ArenaArt.land_squash = _land
 		ArenaArt.hero(self, kind, hero_pos + off, _face, pose, _t, 0.0, ArenaArt.HERO_SCALE)
 		ArenaArt.land_squash = 0.0
 	draw_set_transform(off)
 	if _atk_t > 0.0:
 		var k := 1.0 - _atk_t / 0.22
-		var dir := Vector2(_face, 0)
+		# each hit of the combo cuts on its own line: high, low backhand, then a big flat one
+		var dir := Vector2(_face, [-0.2, 0.42, -0.04][clampi(_combo - 1, 0, 2)]).normalized()
 		if _atk_dir == "up":
 			dir = Vector2(0, -1)
 		elif _atk_dir == "down":
 			dir = Vector2(0, 1)
-		ArenaArt.slash(self, hero_center() + dir * 18.0, dir, k)
+		ArenaArt.slash(self, hero_center() + dir * 18.0, dir, k, _combo == 3 and _atk_dir == "side")
 	if _heal_t >= 0.0:
 		draw_arc(hero_center(), 40.0, -PI * 0.5, -PI * 0.5 + TAU * _heal_t / 0.6, 24, Color("8ef0ff"), 5.0)
 

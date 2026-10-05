@@ -289,3 +289,38 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - config/name moves user:// (now `app_userdata/Glitched Out/`). The game saves nothing there (no
   settings or progress files; only the test tools write screenshots), so nothing is lost. The boot
   splash is Godot's default (no custom image to change).
+
+### 2. Hero movement and animation (Sankeerth's top priority)
+New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights and the 720p brawler:
+- **Frame sets when they exist, current frames as the fallback.** Animations are looked up as
+  `<prefix>_<anim>_1..N`: 2K prefix `hero`, 720p prefix `px_hero`. Names the system asks for:
+  `idle, run, jump, fall, attack1, attack2, attack3, attack_up, attack_down, dash, hurt, skid, land, heal`
+  (2K) and `idle, run, jump, fall, attack1, attack2, attack3, roll, hurt, skid, land, counter` (720p),
+  e.g. `hero_run_1.png ... hero_run_8.png`, `hero_attack2_1.png ... _5.png`, `px_hero_roll_1.png ...`.
+  Same canvas as now (2K 512x512, pixel 64x64), facing right, feet on the bottom edge, same scale in
+  every frame. Missing sets fall back to today's single frames, so frames can land one set at a time.
+- **No hard swaps:** a 0.1 s crossfade between animations; a motion smear on each strike; the hero
+  turns around by swinging through a thin edge-on frame (about 0.12 s) instead of flipping instantly.
+- **Procedural motion on top of the frames** (the picture is drawn as a 6x6 mesh that bends): lean into
+  the run and back on a skid; squash on landing and stretch on take-off (springs); breathing in idle;
+  anticipation (lean back), strike (lunge) and follow-through on every attack, different for each hit of
+  the combo; hit recoil; the cape (the back of the picture, most at the bottom) trails behind the motion
+  on a damped spring and overshoots when he stops; it rises when he falls.
+- A cut-out rig (head, torso, arms, cape cut out of the painting) was considered and not done: the
+  painted frames have the cape and blade overlapping the body, so cutting them would leave holes and
+  seams; bending the whole painting gives the secondary motion without them.
+- **Physics:** speed now builds and runs out (accel 3000, a short slide when stopping) instead of the
+  near-instant 4200; turning at speed skids (dust, back lean, 0.14 s); the air keeps the jump's
+  momentum (little air drag); a hard landing (falling faster than 700) slows the first steps.
+- **Always facing the enemy:** X, V (2K) and a punch (720p) turn the hero to the nearest enemy in reach,
+  in front or behind, also on every hit of a combo (the counter already did). `scripts/tools/face_test.tscn`:
+  enemy behind, X -> turned, in both editions.
+- **Combo hits differ:** 2K slashes cut high, low backhand, then a big flat third hit with a step in;
+  each has its own lean curve. **Enemies recoil away from the blow** (direction-aware; bosses barely budge).
+- Captures (`scripts/tools/hero_strip.tscn`: run, stop, reverse, jump, land, three attacks):
+  `docs/captures/hero_2k_before.png` / `hero_2k_after.png`, `hero_720p_before.png` / `hero_720p_after.png`.
+  In the after strips: the lean into the run, the thin turn-around frame, the cape flying up in the
+  jump, the squash on landing and the smears behind each strike.
+- Tests: flow 0 fails; bots win (Ink Baron 23 s, opera 32 s, Narrator 53 s, street 44 s, Twins 25 s,
+  a little faster than before since the hero no longer swings at empty air); face test 0 fails.
+  Web build re-exported (page title "Glitched Out", index.pck 11.6 MB).
