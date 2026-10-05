@@ -27,6 +27,13 @@ BG_2K_HALL = os.path.join(WT_ANTI, "new-game-project", "assets", "editions", "2k
 BG_2K_ARENA = os.path.join(WT_ANTI, "new-game-project", "assets", "editions", "2k", "arena_far.jpg")
 BG_720_NEON = os.path.join(WT_ANTI, "new-game-project", "assets", "editions", "720", "neon_mid.png")
 
+PARKOUR_BRAIN_DIR = r"C:\Users\sanke\.gemini\antigravity-ide\brain\cbb40665-76c8-44b8-b1b3-35084d6ab57c"
+GRID_WALLSLIDE_PATH = os.path.join(PARKOUR_BRAIN_DIR, "hero_wallslide_grid_b_1791205490833.jpg")
+GRID_WALLJUMP_PATH = os.path.join(PARKOUR_BRAIN_DIR, "hero_walljump_grid_1791205224314.jpg")
+GRID_AIRDASH_PATH = os.path.join(PARKOUR_BRAIN_DIR, "hero_airdash_grid_1791205348586.jpg")
+GRID_DIVE_PATH = os.path.join(PARKOUR_BRAIN_DIR, "hero_dive_grid_1791205432945.jpg")
+GRID_POGO_PATH = os.path.join(PARKOUR_BRAIN_DIR, "hero_pogo_grid_1791205463734.jpg")
+
 def clean_floodfill(img, tolerance=36):
     """Clean floodfill cutout from borders protecting warm golden light blade glow."""
     arr = np.array(img.convert('RGB'), dtype=np.int32)
@@ -675,8 +682,241 @@ def process_group4_specials():
     ], BG_720_NEON, "preview_specials_720.png", y_ground=236, spacing=75)
     print("Group 4 Special Moves complete.")
 
+# =========================================================================
+# GROUP 5: PARKOUR ACTIONS (Wallslide, Walljump, Airdash, Dive, Pogo)
+# =========================================================================
+def process_group5_parkour():
+    print("\n--- Processing Group 5: Parkour Actions ---")
+    SCALE_GLOBAL = 0.692
+    WALL_X = 445
+    
+    frames_2k_dict = {}
+    frames_720_dict = {}
+    
+    # 1. Wallslide
+    arr_ws = np.array(Image.open(GRID_WALLSLIDE_PATH).convert('RGB'))
+    cuts_ws = [
+        clean_floodfill(Image.fromarray(arr_ws[:, :460])),
+        clean_floodfill(Image.fromarray(arr_ws[:, 460:920])),
+        clean_floodfill(Image.fromarray(arr_ws[:, 920:])),
+    ]
+    wallslide_2k, wallslide_720 = [], []
+    for i, cut in enumerate(cuts_ws):
+        b = get_bbox(cut)
+        char = cut.crop(b)
+        nw = int(round(char.width * SCALE_GLOBAL))
+        nh = int(round(char.height * SCALE_GLOBAL))
+        res = char.resize((nw, nh), Image.Resampling.LANCZOS)
+        can = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+        x_pos = WALL_X - nw
+        y_pos = int(round(256 - nh / 2.0))
+        can.paste(res, (x_pos, y_pos), res)
+        
+        arr_can = np.array(can)
+        arr_can[:10, :] = 0; arr_can[-10:, :] = 0; arr_can[:, :10] = 0; arr_can[:, -10:] = 0
+        clean_can = Image.fromarray(arr_can, mode='RGBA')
+        px_can = make_pixel_art_720(clean_can)
+        name = f"hero_wallslide_{i+1}"
+        save_sprite(name, clean_can, px_can)
+        frames_2k_dict[name] = clean_can
+        frames_720_dict[f"px_{name}"] = px_can
+        wallslide_2k.append(clean_can)
+        wallslide_720.append(px_can)
+        
+    save_sprite("hero_wallslide", wallslide_2k[1], wallslide_720[1])
+    save_preview_gif("hero_wallslide_2k.gif", wallslide_2k, fps=14)
+    save_preview_gif("hero_wallslide_720.gif", wallslide_720, fps=14, scale_factor=3)
+    
+    # 2. Walljump
+    arr_wj = np.array(Image.open(GRID_WALLJUMP_PATH).convert('RGB'))
+    arr_wj[:, 386:394] = 255; arr_wj[:, 899:906] = 255
+    scale_wj = 0.710
+    
+    cut_wj1 = clean_floodfill(Image.fromarray(arr_wj[:, :386]))
+    b1 = get_bbox(cut_wj1); c1 = cut_wj1.crop(b1)
+    nw1, nh1 = int(round(c1.width * scale_wj)), int(round(c1.height * scale_wj))
+    res1 = c1.resize((nw1, nh1), Image.Resampling.LANCZOS)
+    can_wj1 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_wj1.paste(res1, (WALL_X - nw1, int(round(440 - nh1))), res1)
+    
+    cut_wj2 = clean_floodfill(Image.fromarray(arr_wj[:, 394:899]))
+    b2 = get_bbox(cut_wj2); c2 = cut_wj2.crop(b2)
+    nw2, nh2 = int(round(c2.width * scale_wj)), int(round(c2.height * scale_wj))
+    res2 = c2.resize((nw2, nh2), Image.Resampling.LANCZOS)
+    can_wj2 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_wj2.paste(res2, (WALL_X - nw2, int(round(440 - nh2))), res2)
+    
+    cut_wj3 = clean_floodfill(Image.fromarray(arr_wj[:, 906:]))
+    b3 = get_bbox(cut_wj3); c3 = cut_wj3.crop(b3)
+    nw3, nh3 = int(round(c3.width * scale_wj)), int(round(c3.height * scale_wj))
+    res3 = c3.resize((nw3, nh3), Image.Resampling.LANCZOS)
+    can_wj3 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_wj3.paste(res3, ((512 - nw3) // 2, 70), res3)
+    
+    walljump_2k, walljump_720 = [], []
+    for i, can in enumerate([can_wj1, can_wj2, can_wj3]):
+        arr_can = np.array(can)
+        arr_can[:10, :] = 0; arr_can[-10:, :] = 0; arr_can[:, :10] = 0; arr_can[:, -10:] = 0
+        clean_can = Image.fromarray(arr_can, mode='RGBA')
+        px_can = make_pixel_art_720(clean_can)
+        name = f"hero_walljump_{i+1}"
+        save_sprite(name, clean_can, px_can)
+        frames_2k_dict[name] = clean_can
+        frames_720_dict[f"px_{name}"] = px_can
+        walljump_2k.append(clean_can)
+        walljump_720.append(px_can)
+        
+    save_sprite("hero_walljump", walljump_2k[1], walljump_720[1])
+    save_preview_gif("hero_walljump_2k.gif", walljump_2k, fps=14)
+    save_preview_gif("hero_walljump_720.gif", walljump_720, fps=14, scale_factor=3)
+    
+    # 3. Airdash
+    arr_ad = np.array(Image.open(GRID_AIRDASH_PATH).convert('RGB'))
+    scale_ad = 0.692
+    
+    c1_img = Image.fromarray(arr_ad[:, :360])
+    cut_ad1 = clean_floodfill(c1_img); b1 = get_bbox(cut_ad1); c1 = cut_ad1.crop(b1)
+    nw1, nh1 = int(round(c1.width * scale_ad)), int(round(c1.height * scale_ad))
+    res1 = c1.resize((nw1, nh1), Image.Resampling.LANCZOS)
+    can_ad1 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_ad1.paste(res1, (160, 150), res1)
+    
+    c2_arr = arr_ad[:, 360:956].copy(); c2_arr[:250, 950-360:] = 255
+    cut_ad2 = clean_floodfill(Image.fromarray(c2_arr)); b2 = get_bbox(cut_ad2); c2 = cut_ad2.crop(b2)
+    nw2, nh2 = int(round(c2.width * scale_ad)), int(round(c2.height * scale_ad))
+    res2 = c2.resize((nw2, nh2), Image.Resampling.LANCZOS)
+    can_ad2 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_ad2.paste(res2, ((512 - nw2) // 2, 175), res2)
+    
+    c3_arr = arr_ad[:, 940:].copy(); c3_arr[330:, :960-940] = 255
+    cut_ad3 = clean_floodfill(Image.fromarray(c3_arr)); b3 = get_bbox(cut_ad3); c3 = cut_ad3.crop(b3)
+    nw3, nh3 = int(round(c3.width * scale_ad)), int(round(c3.height * scale_ad))
+    res3 = c3.resize((nw3, nh3), Image.Resampling.LANCZOS)
+    can_ad3 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_ad3.paste(res3, ((512 - nw3) // 2, 85), res3)
+    
+    airdash_2k, airdash_720 = [], []
+    for i, can in enumerate([can_ad1, can_ad2, can_ad3]):
+        arr_can = np.array(can)
+        arr_can[:10, :] = 0; arr_can[-10:, :] = 0; arr_can[:, :10] = 0; arr_can[:, -10:] = 0
+        clean_can = Image.fromarray(arr_can, mode='RGBA')
+        px_can = make_pixel_art_720(clean_can)
+        name = f"hero_airdash_{i+1}"
+        save_sprite(name, clean_can, px_can)
+        frames_2k_dict[name] = clean_can
+        frames_720_dict[f"px_{name}"] = px_can
+        airdash_2k.append(clean_can)
+        airdash_720.append(px_can)
+        
+    save_sprite("hero_airdash", airdash_2k[1], airdash_720[1])
+    save_preview_gif("hero_airdash_2k.gif", airdash_2k, fps=14)
+    save_preview_gif("hero_airdash_720.gif", airdash_720, fps=14, scale_factor=3)
+    
+    # 4. Dive Strike
+    arr_dv = np.array(Image.open(GRID_DIVE_PATH).convert('RGB'))
+    arr_dv[725:, :] = 255
+    scale_dv = 0.700
+    
+    cut_dv1 = clean_floodfill(Image.fromarray(arr_dv[:, :400]))
+    b1 = get_bbox(cut_dv1); c1 = cut_dv1.crop(b1)
+    nw1, nh1 = int(round(c1.width * scale_dv)), int(round(c1.height * scale_dv))
+    res1 = c1.resize((nw1, nh1), Image.Resampling.LANCZOS)
+    can_dv1 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_dv1.paste(res1, ((512 - nw1) // 2, 20), res1)
+    
+    c2_arr = arr_dv[:, 400:956].copy(); c2_arr[:550, 945-400:] = 255
+    cut_dv2 = clean_floodfill(Image.fromarray(c2_arr)); b2 = get_bbox(cut_dv2); c2 = cut_dv2.crop(b2)
+    nw2, nh2 = int(round(c2.width * scale_dv)), int(round(c2.height * scale_dv))
+    res2 = c2.resize((nw2, nh2), Image.Resampling.LANCZOS)
+    can_dv2 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_dv2.paste(res2, (70, 500 - nh2), res2)
+    
+    c3_arr = arr_dv[:, 940:].copy(); c3_arr[550:, :955-940] = 255
+    cut_dv3 = clean_floodfill(Image.fromarray(c3_arr)); b3 = get_bbox(cut_dv3); c3 = cut_dv3.crop(b3)
+    nw3, nh3 = int(round(c3.width * scale_dv)), int(round(c3.height * scale_dv))
+    res3 = c3.resize((nw3, nh3), Image.Resampling.LANCZOS)
+    can_dv3 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_dv3.paste(res3, ((512 - nw3) // 2, 511 - nh3), res3)
+    
+    dive_2k, dive_720 = [], []
+    for i, can in enumerate([can_dv1, can_dv2, can_dv3]):
+        arr_can = np.array(can)
+        arr_can[:10, :] = 0; arr_can[-10:, :] = 0; arr_can[:, :10] = 0; arr_can[:, -10:] = 0
+        clean_can = Image.fromarray(arr_can, mode='RGBA')
+        px_can = make_pixel_art_720(clean_can)
+        name = f"hero_dive_{i+1}"
+        save_sprite(name, clean_can, px_can)
+        frames_2k_dict[name] = clean_can
+        frames_720_dict[f"px_{name}"] = px_can
+        dive_2k.append(clean_can)
+        dive_720.append(px_can)
+        
+    save_sprite("hero_dive", dive_2k[1], dive_720[1])
+    save_preview_gif("hero_dive_2k.gif", dive_2k, fps=14)
+    save_preview_gif("hero_dive_720.gif", dive_720, fps=14, scale_factor=3)
+    
+    # 5. Pogo Bounce
+    arr_pg = np.array(Image.open(GRID_POGO_PATH).convert('RGB'))
+    scale_pg = 0.692
+    
+    cut_pg1 = clean_floodfill(Image.fromarray(arr_pg[:, :600]))
+    b1 = get_bbox(cut_pg1); c1 = cut_pg1.crop(b1)
+    nw1, nh1 = int(round(c1.width * scale_pg)), int(round(c1.height * scale_pg))
+    res1 = c1.resize((nw1, nh1), Image.Resampling.LANCZOS)
+    can_pg1 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_pg1.paste(res1, ((512 - nw1) // 2, 511 - nh1), res1)
+    
+    cut_pg2 = clean_floodfill(Image.fromarray(arr_pg[:, 600:]))
+    b2 = get_bbox(cut_pg2); c2 = cut_pg2.crop(b2)
+    nw2, nh2 = int(round(c2.width * scale_pg)), int(round(c2.height * scale_pg))
+    res2 = c2.resize((nw2, nh2), Image.Resampling.LANCZOS)
+    can_pg2 = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+    can_pg2.paste(res2, ((512 - nw2) // 2, 25), res2)
+    
+    pogo_2k, pogo_720 = [], []
+    for i, can in enumerate([can_pg1, can_pg2]):
+        arr_can = np.array(can)
+        arr_can[:10, :] = 0; arr_can[-10:, :] = 0; arr_can[:, :10] = 0; arr_can[:, -10:] = 0
+        clean_can = Image.fromarray(arr_can, mode='RGBA')
+        px_can = make_pixel_art_720(clean_can)
+        name = f"hero_pogo_{i+1}"
+        save_sprite(name, clean_can, px_can)
+        frames_2k_dict[name] = clean_can
+        frames_720_dict[f"px_{name}"] = px_can
+        pogo_2k.append(clean_can)
+        pogo_720.append(px_can)
+        
+    save_sprite("hero_pogo", pogo_2k[0], pogo_720[0])
+    save_preview_gif("hero_pogo_2k.gif", pogo_2k, fps=14)
+    save_preview_gif("hero_pogo_720.gif", pogo_720, fps=14, scale_factor=3)
+    
+    # 6. Combo Flow & Composites
+    parkour_flow_2k = [
+        wallslide_2k[0], wallslide_2k[1], wallslide_2k[2],
+        walljump_2k[0], walljump_2k[1], walljump_2k[2],
+        airdash_2k[0], airdash_2k[1], airdash_2k[2],
+        dive_2k[0], dive_2k[1], dive_2k[2],
+        pogo_2k[0], pogo_2k[1]
+    ]
+    parkour_flow_720 = [
+        wallslide_720[0], wallslide_720[1], wallslide_720[2],
+        walljump_720[0], walljump_720[1], walljump_720[2],
+        airdash_720[0], airdash_720[1], airdash_720[2],
+        dive_720[0], dive_720[1], dive_720[2],
+        pogo_720[0], pogo_720[1]
+    ]
+    save_preview_gif("hero_parkour_combo_2k.gif", parkour_flow_2k, fps=14)
+    save_preview_gif("hero_parkour_combo_720.gif", parkour_flow_720, fps=14, scale_factor=3)
+    
+    comp_2k_parkour = [wallslide_2k[1], walljump_2k[1], airdash_2k[1], dive_2k[1], pogo_2k[0]]
+    comp_720_parkour = [wallslide_720[1], walljump_720[1], airdash_720[1], dive_720[1], pogo_720[0]]
+    make_composite(comp_2k_parkour, BG_2K_ARENA, "preview_parkour_2k.png", y_ground=880, spacing=260)
+    make_pixel_composite(comp_720_parkour, BG_720_NEON, "preview_parkour_720.png", y_ground=236, spacing=70)
+    print("Group 5 Parkour Actions complete.")
+
 if __name__ == "__main__":
     process_group1_touchup()
     process_group2_idle()
     process_group3_attacks()
     process_group4_specials()
+    process_group5_parkour()
