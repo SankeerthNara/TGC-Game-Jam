@@ -398,8 +398,9 @@ func _update_hero(delta: float) -> void:
 	var atk_len := 0.24 if _combo < 3 else 0.32
 	_anim.attack = 1.0 - _atk_t / atk_len if _atk_t > 0.0 else (1.0 - _counter_t / 0.25 if _counter_t > 0.0 else -1.0)
 	_anim.update(delta, _anim_name(), _vel, _face, RUN, _ground)
-	# punches land a moment into the swing
-	if _atk_t > 0.0 and _atk_t < 0.16:
+	# punches land while the strike frame is on screen (swing progress 0.12-0.6)
+	var swing := 1.0 - _atk_t / (0.24 if _combo < 3 else 0.32)
+	if _atk_t > 0.0 and swing >= 0.12 and swing <= 0.6:
 		var reach := 90.0 if _combo < 3 else 110.0
 		var box := Rect2(Vector2(hero_pos.x + (0.0 if _face > 0.0 else -reach), hero_pos.y - 110.0), Vector2(reach, 90.0))
 		for e in _enemies:
@@ -735,7 +736,7 @@ func _draw_hero() -> void:
 	if not _anim.draw(self, p + Vector2(0, 4), 180.0) and not Sprites.draw(self, _px_frame(pose), p + Vector2(0, 4), 180.0, _face, Color.WHITE, 1.0 + (sin(_t * 3.0) * 0.015 if pose == "idle" else 0.0), 0.18 * _face if pose == "dash" and _px_frame(pose) == "px_hero" else 0.0):
 		ArenaArt.hero(self, 0, p, _face, pose, _t, 0.0, 1.25)
 	draw_set_transform(Vector2.ZERO)
-	if _atk_t > 0.12:
+	if _atk_t > 0.12 and not _anim.has_set(_anim.anim): # painted punch frames need no drawn arc
 		ArenaArt.slash(self, p + Vector2(_face * 56.0, -70), Vector2(_face, -0.1 if _combo < 3 else -0.6).normalized(), 1.0 - (_atk_t - 0.12) / 0.2, _combo == 3)
 
 

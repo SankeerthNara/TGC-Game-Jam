@@ -389,3 +389,30 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
     (about 0.8 of the hero's height per step) in line with the run speed.
 - Tests: anim set test 14/14 (one check moved to a set not yet delivered), flow 0 fails, bots win.
   Web build re-exported (index.pck 15.0 MB with the new frames).
+
+### 5. Antigravity's groups 2-4: idle, attacks, specials and reactions (merged 31b3d5b, e160ebd, 8e4d892)
+- Merged: 2K idle 6, attack1 3, attack2 3, attack3 4, upslash 3, downslash 3, blade 4, dash 3,
+  heal 3, hurt 2, ko 3; 720p idle 4, punch1 3, punch2 3, punch3 4, roll 4, counter 3, hurt 2, ko 3
+  (plus 720p blade/dash/upslash/downslash/heal, not used by the brawler). Conflicts on hero_attack,
+  hero_dash, hero_hurt and hero_idle (single frames Antigravity re-touched): took theirs.
+- Cleanup: `tools/fix_enclosed_white.py` (trapped white in 10 frames) and a new
+  `tools/remove_stray_marks.py`: the generator left label scraps and a bright bar floating above the
+  figure in the blade, downslash, hurt, ko, dash and upslash frames (both editions); every piece of
+  the picture lying wholly above the figure that is small or sits in the top fifth is removed. Effects
+  over and beside the figure (blade flash, heal glow, sparks) are kept (checked on contact sheets).
+- Wiring: every set plays through HeroAnimator. Attacks (2K attack1-3, upslash, downslash, blade;
+  720p punch1-3, counter) follow the swing: a quick wind-up frame, the strike frame held through the
+  hit window, then recovery. The hits now land exactly in that window (2K slash at swing 0.09-0.45,
+  720p punch at 0.12-0.6), so the hit lands on the strike frame. Painted attack frames carry their own
+  slash and effects, so the code-drawn slash arc and the motion smear are off while a painted set
+  plays. Idle loops at 8 fps; ko plays while a fight resets after a knockout.
+- Baselines: all sets stand on their lowest painted row (the jump arc, ko and roll frames sit higher
+  in their canvas). Scales match within a few percent.
+- run_3 / run_6 (both editions): run_6 now has its blade but is still drawn about 6% smaller than its
+  neighbours; run_3's blade is now a thin gold stick instead of the glowing blade. Both stay out of the
+  loop (2K 10 frames, 720p 8: smooth, no seam). **Still to redraw:** hero_run_3, hero_run_6,
+  px_hero_run_3, px_hero_run_6 (glowing blade, same size and pose spacing as run_2/run_4 and run_5/run_7).
+- Captures: `docs/captures/hero_moves_2k.gif`, `hero_moves_720p.gif` (run, skid and turn, jump, the
+  three-hit combo, dash/roll, up-slash, Light Blade) and their strips `hero_moves_*_strip.png`.
+- Tests: anim sets 17/17, flow 0 fails, face 0 fails, controls 11/11, bots win. Web build
+  re-exported (index.pck 18.6 MB with all the frames).

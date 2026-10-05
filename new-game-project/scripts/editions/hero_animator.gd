@@ -162,7 +162,7 @@ func update(delta: float, want: String, vel: Vector2, want_face: float, run_spee
 	if not fr.is_empty():
 		var i := int(t * rate)
 		if anim in BY_PROGRESS and attack >= 0.0:
-			i = int(attack * fr.size()) # the frames follow the swing: wind-up, strike, recovery
+			i = swing_frame(fr.size(), attack) # wind-up, strike (held while the hit lands), recovery
 		elif anim == "air":
 			i = _arc_frame(fr.size(), vel.y)
 		key = fr[i % fr.size()] if anim in LOOP else fr[mini(i, fr.size() - 1)]
@@ -194,6 +194,16 @@ func update(delta: float, want: String, vel: Vector2, want_face: float, run_spee
 	_squash_v *= exp(-13.0 * delta)
 	squash += _squash_v * delta
 	recoil = maxf(0.0, recoil - delta * 4.0)
+
+
+## The frame of a swing at progress p (0..1): a quick wind-up, the strike frame held through the hit
+## window (p 0.12-0.55; the fights land hits in that window), then the recovery.
+static func swing_frame(n: int, p: float) -> int:
+	if n == 3:
+		return 0 if p < 0.12 else (1 if p < 0.55 else 2)
+	if n == 4:
+		return 0 if p < 0.06 else (1 if p < 0.14 else (2 if p < 0.6 else 3))
+	return clampi(int(p * n), 0, n - 1)
 
 
 func _start_oneshot(a: String) -> void:
@@ -244,8 +254,8 @@ func draw(ci: CanvasItem, feet: Vector2, height: float, tint := Color.WHITE) -> 
 	ci.draw_set_transform(Vector2.ZERO)
 	if _prev_alpha > 0.0 and _prev_key != "" and _prev_key != key and Sprites.has(_prev_key):
 		_mesh(ci, _prev_key, feet, height, Color(tint.r, tint.g, tint.b, tint.a * _prev_alpha * 0.55))
-	if attack >= 0.18 and attack < 0.5:
-		# a smear of the strike
+	if attack >= 0.18 and attack < 0.5 and not has_set(anim):
+		# a smear of the strike (painted attack frames have their own)
 		for k in 2:
 			_mesh(ci, key, feet - Vector2(signf(face) * (16.0 + 16.0 * k), 0), height, Color(tint.r, tint.g, tint.b, tint.a * (0.26 / (k + 1))))
 	_mesh(ci, key, feet, height, tint)

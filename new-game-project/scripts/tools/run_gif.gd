@@ -45,7 +45,9 @@ func _ready() -> void:
 			scene._counters = 1
 			scene.hero_pos.x = 300.0
 		var n := 0
-		for f in 150:
+		if scene is BossFight:
+			scene._ink = 9
+		for f in 290:
 			match f:
 				5: key(KEY_D, true)
 				70: key(KEY_D, false)
@@ -53,6 +55,20 @@ func _ready() -> void:
 				95: key(KEY_A, false)
 				96: key(KEY_SPACE, true)
 				104: key(KEY_SPACE, false)
+				150: key(KEY_J, true)
+				151: key(KEY_J, false)
+				166: key(KEY_J, true)
+				167: key(KEY_J, false)
+				182: key(KEY_J, true)
+				183: key(KEY_J, false)
+				205: key(KEY_K, true)
+				206: key(KEY_K, false)
+				235: key(KEY_W, true)
+				236: key(KEY_J, true)
+				237: key(KEY_J, false)
+				250: key(KEY_W, false)
+				262: key(KEY_L, true)
+				263: key(KEY_L, false)
 			await get_tree().process_frame
 			if f % 2 == 0:
 				var img := get_viewport().get_texture().get_image()

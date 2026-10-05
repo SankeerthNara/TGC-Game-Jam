@@ -503,8 +503,8 @@ func _update_hero(delta: float) -> void:
 	_was_ground = _ground
 	_anim.attack = 1.0 - _atk_t / 0.22 if _atk_t > 0.0 else (1.0 - _blade_t / 0.35 if _blade_t > 0.0 else -1.0)
 	_anim.update(delta, _anim_name(), _vel, _face, RUN, _ground)
-	# the slash hits during its first frames
-	if _atk_t > 0.12:
+	# the slash lands while the strike frame is on screen (swing progress 0.09-0.45)
+	if _atk_t > 0.12 and _atk_t < 0.2:
 		var box := _attack_box()
 		for e in _enemies:
 			if not _atk_hit.has(e) and e.state != "enter" and e.hurt_box().intersects(box):
@@ -1118,7 +1118,8 @@ func _draw_hero(off: Vector2) -> void:
 			dir = Vector2(0, -1)
 		elif _atk_dir == "down":
 			dir = Vector2(0, 1)
-		ArenaArt.slash(self, hero_center() + dir * 18.0, dir, k, _combo == 3 and _atk_dir == "side")
+		if not _anim.has_set(_anim.anim): # painted attack frames carry their own slash
+			ArenaArt.slash(self, hero_center() + dir * 18.0, dir, k, _combo == 3 and _atk_dir == "side")
 	if _heal_t >= 0.0:
 		draw_arc(hero_center(), 40.0, -PI * 0.5, -PI * 0.5 + TAU * _heal_t / 0.6, 24, Color("8ef0ff"), 5.0)
 
