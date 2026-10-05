@@ -200,3 +200,10 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 - Toward the 10-15 min target (watchdog): my human estimate was 14-18 min, so the 144p level 2 now
   has 4 tasks with kinder sabotage timers (ease 2, was 5 tasks) and the Narrator has x1.3 health (was
   x1.4). Expected first playthrough about 13-16 min. Flow test 0 fails.
+
+## Soft-lock hunt (watchdog)
+- New `scripts/tools/chaos_test.tscn`: the playtime bot plays everything while random keys are mashed
+  every half second (P pause, Esc, Z, Enter, Space, M map, Tab) through cutscenes, page turns, twists,
+  fights and the finale; it reports STUCK if one screen lasts 4 minutes. Two runs: both reached the
+  final screen (12.7 and 12.2 min including the random pauses). No soft-lock found besides the
+  Light Blade one fixed above.
