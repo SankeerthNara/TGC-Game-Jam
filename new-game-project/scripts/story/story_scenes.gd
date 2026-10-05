@@ -203,7 +203,7 @@ static func _book() -> Array:
 	return [
 		{"panels": [_p("book_cover", 0, 0, 1, 1, 0.0, "settle")],
 		 "text": [_cap("Every story has a narrator. This one has a secret.", 0, 1.2, "bl", 420.0)],
-		 "sfx": [_sfx("MIRROR PAGE", 0, 0.3, Vector2(0.5, 0.42), 110, Color("ffd23f"), -0.03)],
+		 "sfx": [_sfx("GLITCHED OUT", 0, 0.3, Vector2(0.5, 0.42), 110, Color("ffd23f"), -0.03)],
 		 "hold": 1.4, "turn": "dive"},
 		{"panels": [
 			_p("bk_peace", 0, 0, 0.58, 1, 0.0, "left"),

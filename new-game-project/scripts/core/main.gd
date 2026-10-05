@@ -29,7 +29,7 @@ var score := ScoreKeeper.new()
 var level_ease: Array[int] = [0, 0, 0, 0]
 var _task_layer: CanvasLayer
 var paused := false ## the whole game is frozen (P / Esc); the UI keeps running
-## "Mirror Page: The Editions" (144p -> 720p -> 2k). false = the classic game (roll back here).
+## "Glitched Out" (144p -> 720p -> 2k). false = the classic game (roll back here).
 const EDITIONS := true
 var director: EditionsDirector = null
 const PAUSABLE_STATES := ["world", "task", "parkour", "playing", "boss"]

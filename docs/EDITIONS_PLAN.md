@@ -1,4 +1,4 @@
-# Mirror Page: The Editions (final plan, 2026-10-04)
+# Glitched Out (final plan, 2026-10-04)
 
 Deadline: **Tuesday 2026-10-06, 4 pm IST.** Feature freeze Tuesday 12 pm, web build on itch.io by 3 pm.
 Built on branch `editions`; `main` keeps the classic game until the editions build is approved (roll back = don't merge).

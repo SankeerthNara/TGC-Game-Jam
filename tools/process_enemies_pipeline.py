@@ -1,5 +1,5 @@
 """
-Enemy processing and preview validation pipeline for Mirror Page: The Editions.
+Enemy processing and preview validation pipeline for Glitched Out.
 Handles:
 - Smart cutout and trapped pocket removal (no trapped white/grey areas inside silhouette)
 - Horizontal centering and bottom-edge grounding (feet touching bottom row)

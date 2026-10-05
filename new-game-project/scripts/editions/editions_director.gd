@@ -1,6 +1,6 @@
 class_name EditionsDirector
 extends Node
-## Runs "Mirror Page: The Editions": the book opening, then the same story printed in three editions.
+## Runs "Glitched Out": the book opening, then the same story printed in three editions.
 ##   144p: two dark-room levels and the Ink Baron. Twist 1: the player raises the settings to 720p.
 ##   720p: a pixel-art brawler level and the Static Twins. Fake credits; the cursor moves to 2K by itself.
 ##   2k:   the library hall, the opera arena, the comms die, the Narrator unmasks; the final battle.

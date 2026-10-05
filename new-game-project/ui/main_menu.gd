@@ -1,6 +1,6 @@
 class_name MainMenu
 extends Control
-## Animated comic cover main menu for Mirror Page:
+## Animated comic cover main menu for Glitched Out:
 ## Big logo, looming masked villain, 4 hero busts, a "NOW IN 144p" badge, comic buttons.
 
 const FONT_TITLE := preload("res://assets/fonts/Bangers-Regular.ttf")
@@ -117,9 +117,16 @@ func _draw() -> void:
 	draw_polyline(tail, INK, 2.5)
 	draw_string(FONT_TITLE, speech_c + Vector2(-90, 7), "THE LIGHT IS MINE...", HORIZONTAL_ALIGNMENT_CENTER, 180, 16, RED)
 
-	# 4. Big MIRROR PAGE Logo
+	# 4. Big GLITCHED OUT Logo
 	var logo_pos := Vector2(460, 130)
-	ComicArt.shout(self, "MIRROR PAGE", logo_pos, 82, GOLD, 14, -0.02, 1.0)
+	# the title glitches now and then: cyan and magenta ghosts jump apart for a moment
+	var burst := fposmod(_time, 3.2) < 0.18
+	var split := (10.0 + 6.0 * sin(_time * 90.0)) if burst else 3.0
+	var lw := FONT_TITLE.get_string_size("GLITCHED OUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 82).x
+	var base := logo_pos + Vector2(-lw * 0.5, 82 * 0.33)
+	draw_string(FONT_TITLE, base + Vector2(-split, 0), "GLITCHED OUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 82, Color(0.2, 1.0, 1.0, 0.8))
+	draw_string(FONT_TITLE, base + Vector2(split, 2), "GLITCHED OUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 82, Color(1.0, 0.2, 0.6, 0.8))
+	ComicArt.shout(self, "GLITCHED OUT", logo_pos + (Vector2(randf_range(-4, 4), 0) if burst else Vector2.ZERO), 82, GOLD, 14, -0.02, 1.0)
 
 	# Subtitle ribbon
 	var sub_pts := PackedVector2Array([
@@ -313,7 +320,7 @@ func _build_credits_modal() -> void:
 	vbox.add_child(title)
 
 	var text := Label.new()
-	text.text = "MIRROR PAGE: THE EDITIONS\nCreated for TGC Game Jam (100 Hours)\n\nStory, design & team lead: Sankeerth Nara (team Game it)\nEngine: Godot 4.7 (Compatibility Renderer)\nFonts: Bangers, Comic Neue (SIL OFL)\nArt: drawn in code + AI-generated backgrounds and sprites (Antigravity)\nMusic & sounds: synthesised by our own scripts (CC0)\nAI tools used (disclosed): Claude Code, Antigravity, ChatGPT/Codex\n\nFull attribution: CREDITS.md and docs/AI_USAGE.md."
+	text.text = "GLITCHED OUT\nCreated for TGC Game Jam (100 Hours)\n\nStory, design & team lead: Sankeerth Nara (team Game it)\nEngine: Godot 4.7 (Compatibility Renderer)\nFonts: Bangers, Comic Neue (SIL OFL)\nArt: drawn in code + AI-generated backgrounds and sprites (Antigravity)\nMusic & sounds: synthesised by our own scripts (CC0)\nAI tools used (disclosed): Claude Code, Antigravity, ChatGPT/Codex\n\nFull attribution: CREDITS.md and docs/AI_USAGE.md."
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_theme_font_override("font", FONT_BODY)

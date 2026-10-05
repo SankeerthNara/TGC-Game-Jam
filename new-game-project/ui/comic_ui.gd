@@ -1,6 +1,6 @@
 class_name ComicUI
 extends CanvasLayer
-## Comic UI for Mirror Page: HUD, Narrator Caption Box, Audio triggers, Pause Menu and Level Clear / Twist banners.
+## Comic UI for Glitched Out: HUD, Narrator Caption Box, Audio triggers, Pause Menu and Level Clear / Twist banners.
 ## Listens strictly to EventBus signals as specified in docs/ARCHITECTURE.md.
 
 const FONT_TITLE := preload("res://assets/fonts/Bangers-Regular.ttf")

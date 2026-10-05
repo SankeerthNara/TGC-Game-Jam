@@ -1,5 +1,5 @@
 """
-Sprite processing and quality validation pipeline for Mirror Page: The Editions.
+Sprite processing and quality validation pipeline for Glitched Out.
 Handles:
 - Smart cutout and background removal
 - Horizontal centering and bottom-edge grounding (feet touching bottom row)

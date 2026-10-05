@@ -1,4 +1,4 @@
-"""Generate the short, comic sound effects used by Mirror Page.
+"""Generate the short, comic sound effects used by Glitched Out.
 
 All sounds are synthesised here from elementary oscillators and noise. No samples or
 audio packages are used; NumPy is the only dependency. The output is CC0.

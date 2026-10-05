@@ -1,5 +1,5 @@
 """
-Complete asset build pipeline for Mirror Page: The Editions.
+Complete asset build pipeline for Glitched Out.
 Processes and validates:
 1. 2K Hero frames (512x512)
 2. 2K Narrator & Masked Villain frames (768x768)

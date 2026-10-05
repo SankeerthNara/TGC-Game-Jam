@@ -170,7 +170,7 @@ func _draw() -> void:
 		y += 34.0
 		draw_string(FONT_BODY, Vector2(left + 10, y), ("Total Run Time: %s    Bomb Clock Remaining: %s" % [_fmt(total_time), _fmt(bomb_left)]) if bomb_left >= 0.0 else "Total Run Time: %s" % _fmt(total_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, INK)
 		y += 26.0
-		draw_string(FONT_BODY, Vector2(left + 10, y), "Thanks for playing Mirror Page!" if won else "Play again and save the first hero.", HORIZONTAL_ALIGNMENT_LEFT, 680, 18, Color("5c5470"))
+		draw_string(FONT_BODY, Vector2(left + 10, y), "Thanks for playing Glitched Out!" if won else "Play again and save the first hero.", HORIZONTAL_ALIGNMENT_LEFT, 680, 18, Color("5c5470"))
 	else:
 		for ln in lines:
 			var pts: int = ln[1]

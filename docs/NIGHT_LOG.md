@@ -278,3 +278,14 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   signal. Zero chance.").
 - Tests: flow 0 fails; bots: Ink Baron 31 s, opera 35 s, Narrator 55 s, street 50 s, Twins 26 s.
   Web build re-exported (index.pck 11.5 MB). Back to waiting for Sankeerth's playtest.
+
+## Sankeerth's playtest feedback (Monday)
+### 1. Renamed to "Glitched Out"
+- Title changed in project.godot (config/name: window title and the web page title), the menu logo
+  (now with cyan/magenta ghosts that jump apart in short glitch bursts), the in-game credits, the book
+  cover, the fake credits roll, the final score card, README.md, docs/EDITIONS_PLAN.md,
+  docs/ITCH_PAGE.md, code comments and the art pipeline scripts. Older planning docs (proposal, scope,
+  concepts, round plans) are kept as written, as a historical record.
+- config/name moves user:// (now `app_userdata/Glitched Out/`). The game saves nothing there (no
+  settings or progress files; only the test tools write screenshots), so nothing is lost. The boot
+  splash is Godot's default (no custom image to change).

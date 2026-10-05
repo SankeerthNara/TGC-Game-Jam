@@ -1,5 +1,5 @@
 """
-Build script for all 2K enemies and portraits in Mirror Page: The Editions.
+Build script for all 2K enemies and portraits in Glitched Out.
 """
 
 import os

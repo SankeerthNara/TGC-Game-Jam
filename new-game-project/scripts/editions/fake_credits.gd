@@ -6,7 +6,7 @@ extends Control
 const FONT_SHOUT := preload("res://assets/fonts/Bangers-Regular.ttf")
 const FONT_BODY := preload("res://assets/fonts/ComicNeue-Bold.ttf")
 const LINES := [
-	["MIRROR PAGE", ""],
+	["GLITCHED OUT", ""],
 	["THE HERO", "you"],
 	["THE NARRATOR", "the Narrator"],
 	["THE INK BARON", "defeated"],

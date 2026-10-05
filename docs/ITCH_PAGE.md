@@ -1,4 +1,4 @@
-# Mirror Page: The Editions
+# Glitched Out
 
 > **Tagline:** *The world lost its resolution. Fight through three distinct eras of visual fidelity to restore the stolen light.*
 
@@ -6,7 +6,7 @@
 
 ## About the Game
 
-**Mirror Page: The Editions** is a genre-bending, resolution-evolving comic adventure created for the **TGC Game Jam**. 
+**Glitched Out** is a genre-bending, resolution-evolving comic adventure created for the **TGC Game Jam**. 
 
 When a masked villain wielding an ink-drinking quill drains the light out of the universe, reality collapses. Without light, the world loses its detail—degrading from pristine illustration into crushed pixels and murky static. Guided only by the warm, distinguished voice of the **Narrator** crackling over a retro comms transceiver, you play as a fearless pulp hero armed with a cape of crimson and a blade of pure light, fighting through three distinct visual editions to reclaim the world's brilliance.
 

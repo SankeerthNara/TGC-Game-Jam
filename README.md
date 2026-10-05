@@ -1,4 +1,4 @@
-# Mirror Page: The Editions
+# Glitched Out
 
 A comic book about light, told three times, each time in a better "edition". Made for the TGC Game
 Jam (themes: **Comic, Twist, Light**) in Godot 4.7.
