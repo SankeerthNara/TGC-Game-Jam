@@ -499,3 +499,7 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
 - Text: the fight control line ("Z jump (on a wall: wall jump)  S+J in the air: pogo  K dash  S+K in
   the air: dive"), the library and Narrator cards, the pause guide, How to Play, README, ITCH_PAGE.
   Flow 0 fails, controls 11/11, parkour 8/8, face 0, anim 18/18.
+- GIFs: `docs/captures/library_climb.gif`, `opera_arena.gif`, `narrator_flood.gif` (the bot playing,
+  via `scripts/tools/bot_gif.tscn`). Full game with bots 12.1 min (library 70 s with 5 assists, opera
+  72 s, Narrator 61 s); a first-time player will take longer on the climb (estimate 2-3 min). Chaos
+  test reaches the end. Web build re-exported.
