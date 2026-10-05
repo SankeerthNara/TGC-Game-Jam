@@ -292,13 +292,26 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
 
 ### 2. Hero movement and animation (Sankeerth's top priority)
 New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights and the 720p brawler:
-- **Frame sets when they exist, current frames as the fallback.** Animations are looked up as
-  `<prefix>_<anim>_1..N`: 2K prefix `hero`, 720p prefix `px_hero`. Names the system asks for:
-  `idle, run, jump, fall, attack1, attack2, attack3, attack_up, attack_down, dash, hurt, skid, land, heal`
-  (2K) and `idle, run, jump, fall, attack1, attack2, attack3, roll, hurt, skid, land, counter` (720p),
-  e.g. `hero_run_1.png ... hero_run_8.png`, `hero_attack2_1.png ... _5.png`, `px_hero_roll_1.png ...`.
-  Same canvas as now (2K 512x512, pixel 64x64), facing right, feet on the bottom edge, same scale in
-  every frame. Missing sets fall back to today's single frames, so frames can land one set at a time.
+- **Frame sets when they exist, current frames as the fallback.** Sets are found and counted when first
+  needed, so partial deliveries work set by set. Names (the Antigravity prompt,
+  build/prompts/ANTIGRAVITY_HERO_ANIMATION.md), all in assets/editions/sprites/, facing right, feet on
+  the bottom edge, same canvas per set:
+  - 2K (512x512): `hero_run_1..12` (14 fps, scaled with speed), `hero_runstart_1..3`, `hero_skid_1..3`,
+    `hero_turn_1..3`, `hero_land_1..2` (these four play once as transitions), `hero_jump_1..6` (one
+    arc: crouch, take-off, rising, apex, falling, about to land; picked by vertical speed),
+    `hero_idle_1..6` (8 fps), `hero_attack1_1..3`, `hero_attack2_1..3`, `hero_attack3_1..4`,
+    `hero_upslash_1..3`, `hero_downslash_1..3`, `hero_blade_1..4` (Light Blade) - attack frames follow
+    the swing (wind-up, strike, recovery) - `hero_dash_1..3`, `hero_heal_1..3`, `hero_hurt_1..2`,
+    `hero_ko_1..3` (while the fight resets after a knockout).
+  - 720p (64x64): `px_hero_run_1..10`, `px_hero_runstart_1..2`, `px_hero_skid_1..2`, `px_hero_turn_1..2`,
+    `px_hero_land_1..2`, `px_hero_jump_1..4` (take-off, rising, apex, falling), `px_hero_idle_1..4`,
+    `px_hero_punch1_1..3`, `px_hero_punch2_1..3`, `px_hero_punch3_1..4`, `px_hero_roll_1..4`,
+    `px_hero_counter_1..3`, `px_hero_hurt_1..2`, `px_hero_ko_1..3`.
+  - With a turn set the turn frames show the turn (no squeeze through the edge). Any missing set falls
+    back to today's single frames with the procedural motion below.
+  - `scripts/tools/anim_sets_test.tscn` puts fake sets in the sprite cache and checks the names, the
+    counts, the jump arc by speed, the once-only transitions, attacks following the swing and the
+    fallbacks: 14/14 pass.
 - **No hard swaps:** a 0.1 s crossfade between animations; a motion smear on each strike; the hero
   turns around by swinging through a thin edge-on frame (about 0.12 s) instead of flipping instantly.
 - **Procedural motion on top of the frames** (the picture is drawn as a 6x6 mesh that bends): lean into

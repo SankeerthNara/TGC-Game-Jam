@@ -84,7 +84,10 @@ var _land_lock := 0.0 ## a hard landing slows the first steps
 var _anim := HeroAnimator.new("hero", {"idle": ["hero_idle"], "run": ["hero_run1", "hero_run2"],
 	"jump": ["hero_jump"], "fall": ["hero_jump"], "attack1": ["hero_attack"], "attack2": ["hero_attack"],
 	"attack3": ["hero_attack"], "attack_up": ["hero_attack"], "attack_down": ["hero_jump"],
-	"dash": ["hero_dash"], "hurt": ["hero_hurt"], "skid": ["hero_idle"], "land": ["hero_idle"], "heal": ["hero_idle"]})
+	"dash": ["hero_dash"], "hurt": ["hero_hurt"], "skid": ["hero_idle"], "land": ["hero_idle"], "heal": ["hero_idle"],
+	"turn": ["hero_idle"], "blade": ["hero_attack"], "ko": ["hero_hurt"]},
+	{"attack_up": "upslash", "attack_down": "downslash"})
+var _blade_t := 0.0 ## the Light Blade swing is playing
 var _jump_buf := 0.0
 var _dash_t := 0.0
 var _dash_cd := 0.0
@@ -375,6 +378,7 @@ func _process(delta: float) -> void:
 			if _pending.is_empty() and _enemies.is_empty() and _phase == "wave":
 				_wave_done()
 		"retry":
+			_anim.update(delta, "ko", Vector2.ZERO, _face, RUN, true)
 			if _pt > 2.2:
 				# back to the start of this wave, full health (the Narrator heals too)
 				_hp = max_hp
@@ -426,6 +430,7 @@ func _update_hero(delta: float) -> void:
 	_jump_buf = maxf(0.0, _jump_buf - delta)
 	_coyote = maxf(0.0, _coyote - delta)
 	_combo_t = maxf(0.0, _combo_t - delta)
+	_blade_t = maxf(0.0, _blade_t - delta)
 	_land = maxf(0.0, _land - delta * 6.0)
 	if _atk_buf > 0.0:
 		_atk_buf -= delta
@@ -498,7 +503,7 @@ func _update_hero(delta: float) -> void:
 	elif _ground and absf(_vel.x) > 200.0 and int(_t * 9.0) != int((_t - delta) * 9.0):
 		_fx.append({"kind": "dust", "pos": hero_pos + Vector2(-_face * 10.0, -4), "vel": Vector2(-_face * 60.0, -60.0), "t": 0.0, "life": 0.35, "size": 4.0})
 	_was_ground = _ground
-	_anim.attack = 1.0 - _atk_t / 0.22 if _atk_t > 0.0 else -1.0
+	_anim.attack = 1.0 - _atk_t / 0.22 if _atk_t > 0.0 else (1.0 - _blade_t / 0.35 if _blade_t > 0.0 else -1.0)
 	_anim.update(delta, _anim_name(), _vel, _face, RUN, _ground)
 	# the slash hits during its first frames
 	if _atk_t > 0.12:
@@ -534,6 +539,10 @@ func _run_physics(move: float, delta: float) -> float:
 
 ## Which animation the hero's state asks for.
 func _anim_name() -> String:
+	if _hp <= 0:
+		return "ko"
+	if _blade_t > 0.0:
+		return "blade"
 	if _heal_t >= 0.0:
 		return "heal"
 	if _invuln > 1.0:
@@ -714,6 +723,8 @@ func _power() -> void:
 	match _hero_kind() - 1:
 		-1:
 			# LIGHT BLADE: one huge arc of light in front of the pulp hero
+			_blade_t = 0.35
+			_anim.start_attack(3)
 			_atk_dir = "side"
 			_atk_t = 0.22
 			_fx.append({"kind": "bigslash", "pos": hero_center(), "dir": _face, "t": 0.0, "life": 0.35})

@@ -1,7 +1,8 @@
 class_name HeroAnimator
 extends RefCounted
 ## Smooth hero animation for the 2K fights and the 720p brawler, from whatever frames exist.
-## Frame sets are looked up as <prefix>_<anim>_1..N (hero_run_1..8, hero_attack1_1..5, px_hero_jump_1..3),
+## Frame sets are looked up as <prefix>_<set>_1..N (hero_run_1..12, hero_attack1_1..3, px_hero_jump_1..4),
+## counted once when first needed;
 ## so full animation sets can arrive at any time; without them the single frames we have are used.
 ## On top of the frames: short crossfades between animations, a quick turn-around, a motion smear on
 ## strikes, and a mesh warp of the picture that gives lean with speed, squash and stretch, breathing,
@@ -9,15 +10,21 @@ extends RefCounted
 ## trail behind the body.
 
 const GRID := 6 ## the picture is drawn as a GRID x GRID mesh so it can bend
-const LOOP := ["idle", "run", "fall", "heal", "skid"]
+const LOOP := ["idle", "run", "heal"]
+## Short transitions played once when their frame set exists, then the hero goes on to the next state.
+const LOCOMOTION := ["idle", "run", "skid", "land", "turn", "runstart"]
+## Animations whose frames follow the attack's progress (0..1) instead of a frame rate.
+const BY_PROGRESS := ["attack1", "attack2", "attack3", "attack_up", "attack_down", "counter", "blade"]
 
 var prefix := "hero"
 ## anim -> the frames to use when no <prefix>_<anim>_N set exists
 var fallback := {}
+## anim -> the name of its frame set when it differs (attack_up -> upslash, attack1 -> punch1)
+var aliases := {}
 ## anim -> frames per second
-var rates := {"idle": 6.0, "run": 11.0, "jump": 10.0, "fall": 10.0, "attack1": 24.0, "attack2": 24.0,
+var rates := {"idle": 8.0, "run": 14.0, "runstart": 18.0, "jump": 10.0, "fall": 10.0, "attack1": 24.0, "attack2": 24.0,
 	"attack3": 18.0, "attack_up": 22.0, "attack_down": 22.0, "dash": 16.0, "roll": 16.0, "hurt": 12.0,
-	"skid": 10.0, "land": 16.0, "heal": 8.0, "counter": 20.0}
+	"skid": 20.0, "land": 16.0, "heal": 8.0, "counter": 20.0, "turn": 18.0, "blade": 14.0, "ko": 8.0}
 
 var anim := "idle"
 var t := 0.0 ## time in the current animation
@@ -37,23 +44,45 @@ var _lag_v := Vector2.ZERO
 var _squash_v := 0.0
 var _prev_vel := Vector2.ZERO
 var _clock := 0.0
+var _oneshot := "" ## a transition set playing once (turn, runstart, skid, land)
+var _oneshot_t := 0.0
+var _last_face := 1.0
+var _last_want := "idle"
+var _landed_now := false
 static var _sets := {}
+static var _full := {}
 
 
-func _init(p: String, fb: Dictionary) -> void:
+func _init(p: String, fb: Dictionary, al := {}) -> void:
 	prefix = p
 	fallback = fb
+	aliases = al
 
 
-## The frames of an animation: a full set if it exists, else the fallback frames.
-func frames(a: String) -> Array:
-	var id := prefix + "_" + a
-	if not _sets.has(id):
+## The frame set <prefix>_<set>_1..N, counted once (empty if there is none).
+func _frame_set(name: String) -> Array:
+	var id := prefix + "_" + name
+	if not _full.has(id):
 		var list: Array = []
 		var n := 1
 		while Sprites.has("%s_%d" % [id, n]):
 			list.append("%s_%d" % [id, n])
 			n += 1
+		_full[id] = list
+	return _full[id]
+
+
+## True when a real frame set exists for this animation (not just the fallback frames).
+func has_set(a: String) -> bool:
+	return not frames(a).is_empty() and frames(a)[0].ends_with("_1") and frames(a)[0].begins_with(prefix + "_")
+
+
+## The frames of an animation: its full set if it exists, else the fallback frames.
+## "air" is the whole jump arc (the frame is picked by vertical speed).
+func frames(a: String) -> Array:
+	var id := prefix + "|" + a
+	if not _sets.has(id):
+		var list: Array = _frame_set(String(aliases.get(a, "jump" if a == "air" else a))).duplicate()
 		if list.is_empty():
 			for k: String in fallback.get(a, fallback.get("idle", [])):
 				if Sprites.has(k):
@@ -76,6 +105,7 @@ func jumped() -> void:
 func landed(impact: float) -> void:
 	squash = 1.0 - clampf(impact / 2000.0, 0.06, 0.26)
 	_squash_v = 0.0
+	_landed_now = true
 
 
 func hurt() -> void:
@@ -92,6 +122,28 @@ func start_attack(n: int) -> void:
 ## want: the animation the game asks for; vel: the hero's velocity; want_face: +1 / -1.
 func update(delta: float, want: String, vel: Vector2, want_face: float, run_speed: float, ground: bool) -> void:
 	_clock += delta
+	# one jump arc for going up and coming down, when the set exists
+	if want in ["jump", "fall"] and has_set("air"):
+		want = "air"
+	# transitions played once when their sets exist: turn, run start, skid, land
+	var wf := signf(want_face) if want_face != 0.0 else _last_face
+	if ground and want in LOCOMOTION:
+		if wf != _last_face and has_set("turn"):
+			_start_oneshot("turn")
+		elif want == "skid" and _last_want != "skid" and has_set("skid"):
+			_start_oneshot("skid")
+		elif _landed_now and has_set("land"):
+			_start_oneshot("land")
+		elif want == "run" and _last_want in ["idle", "land"] and has_set("runstart"):
+			_start_oneshot("runstart")
+	_landed_now = false
+	_last_face = wf
+	_last_want = want
+	_oneshot_t = maxf(0.0, _oneshot_t - delta)
+	if _oneshot_t > 0.0 and want in LOCOMOTION:
+		want = _oneshot
+	else:
+		_oneshot_t = 0.0
 	if want != anim:
 		if key != "":
 			_prev_key = key
@@ -105,10 +157,17 @@ func update(delta: float, want: String, vel: Vector2, want_face: float, run_spee
 	var fr := frames(anim)
 	if not fr.is_empty():
 		var i := int(t * rate)
+		if anim in BY_PROGRESS and attack >= 0.0:
+			i = int(attack * fr.size()) # the frames follow the swing: wind-up, strike, recovery
+		elif anim == "air":
+			i = _arc_frame(fr.size(), vel.y)
 		key = fr[i % fr.size()] if anim in LOOP else fr[mini(i, fr.size() - 1)]
 	_prev_alpha = maxf(0.0, _prev_alpha - delta / 0.1)
 	var f := signf(want_face) if want_face != 0.0 else signf(face)
-	face = move_toward(face, f, delta * 16.0) # a turn takes about an eighth of a second
+	if has_set("turn") and ground:
+		face = f # the turn frames show the turn; no squeeze through the edge
+	else:
+		face = move_toward(face, f, delta * 16.0) # a turn takes about an eighth of a second
 	# lean: into the run, back on a skid or a hit, with the swing of an attack
 	var acc := (vel - _prev_vel) / maxf(delta, 0.001)
 	_prev_vel = vel
@@ -131,6 +190,33 @@ func update(delta: float, want: String, vel: Vector2, want_face: float, run_spee
 	_squash_v *= exp(-13.0 * delta)
 	squash += _squash_v * delta
 	recoil = maxf(0.0, recoil - delta * 4.0)
+
+
+func _start_oneshot(a: String) -> void:
+	_oneshot = a
+	_oneshot_t = frames(a).size() / float(rates.get(a, 14.0))
+
+
+## The frame of the jump arc for a vertical speed. 6 frames (2K): crouch, take-off, rising, apex,
+## falling, about to land. 4 frames (720p): take-off, rising, apex, falling. Any other count: spread.
+func _arc_frame(n: int, vy: float) -> int:
+	if n >= 6:
+		if t < 0.06 and vy < -600.0:
+			return 0
+		if vy < -450.0:
+			return 1
+		if vy < -130.0:
+			return 2
+		if vy < 160.0:
+			return 3
+		return 4 if vy < 650.0 else 5
+	if n == 4:
+		if vy < -450.0:
+			return 0
+		if vy < -130.0:
+			return 1
+		return 2 if vy < 160.0 else 3
+	return clampi(int(clampf((vy + 900.0) / 1800.0, 0.0, 0.999) * n), 0, n - 1)
 
 
 ## Anticipation, strike and follow-through of an attack, as a lean (+ = toward the enemy).

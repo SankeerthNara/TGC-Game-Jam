@@ -70,7 +70,8 @@ var _skid := 0.0 ## turning at speed: a short skid
 var _anim := HeroAnimator.new("px_hero", {"idle": ["px_hero"], "run": ["px_hero_run1", "px_hero_run2"],
 	"jump": ["px_hero"], "fall": ["px_hero"], "attack1": ["px_hero_punch"], "attack2": ["px_hero_punch"],
 	"attack3": ["px_hero_kick"], "roll": ["px_hero_roll"], "hurt": ["px_hero_hurt"], "skid": ["px_hero"],
-	"land": ["px_hero"], "counter": ["px_hero_punch"]})
+	"land": ["px_hero"], "counter": ["px_hero_punch"], "ko": ["px_hero_hurt"]},
+	{"attack1": "punch1", "attack2": "punch2", "attack3": "punch3"})
 var _land := 0.0
 
 
@@ -181,6 +182,7 @@ func _process(delta: float) -> void:
 			_update_hero(delta)
 			_update_world(delta)
 		"dead":
+			_anim.update(delta, "ko", Vector2.ZERO, _face, RUN, true)
 			if _pt > 2.0:
 				_restart_fight()
 		"won":
