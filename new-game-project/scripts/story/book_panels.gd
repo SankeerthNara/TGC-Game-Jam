@@ -64,8 +64,29 @@ static func _blob(c: Vector2, r: Vector2, seed_value: float, n := 16) -> PackedV
 
 static func _fill_clipped(ci: CanvasItem, poly: PackedVector2Array, clip: PackedVector2Array, col: Color) -> void:
 	for p in Geometry2D.intersect_polygons(poly, clip):
-		if p.size() >= 3:
-			ci.draw_colored_polygon(p, col)
+		_safe_fill(ci, p, col)
+
+
+## Fills a polygon only if it can be drawn: clipping can leave slivers, repeated points or holes,
+## which the renderer refuses ("triangulation failed"). Those are cleaned or skipped.
+static func _safe_fill(ci: CanvasItem, poly: PackedVector2Array, col: Color) -> void:
+	var clean := PackedVector2Array()
+	for q in poly:
+		if clean.is_empty() or clean[clean.size() - 1].distance_squared_to(q) > 0.25:
+			clean.append(q)
+	if clean.size() >= 2 and clean[0].distance_squared_to(clean[clean.size() - 1]) <= 0.25:
+		clean.remove_at(clean.size() - 1)
+	if clean.size() < 3 or absf(_area(clean)) < 2.0 or Geometry2D.triangulate_polygon(clean).is_empty():
+		return
+	ci.draw_colored_polygon(clean, col)
+
+
+static func _area(p: PackedVector2Array) -> float:
+	var a := 0.0
+	for i in p.size():
+		var j := (i + 1) % p.size()
+		a += p[i].x * p[j].y - p[j].x * p[i].y
+	return a * 0.5
 
 
 # --- once, the Earth shone with light ----------------------------------------------------------
@@ -107,8 +128,7 @@ static func planet(ci: CanvasItem, c: Vector2, r: float, t: float, grey: float) 
 	var lit := A.ellipse_pts(c + Vector2(-r * 0.35, -r * 0.3), r * 1.08, r * 1.08, 72)
 	lit.remove_at(lit.size() - 1)
 	for p in Geometry2D.clip_polygons(disc, lit):
-		if p.size() >= 3:
-			ci.draw_colored_polygon(p, Color(0.02, 0.03, 0.12, 0.55))
+		_safe_fill(ci, p, Color(0.02, 0.03, 0.12, 0.55))
 	_glow(ci, c + Vector2(-r * 0.4, -r * 0.4), r * 0.75, Color(1, 1, 1, 0.22 * (1.0 - grey)))
 	ci.draw_arc(c, r, 0.0, TAU, 72, Color(0.6, 0.85, 1.0, 0.85 * (1.0 - grey)), 3.0)
 	ci.draw_arc(c, r + 3.0, 0.0, TAU, 72, A.INK, 4.0)
@@ -308,7 +328,7 @@ static func _escape(ci: CanvasItem, sz: Vector2, t: float) -> void:
 		var a := -2.2 + k * 0.25
 		ci.draw_colored_polygon(PackedVector2Array([Vector2(sz.x * 0.5, sz.y * 0.5), Vector2(sz.x * 0.5, sz.y * 0.5) + Vector2.from_angle(a - 0.05) * sz.x, Vector2(sz.x * 0.5, sz.y * 0.5) + Vector2.from_angle(a + 0.05) * sz.x]), Color(1, 0.9, 0.6, 0.12))
 	_glow(ci, Vector2(sz.x * 0.5, sz.y * 0.5), sz.y * 0.7, Color(1, 0.85, 0.5, 0.55))
-	ci.draw_colored_polygon(crack, Color(1, 0.96, 0.82))
+	_safe_fill(ci, crack, Color(1, 0.96, 0.82))
 	ci.draw_polyline(crack, Color(1, 0.8, 0.35), 3.0)
 	# ink grabbing at him from below
 	for k in 5:

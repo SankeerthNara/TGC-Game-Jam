@@ -358,3 +358,14 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
 - New `scripts/tools/controls_test.tscn`: D/A move, Space jumps, W+J up-slash, K dash, L Light Blade,
   X/C/V do nothing (2K); D moves, J punch, K roll, L counter (720p): 11/11 pass. Flow test 0 fails,
   face test 0 fails, bots win with the new keys, chaos test reaches the end.
+- Bug from Sankeerth's desktop run: "Invalid polygon data, triangulation failed" in the book's Earth
+  panel. Clipping the drifting continents and clouds to the planet sometimes leaves slivers or
+  repeated points the renderer cannot triangulate (that piece then was not drawn). Reproduced with
+  `scripts/tools/earth_errors.tscn` (the panel at 4000 moments): 6 errors before, 0 after. Every
+  clipped fill (continents, clouds, night side, the escape panel's light crack, the cover gleam) now
+  goes through a guard that drops repeated points and skips slivers and shapes that do not
+  triangulate. The panel looks the same.
+- The "non-equal opposite anchors" warning came from the main menu: its root is anchored to the full
+  screen in the scene and its _ready also set the size. The size call is gone (the anchors already fill
+  1280x720); the warning no longer appears and the menu is unchanged.
+- Flow test 0 fails; web build re-exported.

@@ -1,7 +1,7 @@
 extends Node
 ## Renders frames of the comic story cutscenes to PNGs for a visual check (not part of the game).
 
-const SHOTS := [["book", 1, 4.5], ["ending_editions", 0, 5.0], ["ending_editions", 1, 4.0], ["book", 2, 5.0]]
+const SHOTS := [["book", 1, 4.5]]
 
 
 func _ready() -> void:

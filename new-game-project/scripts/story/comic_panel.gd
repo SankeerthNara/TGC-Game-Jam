@@ -68,7 +68,7 @@ func _cover_fx(at: Vector2, ds: Vector2) -> void:
 		var x := lerpf(quad[0].x - 260.0, quad[1].x + 120.0, g)
 		var band := PackedVector2Array([Vector2(x, 0), Vector2(x + 70.0, 0), Vector2(x - 130.0, size.y), Vector2(x - 200.0, size.y)])
 		for poly in Geometry2D.intersect_polygons(band, quad):
-			if poly.size() >= 3:
+			if poly.size() >= 3 and not Geometry2D.triangulate_polygon(poly).is_empty():
 				draw_colored_polygon(poly, Color(1, 0.97, 0.85, 0.22 * sin(g * PI)))
 	for i in 22:
 		var rx := fposmod(i * 0.618034, 1.0)

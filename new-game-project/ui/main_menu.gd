@@ -22,7 +22,6 @@ const HERO_NAMES := ["PULP", "NOIR", "NINJA", "SPACE"]
 
 
 func _ready() -> void:
-	set_deferred("size", Vector2(1280, 720))
 	custom_minimum_size = Vector2(1280, 720)
 	
 	_sfx_player = AudioStreamPlayer.new()
