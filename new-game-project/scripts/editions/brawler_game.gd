@@ -76,6 +76,9 @@ var _land := 0.0
 
 
 var _light: LightOverlay
+var _orbs: Array[Dictionary] = [] ## the Twins' static orbs: pos, vel, t, wait, from
+var _tunnel := false ## the second half of the Twins' fight runs through a dark tunnel
+var _tunnel_k := 0.0
 
 
 ## The light is gone here too: the hero's glow, street lamps and the Twins' screens light the night.
@@ -83,7 +86,7 @@ func _update_lights() -> void:
 	if _light == null:
 		_light = LightOverlay.new()
 		add_child(_light)
-		_light.set_hud_bands(90.0, 645.0)
+		_light.set_hud_bands(90.0, 634.0)
 	var ls: Array = [[hero_pos - Vector2(_cam, 70.0), 300.0, 1.0]]
 	if stage == "street":
 		var first := floorf((_cam - 200.0) / 560.0)
@@ -94,8 +97,13 @@ func _update_lights() -> void:
 		for e in _enemies:
 			if e.twin():
 				ls.append([e.pos - Vector2(_cam, 190.0), 220.0, 0.9])
-	var flash := 1.0 if stage == "train" and int(_t * 0.5) % 5 == 0 and fposmod(_t, 2.0) < 0.08 else 0.0
-	var dark := 0.0 if _phase == "intro" and _pt < 1.6 else 0.58 * (1.0 - flash)
+		for o in _orbs:
+			ls.append([(o["pos"] as Vector2) - Vector2(_cam, 0), 120.0, 0.7])
+		if _tunnel_k > 0.0:
+			for k in 4:
+				ls.append([Vector2(_tunnel_lamp_x(k), 200.0), 300.0, 0.9 * _tunnel_k])
+	var flash := 1.0 if stage == "train" and _tunnel_k < 0.5 and int(_t * 0.5) % 5 == 0 and fposmod(_t, 2.0) < 0.08 else 0.0
+	var dark := 0.0 if _phase == "intro" and _pt < 1.6 else lerpf(0.58, 0.72, _tunnel_k) * (1.0 - flash)
 	_light.set_lights(ls, dark)
 
 
@@ -167,7 +175,39 @@ func enemy_beam(e: BrawlEnemy) -> void:
 	_shake = 6.0
 
 
+## The tunnel's passing lamps (screen x).
+func _tunnel_lamp_x(k: int) -> float:
+	return fposmod(k * 455.0 - _t * 1400.0, 1820.0) - 270.0
+
+
+func enemy_orbs(e: BrawlEnemy, n: int) -> void:
+	for k in n:
+		var a := -PI * 0.5 + (k - (n - 1) * 0.5) * 0.6
+		_orbs.append({"pos": e.center() + Vector2(0, -60) + Vector2.from_angle(a) * 80.0, "vel": Vector2.ZERO, "t": 0.0, "wait": 0.45 + k * 0.2, "from": e})
+	EventBus.sound_requested.emit("static")
+
+
+## A dive kick hits the roof: anyone close is hit.
+func twin_landed(e: BrawlEnemy) -> void:
+	_shake = 12.0
+	_dust(e.pos, 12)
+	EventBus.sound_requested.emit("punch_heavy")
+	if absf(hero_pos.x - e.pos.x) < 120.0 and hero_pos.y > GROUND - 60.0:
+		hurt_hero(e, 2)
+
+
 func twin_turn_done(e: BrawlEnemy) -> void:
+	_twin_turn += 1
+	if _alive_twins() == 2 and _twin_turn % 5 == 0:
+		# CROSSFIRE: both hop to the edges and dash across at once
+		var i := 0
+		for o in _enemies:
+			if o.twin():
+				o.active = true
+				o.hop_to(lock_left + 80.0 if i == 0 else lock_right - 80.0, "xdash")
+				i += 1
+		_fx.append({"kind": "word", "text": "CROSSFIRE!", "pos": Vector2(640 + _cam, 260), "t": 0.0, "life": 1.2})
+		return
 	# the twins take turns: the other one steps in
 	for o in _enemies:
 		if o.twin():
@@ -186,6 +226,7 @@ func _alive_twins() -> int:
 
 func _process(delta: float) -> void:
 	_update_lights()
+	_tunnel_k = move_toward(_tunnel_k, 1.0 if _tunnel else 0.0, delta * 0.8)
 	_t += delta
 	_pt += delta
 	_shake = maxf(0.0, _shake - delta * 40.0)
@@ -275,12 +316,15 @@ func _restart_fight() -> void:
 	_inv = 1.5
 	_shots.clear()
 	_beams.clear()
+	_orbs.clear()
 	if stage == "train":
-		for e in _enemies:
-			e.hp = e.max_hp
-			e.dead = false
-			e.state = "idle"
-		_enemies = _enemies.filter(func(e: BrawlEnemy) -> bool: return true)
+		var a := BrawlEnemy.new("twin_a", Vector2(980, GROUND))
+		var b := BrawlEnemy.new("twin_b", Vector2(1120, GROUND))
+		b.active = false
+		_enemies = [a, b]
+		_dying.clear()
+		_tunnel = false
+		_twin_turn = 0
 		hero_pos = Vector2(260, GROUND)
 	else:
 		_enemies.clear()
@@ -334,7 +378,43 @@ func _update_world(delta: float) -> void:
 		if e.twin():
 			for o in _enemies:
 				if o.twin():
-					o.active = true # the survivor goes berserk
+					o.active = true # the survivor absorbs the fallen twin's signal: berserk
+					o.berserk = true
+					o.hp = minf(o.max_hp, o.hp + 6.0)
+					_fx.append({"kind": "word", "text": "SIGNAL MERGED!", "pos": o.center() + Vector2(0, -120), "t": 0.0, "life": 1.4})
+					var comms: Node = get_tree().get_first_node_in_group("comms")
+					if comms != null:
+						comms.say("Half the signal... is still ALL the signal!", "static_twins", 1.5)
+	for e in _enemies:
+		if e.just_staggered:
+			e.just_staggered = false
+			_shake = maxf(_shake, 8.0)
+			_fx.append({"kind": "word", "text": "STAGGERED!", "pos": e.center() + Vector2(0, -110), "t": 0.0, "life": 0.9})
+			EventBus.sound_requested.emit("punch_heavy")
+	# halfway through the Twins, the train runs into a tunnel: the light is gone
+	if stage == "train" and not _tunnel and _phase == "play":
+		var sum := 0.0
+		for e in _enemies:
+			if e.twin():
+				sum += maxf(0.0, e.hp)
+		if sum <= float(BrawlEnemy.STATS["twin_a"]["hp"]):
+			_tunnel = true
+			_fx.append({"kind": "word", "text": "TUNNEL!", "pos": Vector2(640 + _cam, 220), "t": 0.0, "life": 1.4})
+			var comms2: Node = get_tree().get_first_node_in_group("comms")
+			if comms2 != null:
+				comms2.say("A tunnel! Stay close to the light, hero.", "narrator", 1.5)
+	# static orbs: they hover, then home in on the hero; a punch pops them
+	var hc := hero_pos + Vector2(0, -60)
+	for o in _orbs:
+		o["t"] = float(o["t"]) + et
+		if float(o["t"]) >= float(o["wait"]):
+			var want := (hc - (o["pos"] as Vector2)).normalized() * (300.0 if (o["from"] as BrawlEnemy).berserk else 240.0)
+			o["vel"] = (o["vel"] as Vector2).lerp(want, minf(1.0, 2.0 * et))
+		o["pos"] = (o["pos"] as Vector2) + (o["vel"] as Vector2) * et
+		if hero_box().grow(6.0).has_point(o["pos"]):
+			o["dead"] = true
+			hurt_hero(o["from"], 1)
+	_orbs = _orbs.filter(func(o: Dictionary) -> bool: return not o.get("dead", false) and float(o["t"]) < 6.0)
 	if stage == "street" and _zone_live and _pending.is_empty() and _enemies.is_empty():
 		_zone_live = false
 		_go_hint = 3.0
@@ -434,6 +514,11 @@ func _update_hero(delta: float) -> void:
 				_hit_fx(e.center().lerp(hero_pos + Vector2(0, -70), 0.3), 1.0 if _combo < 3 else 1.5)
 				_freeze = 0.05 if _combo < 3 else 0.1
 				EventBus.sound_requested.emit("punch" if _combo < 3 else "punch_heavy")
+		for o in _orbs:
+			if not o.get("dead", false) and box.grow(14.0).has_point(o["pos"]):
+				o["dead"] = true
+				_hit_fx(o["pos"], 0.7)
+				EventBus.sound_requested.emit("punch")
 	# hug the camera to the hero inside the locked zone
 	var target_cam := clampf(hero_pos.x - 560.0, lock_left, maxf(lock_left, lock_right - 1280.0))
 	_cam = lerpf(_cam, target_cam, minf(1.0, delta * 6.0))
@@ -627,6 +712,11 @@ func _draw() -> void:
 		var x1 := 1400.0 if float(b["dir"]) > 0.0 else -120.0
 		draw_line(Vector2(bx, by), Vector2(x1, by), Color(0.3, 1.0, 1.0, 0.4), 34.0)
 		draw_line(Vector2(bx, by), Vector2(x1, by), Color(0.9, 1.0, 1.0), 10.0)
+	for o in _orbs:
+		var op := (o["pos"] as Vector2) - Vector2(_cam, 0)
+		draw_texture_rect(TEX_GLOW, Rect2(op - Vector2(30, 30), Vector2(60, 60)), false, Color(0.3, 1.0, 1.0, 0.6))
+		draw_rect(Rect2(op - Vector2(10, 10), Vector2(20, 20)), Color("1a0d2a"))
+		draw_rect(Rect2(op - Vector2(10, 10), Vector2(20, 20)), Color("3ef0ff") if int(_t * 12.0) % 2 == 0 else Color("ff4fa0"), false, 3.0)
 	_draw_hero()
 	for f in _fx:
 		var k := float(f["t"]) / float(f["life"])
@@ -722,13 +812,23 @@ func _draw_train() -> void:
 			for wy in range(int(520.0 - bh), 480, 24):
 				if (wy + k) % 3 == 0:
 					draw_rect(Rect2(bx + 14, wy, 70, 6), Color(1, 0.3, 0.35, 0.3))
-	if int(_t * 0.5) % 5 == 0 and fposmod(_t, 2.0) < 0.08:
+	if _tunnel_k < 0.5 and int(_t * 0.5) % 5 == 0 and fposmod(_t, 2.0) < 0.08:
 		draw_rect(Rect2(0, 0, 1280, 720), Color(0.8, 0.9, 1.0, 0.35)) # lightning
 	if not _layer("train_mid", 0.0):
 		for k in 4:
 			var px := fposmod(k * 420.0 - speed * 0.9, 1700.0) - 200.0
 			draw_rect(Rect2(px, 120, 18, 420), Color("060a10"))
 			draw_line(Vector2(px - 300, 160), Vector2(px + 320, 160), Color("060a10"), 3.0)
+	if _tunnel_k > 0.0:
+		# the tunnel: bare walls rushing past, a few lamps the only light
+		draw_rect(Rect2(0, 0, 1280, GROUND), Color(0.07, 0.06, 0.07, _tunnel_k))
+		for k in 7:
+			var rx := fposmod(k * 240.0 - speed, 1680.0) - 200.0
+			draw_rect(Rect2(rx, 0, 46, GROUND), Color(0.14, 0.12, 0.12, _tunnel_k))
+		for k in 4:
+			var lx := _tunnel_lamp_x(k)
+			draw_texture_rect(TEX_GLOW, Rect2(Vector2(lx - 110, 90), Vector2(220, 220)), false, Color(1, 0.75, 0.35, 0.55 * _tunnel_k))
+			draw_rect(Rect2(Vector2(lx - 18, 194), Vector2(36, 12)), Color(1, 0.85, 0.5, _tunnel_k))
 	# the train roof
 	draw_rect(Rect2(0, GROUND, 1280, 90), Color("1b2433"))
 	draw_rect(Rect2(0, GROUND, 1280, 8), Color("c9d6e3"))
@@ -820,7 +920,7 @@ func _draw_hud() -> void:
 		var bar := Rect2(Vector2(668, 664), Vector2(580, 16))
 		draw_string(FONT_SHOUT, Vector2(668, 656), "THE STATIC TWINS", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("3ef0ff"))
 		var hp_sum := 0.0
-		var hp_max := 80.0
+		var hp_max := float(BrawlEnemy.STATS["twin_a"]["hp"]) * 2.0
 		for e in _enemies:
 			if e.twin():
 				hp_sum += maxf(0.0, e.hp)

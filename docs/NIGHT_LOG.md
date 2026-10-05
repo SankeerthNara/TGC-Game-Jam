@@ -596,3 +596,17 @@ fight structure replicated in our theme with our characters and art (no assets c
 - Checked in frames (`scripts/tools/duel_shot.tscn -- scribe late`): orbs, teleports, fake death,
   laugh, floor break, archive. Flow 0 fails; arena bots win (Ink Baron 31 s, opera 58 s, Ink Scribe
   45 s, Narrator 33 s).
+- **720p: the Static Twins fight upgraded** in the same spirit: besides dash / eye beam / heavy, each
+  Twin now has a channel-hop (vanishes into static, reappears behind the hero for a red heavy), a leap
+  and dive kick (hangs in the air, yellow eyes, the landing spot glows on the roof: get out of it) and
+  static orbs (hover, then home in; a punch pops them). Every fifth turn both hop to the edges and
+  dash across at once (CROSSFIRE: roll or counter). A run of hits (15% of a Twin's health) staggers
+  him (stars, free hits). The last Twin standing absorbs the other's signal (+6 hp, faster, shorter
+  recoveries, five orbs). At half the pair's health the train runs into a tunnel: walls rush past and
+  a few passing lamps, the hero's glow and the Twins' screens are the only light. Health 40 -> 55 each
+  (the bot won in 26 s); restarting after a death now rebuilds both Twins (before, a Twin knocked out
+  before the death stayed gone). Bot: 34-54 s. Frames: `scripts/tools/twins_shot.tscn`.
+- playtime_test: with --fixed-fps the game outruns real-time audio, so the voice-over waits made the
+  cutscenes look endless; the test now plays the VO in game time. Full run 13.5 min (Ink Baron 41 s,
+  street 46 s, Twins 36 s, library 51 s, Ink Scribe 97 s, opera 45 s, Narrator 38 s). Flow, menu,
+  controls, parkour, anim, vo tests: 0 fails.

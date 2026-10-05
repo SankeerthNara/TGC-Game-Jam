@@ -74,6 +74,15 @@ func _process(delta: float) -> void:
 	_total += delta
 	_wait = maxf(0.0, _wait - delta)
 	var ov: Variant = main._overlay
+	# with --fixed-fps the game runs faster than real time but audio does not: play the voice-over in
+	# game time, so the cutscenes that wait for a voice take as long as they would for a player
+	var vo := VoPlayer.get_vo(get_tree())
+	if vo != null and vo._player.playing and vo._player.stream != null:
+		var at := vo.position() + delta
+		if at >= vo._player.stream.get_length():
+			vo._player.stop()
+		else:
+			vo._player.seek(at)
 	if ov is NoticeCard and ov._t > 1.0 and ov._t < 50.0:
 		ov._t = 50.0
 		ov._close() # the reader dismisses the notice / the THE END card

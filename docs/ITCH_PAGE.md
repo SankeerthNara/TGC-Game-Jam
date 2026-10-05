@@ -20,11 +20,11 @@ Step into the pitch-black archives where light is scarce and shadows lurk around
 
 ### 🌆 720p Edition — Neon & Rain
 *Cinematic 16-bit pixel art, dripping neon reflections, synthwave grooves, and heavy rain.*
-Surge into a sprawling neo-noir cityscape. Clean pixel clusters meet dramatic volumetric lighting as you fight street brawlers beneath flickering neon shop signs. Leap onto the roof of a high-speed freight train under lightning-streaked skies for a duel against the electrifying **Static Twins**.
+Surge into a sprawling neo-noir cityscape. Clean pixel clusters meet dramatic volumetric lighting as you fight street brawlers beneath flickering neon shop signs. Leap onto the roof of a high-speed freight train under lightning-streaked skies for a duel against the electrifying **Static Twins**: two bodies, one signal. They channel-hop through static, dive from the sky, and cross the roof in a synchronized dash, and halfway through the fight the train plunges into a tunnel where only a few passing lamps light the way.
 
 ### 🏛️ 2k Edition — The Painted Cathedral
 *High-definition gothic comic art, hand-inked linework, warm backlights, and operatic depth.*
-Reach the pinnacle of visual clarity. Soar through majestic gothic library halls and vaulted cathedrals where dust motes dance in shafts of golden light. Unsheathe your blade of light against waves of shadowy ink spectators in a grand opera house arena for the ultimate confrontation to restore the universe's solar brilliance.
+Reach the pinnacle of visual clarity. Soar through majestic gothic library halls and vaulted cathedrals where dust motes dance in shafts of golden light. Climb to a sealed sanctum and face **The Ink Scribe**, a teleporting ink sorcerer who does not stay defeated, before waves of shadowy ink spectators in a grand opera house, and a final sword duel to restore the universe's solar brilliance. The light is gone: fight inside your own glow and the last lanterns.
 
 ---
 
