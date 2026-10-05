@@ -35,6 +35,18 @@ func _ready() -> void:
 	b.boss_hp_scale = 1.3
 	b.lamps.assign([Vector2(150, 400), Vector2(470, 330), Vector2(810, 330), Vector2(1130, 400)])
 	b.waves = [[[["scribe", Vector2(640, 300), 0.0]]]] if scribe else [[[["narrator", "BALCONY", 0.0]]]]
+	if "opera" in OS.get_cmdline_user_args():
+		b.stage = "opera"
+		b.caged_heroes = false
+		b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AC", 1.2], ["bat", "AL", 1.8]], [["brute", "C", 0.0], ["dancer", "AL", 0.6], ["bat", "AR", 1.0], ["bat", "AC", 1.6]]]]
+		layer.add_child(b)
+		for f in 60 * 30:
+			ArenaBot.drive(b, press, tap)
+			await get_tree().process_frame
+			if f % 150 == 149:
+				get_viewport().get_texture().get_image().save_png("user://duel_%d.png" % (f / 150))
+		get_tree().quit()
+		return
 	layer.add_child(b)
 	for i in 5:
 		await get_tree().process_frame

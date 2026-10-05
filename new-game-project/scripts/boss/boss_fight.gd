@@ -1138,6 +1138,7 @@ func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool, pierce := false) -> void:
 	if not e.guarding(hero_pos.x) or pogo or pierce or riposte:
 		# the hit lands: the enemy flashes white and a burst of paper petals flies off
 		e.whiteout = 0.06
+		shake(3.0)
 		for k in 8:
 			_fx.append({"kind": "paper", "pos": e.center(), "vel": Vector2(randf_range(-380, 380), randf_range(-420, 80)), "t": 0.0, "life": 0.7, "size": randf_range(4, 8)})
 	if e.kind != "bomb" and e.broken > 0.0 and not pierce:
@@ -1203,7 +1204,10 @@ func _kill_fx(e: ArenaEnemy) -> void:
 	_fx.append({"kind": "spark", "pos": e.center(), "t": 0.0, "life": 0.4, "size": 2.0 if e.kind == "brute" else 1.4})
 	for k in 14:
 		_fx.append({"kind": "paper", "pos": e.center(), "vel": Vector2(randf_range(-380, 380), randf_range(-480, -80)), "t": 0.0, "life": 1.2, "size": randf_range(4, 9)})
-	_say(["SPLAT!", "POW!", "KRAK!", "BLAM!"][randi() % 4], e.center() + Vector2(0, -50), GOLD, 42)
+	# the burst says it; comic words only for the big ones
+	_fx.append({"kind": "ring", "pos": e.center(), "t": 0.0, "life": 0.3, "col": Color(1, 0.97, 0.85, 1.0)})
+	if e.kind in ["brute", "baron"]:
+		_say(["SPLAT!", "POW!", "KRAK!", "BLAM!"][randi() % 4], e.center() + Vector2(0, -50), GOLD, 42)
 	EventBus.sound_requested.emit("kill")
 	if e.kind != "bomb" and e.kind != "narrator":
 		_corpses.append({"x": e.pos.x, "y": e.floor_y, "kind": e.kind, "dir": e.dir})
@@ -1231,8 +1235,11 @@ func _hurt(from_x: float) -> void:
 	_invuln = 1.3
 	_heal_t = -1.0
 	_hurt_flash = 1.0
-	_freeze = 0.14
-	shake(12.0)
+	_freeze = 0.22 # a hard stop: getting hit must feel heavy
+	shake(14.0)
+	_fx.append({"kind": "ring", "pos": hero_center(), "t": 0.0, "life": 0.35, "col": Color(1, 1, 1, 0.9)})
+	for k in 12:
+		_fx.append({"kind": "ink", "pos": hero_center(), "vel": Vector2.from_angle(k * TAU / 12.0) * randf_range(260, 480), "t": 0.0, "life": 0.45, "size": randf_range(6, 11)})
 	var away := signf(hero_pos.x - from_x)
 	if away == 0.0:
 		away = -_face

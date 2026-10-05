@@ -666,3 +666,4 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
   paper petals on every landed hit. Darkness 0.62 -> 0.5. Flow 0 fails; bots win (Ink Baron 30 s,
   opera 52 s, Scribe 64 s, Narrator 36 s); parkour, controls, anim tests 0 fails.
 - T6: opera waves now 4 / 4 / 5 enemies with tighter delays (a crowd like the reference); bot 45-51 s; playtime 12.8 min.
+- T7 (reference pass): heavier hits on the hero (0.22 s hit-stop, white ring, ink splash), kill bursts with a white ring, comic words only for brutes/bosses, small shake on landed hits. Flow 0 fails; all bots win (Ink Baron 33 s, opera 51 s, Scribe 60 s, Narrator 37 s, street 49 s, Twins 34 s). Zipped as build/GlitchedOut_v4.zip.

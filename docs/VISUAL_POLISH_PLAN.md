@@ -99,7 +99,12 @@ Notes from doing T1-T5:
   extra light enemies (bat, dancer), so 3-5 are on screen. Re-run arena_bot_test (the opera must
   still be won) and playtime_test (the total must stay 10-15 min).
 
-## T7. Compare with the references again, then polish: Status: TODO
+## T7. Compare with the references again, then polish: Status: DONE (first pass)
+- Done: getting hit is heavier (hit-stop 0.22 s, white ring, ink splash); kills burst with a white
+  ring and paper; comic words only for brutes and bosses (the reference has no text pops); a small
+  shake on every landed hit. `duel_shot.tscn -- opera` renders the opera crowd.
+- Ideas for a next pass, if time allows: a short camera zoom-in on parries; dust/particle motes in
+  the lamp light; brighter floor edge in the library hall.
 - Watch the duel_shot frames next to the reference videos (Hollow Knight Soul Master / Hornet). Fix
   whatever still reads worse: camera framing, hit-stop, screen shake, enemy telegraph readability.
 
