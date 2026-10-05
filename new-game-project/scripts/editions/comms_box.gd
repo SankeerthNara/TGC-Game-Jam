@@ -127,6 +127,8 @@ func _draw_box() -> void:
 	var ci := _draw_node
 	var appear := clampf(_t / 0.18, 0.0, 1.0)
 	var box := Rect2(Vector2(24, 586 + (1.0 - appear) * 40.0), Vector2(620, 112))
+	if not get_tree().get_nodes_in_group("boss_fight").is_empty():
+		box = Rect2(Vector2(320, 8 - (1.0 - appear) * 40.0), Vector2(600, 112)) # top centre: off the floor and the climb
 	var who := String(_cur["who"])
 	var evil := who == "narrator_evil"
 	ci.draw_rect(Rect2(box.position + Vector2(6, 6), box.size), Color(0, 0, 0, 0.5))

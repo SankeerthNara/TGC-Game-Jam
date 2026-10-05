@@ -218,11 +218,18 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_ALL
 	grab_focus()
+	add_to_group("boss_fight")
+	_anim.rim = Color(0.75, 1.0, 1.0, 0.6)
 	for key in ["hall_far", "hall_mid", "hall_near", "arena_far", "arena_mid", "arena_near", "arena_dark"]:
-		for ext in [".jpg", ".png"]:
-			var path: String = "res://assets/editions/2k/" + key + ext
-			if ResourceLoader.exists(path):
-				_bg[key] = load(path)
+		# the soft (blurred, hazed) versions keep the background behind the fighters
+		for name in [key + "_soft", key]:
+			if _bg.has(key):
+				break
+			for ext in [".jpg", ".png"]:
+				var path: String = "res://assets/editions/2k/" + name + ext
+				if ResourceLoader.exists(path):
+					_bg[key] = load(path)
+					break
 	if stage == "opera" or stage == "dark":
 		platforms.append(ArenaArt.PODIUM)
 	for ch: Array in chandeliers:
@@ -577,10 +584,21 @@ func _update_lights() -> void:
 		ls.append([r.get_center() - off + Vector2(0, -16), 210.0, 0.8])
 	for g: Array in glows:
 		ls.append([(g[0] as Vector2) - off, float(g[1]), float(g[2])])
+	# every fighter carries a little light, so the dark never hides one
+	for e in _enemies:
+		if not e.dead:
+			ls.append([e.center() - off, 170.0, 0.55])
+	if level_top < 0.0:
+		var n := 0
+		for r in platforms:
+			var c := Vector2(r.get_center().x, r.position.y) - off
+			if c.y > -60.0 and c.y < 780.0 and n < 8:
+				ls.append([c, 150.0, 0.6])
+				n += 1
 	glows.clear()
-	var dark := 0.62
+	var dark := 0.5 # the backgrounds are pre-darkened (soft versions)
 	if _phase in ["round_intro", "won", "lost", "ko", "the_end"]:
-		dark = 0.62 * clampf((_pt - 3.0) / 0.6, 0.0, 1.0) if _phase == "round_intro" else 0.15
+		dark = 0.5 * clampf((_pt - 3.0) / 0.6, 0.0, 1.0) if _phase == "round_intro" else 0.15
 	dark *= 1.0 - clampf(_white, 0.0, 1.0)
 	_light.set_lights(ls, dark)
 
@@ -613,6 +631,7 @@ func _process(delta: float) -> void:
 	_t += delta
 	_swing_chandeliers()
 	_update_lights()
+	hints_seen += delta
 	_pt += delta
 	_shake = maxf(0.0, _shake - delta * 40.0)
 	_white = maxf(0.0, _white - delta * 2.5)
@@ -1116,6 +1135,11 @@ func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool, pierce := false) -> void:
 	if e.kind == "scribe" and e.state in ["tele_out", "tele_in", "fake_death", "laugh", "crash"]:
 		return # mid-teleport or playing dead: the blow passes through ink
 	var riposte := _riposting and not pierce
+	if not e.guarding(hero_pos.x) or pogo or pierce or riposte:
+		# the hit lands: the enemy flashes white and a burst of paper petals flies off
+		e.whiteout = 0.06
+		for k in 8:
+			_fx.append({"kind": "paper", "pos": e.center(), "vel": Vector2(randf_range(-380, 380), randf_range(-420, 80)), "t": 0.0, "life": 0.7, "size": randf_range(4, 8)})
 	if e.kind != "bomb" and e.broken > 0.0 and not pierce:
 		_critical(e)
 		if e.dead:
@@ -1685,7 +1709,7 @@ func _draw() -> void:
 		var obj := ("REACH THE DOOR AT THE TOP" if _exit_open else "CLIMB THE LIBRARY") if level_top < 0.0 else "REACH THE END OF THE LIBRARY"
 		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
-		if _pt < 10.0:
+		if _pt < 10.0 and _hints_on():
 			draw_string(FONT_BODY, Vector2(70, 700), "WASD move   Z jump (on a wall: wall jump)   J attack   S+J in the air: pogo   K dash   S+K in the air: dive   L parry (hold: blade)   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, PAPER)
 	elif _phase == "wave" and _narrator == null:
 		# the objective while there is no boss bar: how many are left on stage
@@ -1756,7 +1780,8 @@ func _draw_climb(off: Vector2) -> void:
 			draw_rect(Rect2(Vector2(w.position.x, y + 30.0), Vector2(w.size.x, 5.0)), Color("140d0a"))
 			y += 36.0
 			row += 1
-		draw_line(w.position, Vector2(w.end.x, w.position.y), Color(1, 0.8, 0.5, 0.7), 3.0)
+		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(w.position + Vector2(-30, -36), Vector2(w.size.x + 60, 60)), false, Color(1, 0.8, 0.45, 0.45))
+		draw_rect(Rect2(w.position, Vector2(w.size.x, 5)), Color(1, 0.86, 0.55))
 	if exit_rect.size.x > 0.0:
 		var d := exit_rect
 		var lit := 1.0 if _exit_open else 0.25
@@ -1799,9 +1824,11 @@ func _draw_hall_floor(off: Vector2) -> void:
 	draw_set_transform(off)
 	for r in platforms:
 		var ledge := Rect2(r.position, Vector2(r.size.x, 22))
+		# lit from above: a warm glow on top, a bright edge, so every ledge reads at a glance
+		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(ledge.position + Vector2(-30, -36), Vector2(ledge.size.x + 60, 60)), false, Color(1, 0.8, 0.45, 0.45))
 		draw_rect(ledge.grow(3.0), Color("06090a"))
-		draw_rect(ledge, Color("23302f"))
-		draw_line(ledge.position, Vector2(ledge.end.x, ledge.position.y), Color(1, 0.8, 0.5, 0.7), 3.0)
+		draw_rect(ledge, Color("3b4a48"))
+		draw_rect(Rect2(ledge.position, Vector2(ledge.size.x, 5)), Color(1, 0.86, 0.55))
 		for k in 3:
 			draw_line(Vector2(r.position.x + 12 + k * r.size.x / 3.0, r.position.y + 22), Vector2(r.position.x + 20 + k * r.size.x / 3.0, r.position.y + 60), Color("06090a"), 4.0)
 
@@ -1912,8 +1939,8 @@ func _draw_hero(off: Vector2) -> void:
 			dir = Vector2(0, -1)
 		elif _atk_dir == "down":
 			dir = Vector2(0, 1)
-		if not _anim.has_set(_anim.anim): # painted attack frames carry their own slash
-			ArenaArt.slash(self, hero_center() + dir * 18.0, dir, k, _combo == 3 and _atk_dir == "side")
+		# a big white arc on every swing (over the painted frames' own smear too)
+		ArenaArt.slash(self, hero_center() + dir * 24.0, dir, k, _combo == 3 and _atk_dir == "side")
 	if _heal_t >= 0.0:
 		draw_arc(hero_center(), 40.0, -PI * 0.5, -PI * 0.5 + TAU * _heal_t / 0.6, 24, Color("8ef0ff"), 5.0)
 	if _parry_t > 0.0:
@@ -1967,6 +1994,14 @@ func _draw_fx(f: Dictionary, off: Vector2) -> void:
 			ComicArt.shout(self, String(f["text"]), (f["pos"] as Vector2) + off + Vector2(0, -30.0 * k), int(f["fs"]), Color(f["col"]), 10, -0.05, s)
 
 
+## The key hints show in the first fights of a run only (the pause menu lists the controls).
+static var hints_seen := 0.0
+
+
+func _hints_on() -> bool:
+	return hints_seen < 40.0
+
+
 ## The painted pulp hero portrait for the HUD medallion (the code-drawn bust if it is missing).
 var _portrait: Texture2D = load("res://assets/editions/portraits/hero.png") if ResourceLoader.exists("res://assets/editions/portraits/hero.png") else null
 
@@ -1995,13 +2030,15 @@ func _draw_hud() -> void:
 		draw_rect(r, INK)
 		draw_rect(r.grow(-2.0), Color("2ec4b6") if i < _ink else Color(0.15, 0.15, 0.2))
 	var power_line := "L parry   hold L: %s (3)   F heal (6)" % POWER_BY_KIND[0] if _hero_kind() == 0 else "L %s (3)   F heal (6)" % POWER_BY_KIND[_hero_kind()]
-	draw_string(FONT_BODY, Vector2(126, 116), power_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
+	if _hints_on():
+		draw_string(FONT_BODY, Vector2(126, 116), power_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
 	# round, wave, bomb (top right)
 	draw_string(FONT_SHOUT, Vector2(930, 46), ("ROUND %d  -  %s" % [_round + 1, ComicArt.HERO_NAMES[kind]]) if fight_title == "" else fight_title, HORIZONTAL_ALIGNMENT_LEFT, 330, 22, GOLD)
 	if bomb_left >= 0.0:
 		var bs := int(ceil(bomb_left))
 		draw_string(FONT_SHOUT, Vector2(930, 82), "BOMB %d:%02d" % [bs / 60, bs % 60], HORIZONTAL_ALIGNMENT_LEFT, -1, 32, RED if bomb_left < 60.0 else PAPER)
-	draw_string(FONT_SHOUT, Vector2(1110, 82), "WAVE %d/%d" % [mini(_global_wave(), _total_waves()), _total_waves()], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, PAPER)
+	if _total_waves() > 1:
+		draw_string(FONT_SHOUT, Vector2(1110, 82), "WAVE %d/%d" % [mini(_global_wave(), _total_waves()), _total_waves()], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, PAPER)
 	# the Narrator's health (bottom)
 	if _narrator != null:
 		var bar := Rect2(Vector2(668, 660), Vector2(580, 20))
@@ -2013,7 +2050,7 @@ func _draw_hud() -> void:
 			draw_rect(pb, INK)
 			var pcol := Color.WHITE if _narrator.broken > 0.0 and int(_t * 8.0) % 2 == 0 else Color("ffd23f").lerp(Color("ff8a00"), _narrator.posture)
 			draw_rect(Rect2(pb.position + Vector2(2, 2), Vector2((pb.size.x - 4) * clampf(_narrator.posture, 0.0, 1.0), pb.size.y - 4)), pcol)
-	elif _phase in ["wave", "wave_intro"] and _wave == 0 and _pt < 8.0:
+	elif _phase in ["wave", "wave_intro"] and _wave == 0 and _pt < 8.0 and _hints_on():
 		draw_string(FONT_BODY, Vector2(70, 700), "WASD move   Z jump (on a wall: wall jump)   J attack   S+J in the air: pogo   K dash   S+K in the air: dive   L parry (hold: blade)   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, PAPER)
 
 

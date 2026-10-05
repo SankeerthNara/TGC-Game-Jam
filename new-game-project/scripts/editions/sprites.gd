@@ -34,3 +34,14 @@ static func draw(ci: CanvasItem, key: String, feet: Vector2, height: float, dir 
 	ci.draw_texture_rect_region(tex, Rect2(Vector2(-w * 0.5, -h), Vector2(w, h)), Rect2(Vector2(0.5, 0.5), tex.get_size() - Vector2.ONE), tint)
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	return true
+
+
+## A light rim around a sprite so it reads against a busy background: the silhouette drawn solid
+## (an overbright modulate clamps to one colour) in 8 directions, `width` px out, before the sprite.
+static func draw_rim(ci: CanvasItem, key: String, feet: Vector2, height: float, dir := 1.0, col := Color(1, 0.93, 0.8, 0.55), squash := 1.0, rot := 0.0, width := 3.0) -> void:
+	var tex := get_tex(key)
+	if tex == null:
+		return
+	var solid := Color(col.r * 8.0, col.g * 8.0, col.b * 8.0, col.a)
+	for i in 8:
+		draw(ci, key, feet + Vector2.from_angle(i * TAU / 8.0) * width, height, dir, solid, squash, rot)

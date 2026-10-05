@@ -36,7 +36,7 @@ The gaps (from Sankeerth's comparison with the reference videos), worst first:
 
 ---
 
-## T1. Soft backgrounds (blur, darken, desaturate, haze): Status: TODO
+## T1. Soft backgrounds (blur, darken, desaturate, haze): Status: DONE
 - Why: gaps 1 and 2.
 - Approach: pre-process the 2K background pictures offline (no runtime shader, so the web build
   stays fast). Script `tools/soften_backgrounds.py` (Python + Pillow) reads
@@ -48,7 +48,7 @@ The gaps (from Sankeerth's comparison with the reference videos), worst first:
   `<key>_soft` when it exists, else the original. The cutscenes keep using the sharp originals.
 - Check: duel_shot frames. The background is visibly softer and darker; the fighters stand out.
 
-## T2. Fighters pop: rim light, own light, 20% bigger: Status: TODO
+## T2. Fighters pop: rim light, own light, 20% bigger: Status: DONE
 - Rim: `scripts/editions/sprites.gd` gets `static func draw_rim(ci, key, feet, height, dir, col,
   squash, rot, width)`. It draws the same texture 8 times, offset by `width` px in 8 directions, with
   an overbright modulate (`Color(col.r*6, col.g*6, col.b*6, col.a)`), which clamps to a solid
@@ -61,14 +61,14 @@ The gaps (from Sankeerth's comparison with the reference videos), worst first:
   values x1.2. Hitboxes are not changed (the art only).
 - Check: duel_shot frames; the hero and the enemies are readable at a glance; feet still on the floor.
 
-## T3. Lit ledges on the climb: Status: TODO
+## T3. Lit ledges on the climb: Status: DONE
 - Code: `boss_fight.gd` `_draw_hall_floor()` (the `platforms` loop) and `_draw_climb()` (the
   `walls` top edge). Each ledge gets a warm glow strip above it (`ArenaArt.TEX_GLOW`), a 5 px bright
   top edge `Color(1, 0.86, 0.55)`, a lighter body colour `#3b4a48`, and a small lantern light per
   ledge in `_update_lights()` (only when `level_top < 0`, at most 10 lights).
 - Check: `scripts/tools/parkour_shot.tscn` or the climb in a playthrough. Every ledge is visible.
 
-## T4. Less clutter: Status: TODO
+## T4. Less clutter: Status: DONE
 - Key hints: the long "WASD move ... F heal" line (bottom of `_draw_hud()` and the explore block in
   `_draw()`) and the "L parry hold L..." line under the ink meter show only during the first fight of
   a run. Add `static var hints_seen := false` to BossFight; set it in `_exit_tree()` once a fight was
@@ -79,13 +79,20 @@ The gaps (from Sankeerth's comparison with the reference videos), worst first:
   not bottom-left.
 - Check: duel_shot frames; the play area is clear and the top-left only shows health and ink.
 
-## T5. Bigger hits: Status: TODO
+## T5. Bigger hits: Status: DONE
 - `arena_art.gd` `slash()`: radius 62/90 -> 92/130, thickness 16/26 -> 22/34, near-white.
 - `boss_fight.gd` `_draw_hero()`: also draw the slash arc when painted attack frames exist (today it
   is skipped), at 0.85 alpha.
 - On every hit (`_hit_enemy`), set the enemy's `whiteout` to 0.06 s (it exists in arena_enemy) and
   burst 8 cream "petal" paper flakes (`_fx` kind "paper").
 - Check: duel_shot frames show big white arcs and white flashes.
+
+Notes from doing T1-T5:
+- The darkness overlay dropped from 0.62 to 0.5 (`_update_lights`), because the soft backgrounds are already darker.
+- The comms box is 600 px wide at the top centre during 2K fights (`boss_fight` group), so it clears the fight title.
+- Hints count game seconds across fights (`BossFight.hints_seen`) and hide after 40 s.
+- Tools: `scripts/tools/climb_shot.tscn` (library climb frames). It starts the 2K act directly, so the
+  frames still show the 240p filter; that's a tool artifact, not the game.
 
 ## T6. More on screen: Status: TODO
 - Opera waves (`scripts/editions/editions_director.gd` `_opera()`): wave 2 and 3 get one or two

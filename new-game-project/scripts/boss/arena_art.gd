@@ -11,7 +11,7 @@ const GLOW := Color("ffb46b")
 const FLOOR_Y := 600.0
 const PODIUM := Rect2(520, 505, 240, 18) ## the rim of the giant inkwell: a platform
 const TEX_GLOW := preload("res://assets/art/radial_glow.png")
-const HERO_SCALE := 1.35
+const HERO_SCALE := 1.62 ## +20% (the hero reads like the reference fights)
 static var land_squash := 0.0 ## 0..1, set by the fight for the frame after a landing
 
 const HERO_MAIN := [Color("1d4ed8"), Color("c2a878"), Color("1f2a44"), Color("ff70a6")]
@@ -349,7 +349,7 @@ static func _weapon(ci: CanvasItem, kind: int, hand: Vector2, pose: String) -> v
 ## The white crescent of a slash (the arc follows the attack direction).
 static func slash(ci: CanvasItem, c: Vector2, dir: Vector2, k: float, big := false) -> void:
 	var a := dir.angle()
-	var r := 62.0 if not big else 90.0
+	var r := 92.0 if not big else 130.0
 	var span := 1.6
 	var pts := PackedVector2Array()
 	var n := 14
@@ -358,11 +358,12 @@ static func slash(ci: CanvasItem, c: Vector2, dir: Vector2, k: float, big := fal
 		pts.append(c + Vector2.from_angle(a - span * 0.5 + span * u) * r)
 	for i in n + 1:
 		var u := 1.0 - float(i) / n
-		var thick := maxf(1.5, sin(u * PI) * (16.0 if not big else 26.0))
+		var thick := maxf(1.5, sin(u * PI) * (22.0 if not big else 34.0))
 		pts.append(c + Vector2.from_angle(a - span * 0.5 + span * u) * (r - thick))
 	var alpha := clampf(1.0 - k, 0.0, 1.0)
 	ci.draw_colored_polygon(pts, Color(1, 1, 1, 0.95 * alpha))
-	ci.draw_arc(c, r + 4.0, a - span * 0.5, a + span * 0.5, 16, Color(1, 0.9, 0.6, 0.5 * alpha), 3.0)
+	ci.draw_arc(c, r + 4.0, a - span * 0.5, a + span * 0.5, 16, Color(1, 1, 0.95, 0.7 * alpha), 4.0)
+	ci.draw_arc(c, r + 12.0, a - span * 0.4, a + span * 0.4, 16, Color(1, 1, 1, 0.3 * alpha), 8.0)
 
 
 ## A white starburst where a hit lands.

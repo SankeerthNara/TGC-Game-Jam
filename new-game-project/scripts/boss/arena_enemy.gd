@@ -871,7 +871,10 @@ func _draw_posture(ci: CanvasItem, time: float) -> void:
 
 
 const SPRITE_KEYS := {"scribe": "masked_villain", "dancer": "enemy_lancer", "step": "enemy_bat", "lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
-const SPRITE_H := {"scribe": 230.0, "dancer": 120.0, "step": 90.0, "lancer": 160.0, "bat": 96.0, "brute": 220.0, "baron": 255.0, "narrator": 260.0}
+## Drawn heights (20% up from the first pass, so the fighters read like the reference fights;
+## hitboxes are unchanged).
+const SPRITE_H := {"scribe": 276.0, "dancer": 144.0, "step": 108.0, "lancer": 192.0, "bat": 115.0, "brute": 264.0, "baron": 306.0, "narrator": 312.0}
+const RIM := Color(1, 0.93, 0.8, 0.55)
 
 
 func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
@@ -951,6 +954,8 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 		var c := feet - Vector2(0, h * (0.45 if kind != "bat" else 0.5))
 		var r := h * 0.62
 		ci.draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false, Color(1.0, 0.45, 0.32, 0.8 * a))
+	if whiteout <= 0.0 and a > 0.3:
+		Sprites.draw_rim(ci, key, feet, h, face, Color(RIM.r, RIM.g, RIM.b, RIM.a * a), squash, rot)
 	Sprites.draw(ci, key, feet, h, face, tint, squash, rot)
 	ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 	return true

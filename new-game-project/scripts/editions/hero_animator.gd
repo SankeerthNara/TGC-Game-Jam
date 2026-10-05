@@ -248,6 +248,9 @@ func _attack_lean() -> float:
 # --- drawing -------------------------------------------------------------------------------------
 
 ## Draws the hero with his feet at `feet`, the picture `height` pixels tall. False if there is no art.
+var rim := Color(0, 0, 0, 0) ## a light outline (set by the 2K fights so the hero pops)
+
+
 func draw(ci: CanvasItem, feet: Vector2, height: float, tint := Color.WHITE) -> bool:
 	if key == "" or not Sprites.has(key):
 		return false
@@ -258,6 +261,10 @@ func draw(ci: CanvasItem, feet: Vector2, height: float, tint := Color.WHITE) -> 
 		# a smear of the strike (painted attack frames have their own)
 		for k in 2:
 			_mesh(ci, key, feet - Vector2(signf(face) * (16.0 + 16.0 * k), 0), height, Color(tint.r, tint.g, tint.b, tint.a * (0.26 / (k + 1))))
+	if rim.a > 0.0:
+		var solid := Color(rim.r * 8.0, rim.g * 8.0, rim.b * 8.0, rim.a * tint.a)
+		for i in 8:
+			_mesh(ci, key, feet + Vector2.from_angle(i * TAU / 8.0) * 3.0, height, solid)
 	_mesh(ci, key, feet, height, tint)
 	return true
 

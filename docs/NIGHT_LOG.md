@@ -655,3 +655,13 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
 - Checked in-game (`duel_shot.tscn`, both fights): same 768 px canvas with feet on the bottom edge as
   the old sprites, so scale and baseline match the hero; no popping between sets. Flow 0 fails;
   bots: Ink Scribe 70 s, Narrator 35 s. Web build re-exported.
+
+### 18. Fights read like the reference (Sankeerth's comparison; plan: docs/VISUAL_POLISH_PLAN.md)
+- v2 zip built before this (build/GlitchedOut_v2.zip).
+- T1 soft backgrounds (tools/soften_backgrounds.py -> *_soft.jpg/png; the fights load them first).
+  T2 fighters pop: a light rim on every sprite (8 overbright silhouette draws), a small light on each
+  enemy, hero and enemy art +20% (hitboxes unchanged). T3 lit ledges (glow + bright top edge + lamps).
+  T4 less clutter: key hints only for the first 40 s of fights, no "WAVE 1/1", comms box at the top
+  centre during 2K fights. T5 bigger white slash arcs on every swing, a white flash and a burst of
+  paper petals on every landed hit. Darkness 0.62 -> 0.5. Flow 0 fails; bots win (Ink Baron 30 s,
+  opera 52 s, Scribe 64 s, Narrator 36 s); parkour, controls, anim tests 0 fails.
