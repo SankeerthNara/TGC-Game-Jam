@@ -450,3 +450,24 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
 - New `scripts/tools/parkour_test.tscn` (real key presses): wall slide, wall contact, wall jump, one
   air dash, pogo (bounce + jump back), dive strike (starts, hits, bounces): 8/8. Flow 0 fails,
   controls 11/11, arena bots win.
+
+**Stage 2: the library as a vertical climb**
+- BossFight gains a vertical camera (`level_top`; the painted hall slides slowly as you climb), solid
+  `walls` (bookshelf blocks drawn with rows of books), encounters as areas with their own floor
+  (`floor_y`: enemies, spawns, shockwaves, ink rain and corpses use it; a locked fight's floor is
+  solid even where it is a drop-through ledge on the climb), stepping paper bats (harmless, pogo off
+  them), falling books (hurt, pogo off them; warned by a red mark), move tips and an exit door.
+- Layout (1280 wide, 2300 tall): a locked fight on the ground floor (2 lancers, a bat) -> a bookshelf
+  chimney to wall-jump up (tip + comms) -> a gap to air-dash across (tip) -> two paper bats to pogo
+  up (tip) -> falling books -> a locked fight in the upper reading room (3 lancers, 2 bats; the dive
+  tip) -> ledges to the door at the top ("OPERA >>"). Beaten on the climb (books): back on the last
+  safe ledge with full health.
+- Can a player climb it? `scripts/tools/chimney_test.tscn` plays the chimney with a plain human input
+  pattern (hold toward a wall, Z when sliding, hold toward the other wall): on top in about 6 s.
+- The test bot (`scripts/tools/arena_bot.gd`, shared again by the arena and playtime tests) follows
+  waypoints: it crosses the dash gap, pogoes up the bats and climbs to the door on its own; at the
+  chimney and two other spots its input timing fails and it is moved on after 8 s (an "assist",
+  reported: 4-5 per run). Bug found on the way: the bot's taps released Z every frame, which cut every
+  jump to a short hop (that also made the old arena bot's jumps tiny).
+- `scripts/tools/climb_bot_test.tscn`: the library as the game builds it, by the bot: finished in about
+  60 s with 4 assists. Full game with bots 11.2 min (library 75 s). Flow 0 fails, parkour 8/8.

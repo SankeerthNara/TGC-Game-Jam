@@ -87,7 +87,7 @@ func _ready() -> void:
 	check(await wait_until(func() -> bool: return d.act == "2k"), "the cursor picks 2K by itself")
 	check(await wait_until(func() -> bool: return d.fx.edition == "2k"), "the picture is 2k")
 	check(await wait_until(func() -> bool: return main._overlay is BossFight and main._overlay.stage == "hall"), "2k level 1: the library hall")
-	check(main._overlay._exploring and main._overlay.level_width > 1280.0, "the hall scrolls")
+	check(main._overlay._exploring and main._overlay.level_top < 0.0, "the library is a climb")
 	main._overlay.finished.emit("win")
 	check(await wait_until(func() -> bool: return main._overlay is BossFight and main._overlay.stage == "opera"), "2k level 2: the opera arena")
 	main._overlay.finished.emit("win")

@@ -60,6 +60,31 @@ var roamers: Array = [] ## [kind, Vector2]
 var arena_x := 0.0
 ## Solid blocks (bookshelves, walls): the hero lands on them, bumps his head and clings to their sides.
 var walls: Array[Rect2] = []
+## A level taller than the screen scrolls up to this height (0: no vertical scrolling).
+var level_top := 0.0
+var floor_y := FLOOR_Y ## the floor of the current fight (enemies, shockwaves, ink rain)
+## Separate locked fights in a scrolling level, one per wave: {"at": Rect2 the hero walks into,
+## "l": lock left, "r": lock right, "floor": its floor}. Empty: one locked arena at arena_x.
+var encounters: Array = []
+## Reaching this (after the last fight) ends the level; empty: the level ends with its last wave.
+var exit_rect := Rect2()
+## Harmless paper bats that hang in the air to be pogoed off (the climb).
+var steppers: Array[Vector2] = []
+## On-screen tips for the parkour moves: {"at": Rect2, "text": String, "say": comms line}.
+var tips: Array = []
+## Columns where books fall from the shelves above while the hero climbs: [x, period].
+var book_columns: Array = []
+## Waypoints through a climb for the test bot (not used by the game itself).
+var route: Array[Vector2] = []
+var bot_assists := 0
+var _cam_y := 0.0
+var _steps: Array[ArenaEnemy] = []
+var _books: Array[Dictionary] = []
+var _book_t := 0.0
+var _tip := ""
+var _tips_said := {}
+var _safe_pos := Vector2(200, FLOOR_Y)
+var _exit_open := false
 var caged_heroes := false ## the three captured heroes hang in cages (the final stage)
 var _cam := 0.0
 var _lock_l := LEFT_X
@@ -262,7 +287,7 @@ func _begin_round(r: int) -> void:
 	_wave = 0
 	_phase = "round_intro"
 	_pt = 0.0
-	_exploring = level_width > 1280.0
+	_exploring = level_width > 1280.0 or level_top < 0.0
 	hero_pos = Vector2(200 if _exploring else 640, FLOOR_Y)
 	_vel = Vector2.ZERO
 	_hp = max_hp
@@ -276,11 +301,64 @@ func _begin_round(r: int) -> void:
 	_drops.clear()
 	_beams.clear()
 	intensity = 0
+	for sp in steppers:
+		var st_e := ArenaEnemy.new("step", sp)
+		st_e.anchor = sp
+		st_e.state = "hover"
+		_steps.append(st_e)
+	_safe_pos = hero_pos
 	if _exploring:
 		for rm: Array in roamers:
 			var e := ArenaEnemy.new(String(rm[0]), rm[1])
 			e.state = "hover" if e.flying() else "idle"
 			_enemies.append(e)
+
+
+func _encounter() -> Dictionary:
+	if not encounters.is_empty():
+		return encounters[mini(_wave, encounters.size() - 1)]
+	return {"at": Rect2(arena_x, -9999.0, 99999.0, 99999.0), "l": arena_x - 530.0, "r": arena_x + 530.0, "floor": FLOOR_Y}
+
+
+func _entered_fight() -> bool:
+	var at: Rect2 = _encounter()["at"]
+	return at.has_point(hero_pos)
+
+
+## The climb between the fights: stepping bats, falling books, tips, a safe spot to come back to.
+func _update_climb(delta: float) -> void:
+	if _ground:
+		_safe_pos = hero_pos
+	for e in _steps:
+		e.update(delta, self)
+	# books slip off the shelves above
+	_book_t += delta
+	for col: Array in book_columns:
+		var x := float(col[0])
+		var period := float(col[1])
+		if fposmod(_book_t, period) < delta and absf(x - hero_pos.x) < 700.0:
+			_books.append({"pos": Vector2(x + randf_range(-20, 20), _cam_y - 40.0), "vel": Vector2(0, 120), "spin": randf_range(-6, 6), "a": 0.0, "warn": 0.6})
+	for b in _books:
+		if float(b["warn"]) > 0.0:
+			b["warn"] = float(b["warn"]) - delta
+			continue
+		b["vel"] = (b["vel"] as Vector2) + Vector2(0, 1300.0 * delta)
+		b["pos"] = (b["pos"] as Vector2) + (b["vel"] as Vector2) * delta
+		b["a"] = float(b["a"]) + float(b["spin"]) * delta
+		if _hero_box().grow(4.0).has_point(b["pos"]):
+			b["dead"] = true
+			_hurt((b["pos"] as Vector2).x)
+	_books = _books.filter(func(b: Dictionary) -> bool: return not b.get("dead", false) and (b["pos"] as Vector2).y < _cam_y + 800.0)
+	# tips for the moves, each in a safe spot
+	_tip = ""
+	for tp: Dictionary in tips:
+		if (tp["at"] as Rect2).has_point(hero_pos):
+			_tip = String(tp["text"])
+			if not _tips_said.has(_tip):
+				_tips_said[_tip] = true
+				var comms: Node = get_tree().get_first_node_in_group("comms")
+				if comms != null and tp.has("say"):
+					comms.say(String(tp["say"]), "narrator", 2.5)
 
 
 func _begin_wave() -> void:
@@ -296,20 +374,20 @@ func _start_spawns() -> void:
 	for s: Array in wave:
 		var kind: String = s[0]
 		var where: String = s[1]
-		var p := Vector2(640, FLOOR_Y)
+		var p := Vector2(640, floor_y)
 		match where:
 			"L":
-				p = Vector2(_lock_l + 110.0, FLOOR_Y)
+				p = Vector2(_lock_l + 110.0, floor_y)
 			"R":
-				p = Vector2(_lock_r - 110.0, FLOOR_Y)
+				p = Vector2(_lock_r - 110.0, floor_y)
 			"C":
-				p = Vector2(center_x(), FLOOR_Y)
+				p = Vector2(center_x(), floor_y)
 			"AL":
-				p = Vector2(_lock_l + 150.0, 220)
+				p = Vector2(_lock_l + 150.0, floor_y - 380.0)
 			"AR":
-				p = Vector2(_lock_r - 150.0, 220)
+				p = Vector2(_lock_r - 150.0, floor_y - 380.0)
 			"AC":
-				p = Vector2(center_x(), 180)
+				p = Vector2(center_x(), floor_y - 420.0)
 			"BALCONY":
 				p = Vector2(center_x(), 150)
 		_pending.append({"kind": kind, "pos": p, "delay": float(s[2]), "mark": 0.7})
@@ -320,7 +398,15 @@ func _wave_done() -> void:
 	if _relay_round():
 		_cleared += 1
 	_wave += 1
-	if _wave < waves[_round].size():
+	if not encounters.is_empty() and (_wave < waves[_round].size() or exit_rect.size.x > 0.0):
+		# a breather: the doors open and the hero climbs on
+		_exploring = true
+		_exit_open = _wave >= waves[_round].size()
+		_phase = "explore"
+		_pt = 0.0
+		_gate = 0.0
+		EventBus.sound_requested.emit("chase_checkpoint")
+	elif _wave < waves[_round].size():
 		_begin_wave()
 	elif _relay_round():
 		# the story: the Narrator writes THE END on this hero
@@ -382,11 +468,17 @@ func _process(delta: float) -> void:
 		"explore":
 			_update_hero(delta)
 			_update_world(delta)
-			if hero_pos.x > arena_x:
+			_update_climb(delta)
+			if _exit_open and exit_rect.intersects(_hero_box()):
+				_exploring = false
+				_win()
+			elif not _exit_open and _entered_fight():
 				# the doors slam: a locked fight, like the video
 				_exploring = false
-				_lock_l = arena_x - 530.0
-				_lock_r = arena_x + 530.0
+				var enc := _encounter()
+				_lock_l = float(enc["l"])
+				_lock_r = float(enc["r"])
+				floor_y = float(enc["floor"])
 				# roamers left behind outside the doors stay behind (no teleporting into the fight)
 				_enemies = _enemies.filter(func(e: ArenaEnemy) -> bool: return e.pos.x > _lock_l and e.pos.x < _lock_r)
 				_begin_wave()
@@ -415,7 +507,7 @@ func _process(delta: float) -> void:
 				_drops.clear()
 				_narrator = null
 				hero_pos.x = center_x()
-				hero_pos.y = FLOOR_Y
+				hero_pos.y = floor_y
 				_vel = Vector2.ZERO
 				_begin_wave()
 		"the_end":
@@ -544,6 +636,11 @@ func _update_hero(delta: float) -> void:
 		hero_pos.y = FLOOR_Y
 		_vel.y = 0.0
 		_ground = true
+	if not _exploring and floor_y < FLOOR_Y and hero_pos.y >= floor_y and prev_y <= floor_y + 1.0:
+		# a locked fight's floor is solid, even where it is a ledge you can drop through on the climb
+		hero_pos.y = floor_y
+		_vel.y = 0.0
+		_ground = true
 	for rim in platforms:
 		if _vel.y >= 0.0 and prev_y <= rim.position.y + 1.0 and hero_pos.y >= rim.position.y and hero_pos.x > rim.position.x and hero_pos.x < rim.end.x and not Input.is_action_pressed("move_down"):
 			hero_pos.y = rim.position.y
@@ -553,6 +650,9 @@ func _update_hero(delta: float) -> void:
 	# the camera follows in wide levels and frames the locked fight
 	var cam_target := clampf(hero_pos.x - 560.0, 0.0, level_width - 1280.0) if _exploring else clampf(center_x() - 640.0, 0.0, maxf(0.0, level_width - 1280.0))
 	_cam = lerpf(_cam, cam_target, minf(1.0, delta * 5.0))
+	if level_top < 0.0:
+		var cam_y_target := clampf(hero_pos.y - 450.0, level_top, 0.0) if _exploring else clampf(floor_y - 600.0, level_top, 0.0)
+		_cam_y = lerpf(_cam_y, cam_y_target, minf(1.0, delta * 5.0))
 	if _ground and not _was_ground:
 		_land = 1.0
 		_anim.landed(fall_v)
@@ -572,7 +672,9 @@ func _update_hero(delta: float) -> void:
 			if not _atk_hit.has(e) and e.state != "enter" and e.hurt_box().intersects(box):
 				_atk_hit[e] = true
 				_hit_enemy(e, 1.0, _atk_dir == "down")
-		if _atk_dir == "down" and not _ground:
+		if _atk_dir == "down" and not _ground and _pogo_props(box):
+			pass
+		elif _atk_dir == "down" and not _ground:
 			# a down-slash bounces off falling ink too
 			for d in _drops:
 				if float(d["warn"]) <= 0.0 and box.grow(10.0).has_point(Vector2(float(d["x"]), float(d["y"]))):
@@ -646,12 +748,40 @@ func _update_dive(delta: float) -> void:
 			d["y"] = 9999.0
 			_dive_bounce()
 			return
+	if _pogo_props(box):
+		_dive_bounce()
+		return
 	if _ground or _dive_t <= 0.0:
 		_dive_t = 0.0
 		if _ground:
 			shake(6.0)
 			for k in 8:
 				_fx.append({"kind": "dust", "pos": hero_pos + Vector2(randf_range(-20, 20), -4), "vel": Vector2(randf_range(-220, 220), randf_range(-200, -60)), "t": 0.0, "life": 0.45, "size": randf_range(4, 8)})
+
+
+## Pogo off a stepping bat or a falling book: bounce, the jump and the air dash come back.
+func _pogo_props(box: Rect2) -> bool:
+	for e in _steps:
+		if e.hurt_box().grow(6.0).intersects(box):
+			e.whiteout = 0.06
+			e.flash = 1.0
+			_bounce_up(e.center())
+			return true
+	for b in _books:
+		if float(b["warn"]) <= 0.0 and box.grow(10.0).has_point(b["pos"]):
+			b["dead"] = true
+			_bounce_up(b["pos"])
+			return true
+	return false
+
+
+func _bounce_up(at: Vector2) -> void:
+	_vel.y = -760.0
+	_air_dash = true
+	_air_jump = true
+	_atk_t = minf(_atk_t, 0.11)
+	_fx.append({"kind": "spark", "pos": at, "t": 0.0, "life": 0.25, "size": 1.0})
+	EventBus.sound_requested.emit("hit")
 
 
 func _dive_bounce() -> void:
@@ -800,13 +930,23 @@ func _kill_fx(e: ArenaEnemy) -> void:
 	_say(["SPLAT!", "POW!", "KRAK!", "BLAM!"][randi() % 4], e.center() + Vector2(0, -50), GOLD, 42)
 	EventBus.sound_requested.emit("kill")
 	if e.kind != "bomb" and e.kind != "narrator":
-		_corpses.append({"x": e.pos.x, "kind": e.kind, "dir": e.dir})
+		_corpses.append({"x": e.pos.x, "y": e.floor_y, "kind": e.kind, "dir": e.dir})
 		if _corpses.size() > 24:
 			_corpses.pop_front()
 
 
 func _hurt(from_x: float) -> void:
 	if _invuln > 0.0 or _dash_t > 0.0 or not _phase in ["wave", "wave_intro", "explore"]:
+		return
+	if _phase == "explore" and _hp <= 1:
+		# beaten on the climb: back on the last safe ledge, healed
+		_hp = max_hp
+		hero_pos = _safe_pos
+		_vel = Vector2.ZERO
+		_invuln = 1.5
+		_hurt_flash = 1.0
+		_say("TRY AGAIN", hero_center() + Vector2(0, -80), PAPER, 40)
+		EventBus.sound_requested.emit("hero_hurt")
 		return
 	_anim.hurt()
 	_hp -= 1
@@ -939,6 +1079,7 @@ func _update_world(delta: float) -> void:
 	for p in ready:
 		_pending.erase(p)
 		var e := ArenaEnemy.new(String(p["kind"]), p["pos"])
+		e.floor_y = floor_y
 		if e.kind == "narrator":
 			e.hp = _narrator_hp() * boss_hp_scale
 			e.max_hp = e.hp
@@ -960,7 +1101,7 @@ func _update_world(delta: float) -> void:
 				e.hp = _boss_carry
 				_boss_carry = -1.0
 		elif not e.flying():
-			e.pos.y = FLOOR_Y - (520.0 if e.kind == "brute" else 260.0) # drops onto the stage
+			e.pos.y = floor_y - (520.0 if e.kind == "brute" else 260.0) # drops onto the stage
 		_enemies.append(e)
 		EventBus.sound_requested.emit("enemy_spawn")
 	for e in _enemies:
@@ -988,7 +1129,7 @@ func _update_world(delta: float) -> void:
 	for w in _waves:
 		w["x"] = float(w["x"]) + float(w["dir"]) * 470.0 * et
 		w["life"] = float(w["life"]) - et
-		if absf(float(w["x"]) - hero_pos.x) < 26.0 and hero_pos.y > FLOOR_Y - 40.0:
+		if absf(float(w["x"]) - hero_pos.x) < 26.0 and hero_pos.y > floor_y - 40.0:
 			_hurt(float(w["x"]) - float(w["dir"]) * 10.0)
 	_waves = _waves.filter(func(w: Dictionary) -> bool: return float(w["life"]) > 0.0 and float(w["x"]) > bound_l() - 40.0 and float(w["x"]) < bound_r() + 40.0)
 	for d in _drops:
@@ -999,7 +1140,7 @@ func _update_world(delta: float) -> void:
 		if Rect2(float(d["x"]) - 16.0, float(d["y"]) - 30.0, 32.0, 60.0).intersects(_hero_box()):
 			d["y"] = 9999.0
 			_hurt(float(d["x"]))
-	_drops = _drops.filter(func(d: Dictionary) -> bool: return float(d["y"]) < FLOOR_Y)
+	_drops = _drops.filter(func(d: Dictionary) -> bool: return float(d["y"]) < floor_y)
 	for b in _beams:
 		b["t"] = float(b["t"]) - delta
 
@@ -1027,6 +1168,12 @@ func _bg_layer(key: String, par: float, off: Vector2, mod := Color.WHITE) -> boo
 	var sc := 720.0 / tex.get_height()
 	var w := tex.get_width() * sc
 	var x := -_cam * par + off.x
+	if level_top < 0.0:
+		# a climb: the painting is drawn taller and slides down slowly as the hero climbs
+		var k := clampf(_cam_y / level_top, 0.0, 1.0)
+		var tall := 720.0 * (1.0 + par * 0.0 + 0.3)
+		draw_texture_rect(tex, Rect2(Vector2(-_cam * par, -(tall - 720.0) * (1.0 - k)) + off * 0.5, Vector2(maxf(w, 1280.0) * 1.3, tall)), false, mod)
+		return true
 	if w <= 1281.0:
 		draw_texture_rect(tex, Rect2(Vector2(off.x * 0.5, off.y * 0.5), Vector2(1280, 720)), false, mod)
 		return true
@@ -1037,7 +1184,7 @@ func _bg_layer(key: String, par: float, off: Vector2, mod := Color.WHITE) -> boo
 
 func _draw() -> void:
 	var shake_off := Vector2(randf_range(-_shake, _shake), randf_range(-_shake, _shake)) if _shake > 0.0 else Vector2.ZERO
-	var off := shake_off - Vector2(_cam, 0)
+	var off := shake_off - Vector2(_cam, _cam_y)
 	draw_set_transform(shake_off)
 	var glow := 1.0 + 0.15 * sin(_t * 1.3) + (0.3 if intensity >= 3 else 0.0)
 	var art := false
@@ -1067,6 +1214,7 @@ func _draw() -> void:
 		_draw_hall_floor(off)
 	elif not art:
 		ArenaArt.stage_floor(self, size)
+	_draw_climb(off)
 	for c in _corpses:
 		_draw_corpse(c, off)
 	draw_set_transform(off)
@@ -1077,26 +1225,40 @@ func _draw() -> void:
 		if float(p["delay"]) <= 0.0:
 			var k := 1.0 - float(p["mark"]) / 0.7
 			var pp: Vector2 = p["pos"]
-			var at := Vector2(pp.x, FLOOR_Y) if pp.y >= FLOOR_Y - 1.0 else pp
+			var at := Vector2(pp.x, floor_y) if pp.y >= floor_y - 1.0 else pp
 			draw_circle(at, 10.0 + 40.0 * k, Color(0.1, 0.05, 0.15, 0.6))
 			draw_arc(at, 12.0 + 44.0 * k, 0.0, TAU, 24, Color(1, 0.85, 0.5, 0.6), 3.0)
 	for w in _waves:
 		var x := float(w["x"])
-		var pts := PackedVector2Array([Vector2(x - 26, FLOOR_Y), Vector2(x - 10, FLOOR_Y - 40), Vector2(x + 2, FLOOR_Y - 22), Vector2(x + 12, FLOOR_Y - 46), Vector2(x + 26, FLOOR_Y)])
+		var fy := floor_y
+		var pts := PackedVector2Array([Vector2(x - 26, fy), Vector2(x - 10, fy - 40), Vector2(x + 2, fy - 22), Vector2(x + 12, fy - 46), Vector2(x + 26, fy)])
 		draw_colored_polygon(pts, Color("2b1d3a"))
 		draw_polyline(pts, Color(1, 0.85, 0.5, 0.8), 2.0)
 	for d in _drops:
 		var dx := float(d["x"])
 		if float(d["warn"]) > 0.0:
-			draw_set_transform(Vector2(dx, FLOOR_Y) + off, 0.0, Vector2(1.0, 0.25))
+			draw_set_transform(Vector2(dx, floor_y) + off, 0.0, Vector2(1.0, 0.25))
 			draw_circle(Vector2.ZERO, 26.0, Color(0.6, 0.1, 0.3, 0.35 + 0.25 * sin(_t * 20.0)))
 			draw_set_transform(off)
 		else:
 			var dy := float(d["y"])
 			draw_colored_polygon(PackedVector2Array([Vector2(dx, dy - 34), Vector2(dx + 14, dy), Vector2(dx, dy + 12), Vector2(dx - 14, dy)]), Color("3c096c"))
 			draw_line(Vector2(dx, dy - 80), Vector2(dx, dy - 34), Color(0.5, 0.2, 0.8, 0.4), 4.0)
+	for e in _steps:
+		e.draw(self, _t, off)
+		draw_set_transform(off)
 	for e in _enemies:
 		e.draw(self, _t, off)
+		draw_set_transform(off)
+	for b in _books:
+		var bp: Vector2 = b["pos"]
+		if float(b["warn"]) > 0.0:
+			draw_rect(Rect2(Vector2(bp.x - 16, _cam_y + 4), Vector2(32, 6)), Color(1, 0.3, 0.3, 0.5 + 0.4 * sin(_t * 30.0)))
+			continue
+		draw_set_transform(bp + off, float(b["a"]), Vector2.ONE)
+		draw_rect(Rect2(-16, -11, 32, 22), INK)
+		draw_rect(Rect2(-14, -9, 28, 18), Color("7a2e2e"))
+		draw_rect(Rect2(-14, -3, 28, 4), Color("e0c27a"))
 		draw_set_transform(off)
 	_draw_hero(off)
 	draw_set_transform(off)
@@ -1136,7 +1298,7 @@ func _draw() -> void:
 		if _pt < 6.0:
 			ComicArt.shout(self, "GO  >>", Vector2(1100, 300), 48, GOLD, 10, 0.0)
 		# the objective, and the controls for the first seconds
-		var obj := "REACH THE END OF THE LIBRARY"
+		var obj := ("REACH THE DOOR AT THE TOP" if _exit_open else "CLIMB THE LIBRARY") if level_top < 0.0 else "REACH THE END OF THE LIBRARY"
 		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
 		if _pt < 10.0:
@@ -1149,6 +1311,12 @@ func _draw() -> void:
 			var ow2 := FONT_SHOUT.get_string_size(obj2, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 			draw_string_outline(FONT_SHOUT, Vector2(640 - ow2 * 0.5, 120), obj2, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, 6, INK)
 			draw_string(FONT_SHOUT, Vector2(640 - ow2 * 0.5, 120), obj2, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
+	if _tip != "" and _phase == "explore":
+		var tw := FONT_SHOUT.get_string_size(_tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+		var ta := Vector2(640 - tw * 0.5, 165)
+		draw_rect(Rect2(ta + Vector2(-14, -28), Vector2(tw + 28, 42)), Color(0, 0, 0, 0.55))
+		draw_string_outline(FONT_SHOUT, ta, _tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, 6, INK)
+		draw_string(FONT_SHOUT, ta, _tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, GOLD)
 	match _phase:
 		"round_intro":
 			_draw_round_card()
@@ -1164,6 +1332,39 @@ func _draw() -> void:
 			ComicArt.shout(self, win_text, Vector2(640, 330), 96, GOLD, 14, -0.04)
 		"lost":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0.3, 0.02, 0.05, clampf(_pt * 0.5, 0.0, 0.85)))
+
+
+## The climb: bookshelf walls (solid blocks) and, once the last fight is won, the door at the top.
+func _draw_climb(off: Vector2) -> void:
+	draw_set_transform(off)
+	for w in walls:
+		draw_rect(w.grow(3.0), Color("06090a"))
+		draw_rect(w, Color("2a1d17"))
+		var y := w.position.y + 8.0
+		var row := 0
+		while y < w.end.y - 30.0:
+			var x := w.position.x + 4.0
+			var i := 0
+			while x < w.end.x - 6.0:
+				var bw := 6.0 + float((row * 7 + i * 3) % 5) * 2.0
+				var bh := 24.0 + float((row + i) % 3) * 3.0
+				var col: Color = [Color("6b2f2a"), Color("2f4a5c"), Color("5c4a2a"), Color("3d5a3a"), Color("7a6a4a")][(row * 3 + i) % 5]
+				draw_rect(Rect2(Vector2(x, y + 30.0 - bh), Vector2(bw, bh)), col)
+				x += bw + 1.0
+				i += 1
+			draw_rect(Rect2(Vector2(w.position.x, y + 30.0), Vector2(w.size.x, 5.0)), Color("140d0a"))
+			y += 36.0
+			row += 1
+		draw_line(w.position, Vector2(w.end.x, w.position.y), Color(1, 0.8, 0.5, 0.7), 3.0)
+	if exit_rect.size.x > 0.0:
+		var d := exit_rect
+		var lit := 1.0 if _exit_open else 0.25
+		draw_texture_rect(ArenaArt.TEX_GLOW, d.grow(70.0), false, Color(1, 0.85, 0.5, 0.6 * lit))
+		draw_rect(d.grow(6.0), Color("06090a"))
+		draw_rect(d, Color(1, 0.92, 0.7, 0.85 * lit) if _exit_open else Color("1b1410"))
+		if _exit_open:
+			ComicArt.shout(self, "OPERA  >>", d.get_center() + Vector2(0, -d.size.y * 0.5 - 30.0) + off, 30, GOLD, 8, 0.0)
+			draw_set_transform(off)
 
 
 ## The library hall's stone floor and ledges.
@@ -1228,23 +1429,24 @@ func _draw_balcony() -> void:
 
 
 func _draw_corpse(c: Dictionary, off: Vector2) -> void:
+	var fy := float(c.get("y", FLOOR_Y))
 	var x := float(c["x"])
 	var big := String(c["kind"]) == "brute"
-	draw_set_transform(Vector2(x, FLOOR_Y - 4) + off, 0.0, Vector2(1.0, 0.35))
+	draw_set_transform(Vector2(x, fy - 4) + off, 0.0, Vector2(1.0, 0.35))
 	draw_circle(Vector2.ZERO, 46.0 if big else 26.0, Color("120c18"))
 	draw_set_transform(off)
 	if big:
 		var dome := PackedVector2Array()
 		for k in 11:
 			var ang := PI + k * PI / 10.0
-			dome.append(Vector2(x + cos(ang) * 60.0, FLOOR_Y + sin(ang) * 34.0))
+			dome.append(Vector2(x + cos(ang) * 60.0, fy + sin(ang) * 34.0))
 		draw_colored_polygon(dome, Color("6e2a16"))
 		draw_polyline(dome, INK, 3.0)
 	else:
-		var lump := PackedVector2Array([Vector2(x - 30, FLOOR_Y), Vector2(x - 18, FLOOR_Y - 16), Vector2(x + 6, FLOOR_Y - 20), Vector2(x + 28, FLOOR_Y)])
+		var lump := PackedVector2Array([Vector2(x - 30, fy), Vector2(x - 18, fy - 16), Vector2(x + 6, fy - 20), Vector2(x + 28, fy)])
 		draw_colored_polygon(lump, Color("241b33"))
 		draw_polyline(lump, INK, 3.0)
-		var mk := Vector2(x + 14.0 * float(c["dir"]), FLOOR_Y - 14)
+		var mk := Vector2(x + 14.0 * float(c["dir"]), fy - 14)
 		draw_set_transform(mk + off, 0.5 * float(c["dir"]), Vector2(1.0, 0.8))
 		draw_circle(Vector2.ZERO, 12.0, INK)
 		draw_circle(Vector2.ZERO, 10.0, Color("e9dccb"))

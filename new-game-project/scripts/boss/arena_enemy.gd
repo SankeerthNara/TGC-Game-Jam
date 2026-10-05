@@ -16,6 +16,7 @@ const STATS := {
 	"brute": {"hp": 18.0, "r": 70.0, "h": 150.0, "s": 1.15},
 	"narrator": {"hp": 60.0, "r": 60.0, "h": 170.0, "s": 1.0},
 	"baron": {"hp": 40.0, "r": 62.0, "h": 170.0, "s": 1.0},
+	"step": {"hp": 999.0, "r": 30.0, "h": 50.0, "s": 1.3},
 }
 
 var kind := "lancer"
@@ -28,6 +29,8 @@ var state := "enter"
 var st := 0.0 ## time in the current state
 var cd := 1.0 ## cooldown before the next attack
 var flash := 0.0
+var floor_y := FLOOR_Y ## the floor of the fight he is in (the library has floors at several heights)
+var anchor := Vector2.ZERO ## a stepping bat bobs around this point
 var whiteout := 0.0 ## a frame of pure white when hit
 var recoil := 0.0 ## 1 when hit, fades: the body snaps away from the blow
 var recoil_dir := 1.0
@@ -54,7 +57,7 @@ func radius() -> float:
 
 
 func flying() -> bool:
-	return kind in ["bat", "bomb", "narrator"]
+	return kind in ["bat", "bomb", "narrator", "step"]
 
 
 ## Centre of the body, for hits.
@@ -113,12 +116,16 @@ func update(dt: float, fight: Node) -> void:
 	if state == "enter":
 		var heavy := kind in ["brute", "baron"]
 		if not flying():
-			pos.y = minf(FLOOR_Y, pos.y + (1500.0 if heavy else 900.0) * dt)
-		if st > 0.55 and (not heavy or pos.y >= FLOOR_Y):
+			pos.y = minf(floor_y, pos.y + (1500.0 if heavy else 900.0) * dt)
+		if st > 0.55 and (not heavy or pos.y >= floor_y):
 			state = "idle" if not flying() else "hover"
 			st = 0.0
 			if heavy:
 				fight.heavy_landing(self)
+		return
+	if kind == "step":
+		pos = anchor + Vector2(sin(t * 1.3 + seed) * 18.0, sin(t * 2.1 + seed) * 10.0)
+		vel = Vector2(cos(t * 1.3 + seed), 0.0)
 		return
 	match kind:
 		"lancer":
@@ -140,7 +147,7 @@ func update(dt: float, fight: Node) -> void:
 func _ground(dt: float) -> void:
 	pos.x += vel.x * dt
 	vel.x = move_toward(vel.x, 0.0, 1400.0 * dt)
-	pos.y = FLOOR_Y
+	pos.y = floor_y
 
 
 func _lancer(dt: float, hero: Vector2, fight: Node) -> void:
@@ -182,7 +189,7 @@ func _bat(dt: float, hc: Vector2) -> void:
 	match state:
 		"hover":
 			target = hc + Vector2(sin(t * 0.7 + seed) * 220.0, -170.0 + sin(t * 1.3 + seed) * 40.0)
-			target.y = clampf(target.y, 140.0, 450.0)
+			target.y = clampf(target.y, floor_y - 460.0, floor_y - 150.0)
 			vel = vel.lerp((target - pos) * 2.2, minf(1.0, dt * 3.0))
 			pos += vel * dt
 			cd -= dt
@@ -198,7 +205,7 @@ func _bat(dt: float, hc: Vector2) -> void:
 				vel = (hc - pos).normalized() * 640.0
 		"dive":
 			pos += vel * dt
-			if st > 0.9 or pos.y > FLOOR_Y - 20.0:
+			if st > 0.9 or pos.y > floor_y - 20.0:
 				state = "hover"
 				st = 0.0
 				cd = randf_range(1.2, 2.2)
@@ -257,7 +264,7 @@ func _brute(dt: float, hero: Vector2, fight: Node) -> void:
 				fight.shake(8.0)
 	pos.x += vel.x * dt
 	pos.x = clampf(pos.x, fight.bound_l(), fight.bound_r())
-	pos.y = FLOOR_Y
+	pos.y = floor_y
 
 
 ## The Ink Baron (144p boss): a hulking ringmaster of ink. Cane sweeps send shockwaves, he lobs ink
@@ -399,8 +406,8 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 		ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
-const SPRITE_KEYS := {"lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
-const SPRITE_H := {"lancer": 160.0, "bat": 96.0, "brute": 220.0, "baron": 255.0, "narrator": 260.0}
+const SPRITE_KEYS := {"step": "enemy_bat", "lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
+const SPRITE_H := {"step": 90.0, "lancer": 160.0, "bat": 96.0, "brute": 220.0, "baron": 255.0, "narrator": 260.0}
 
 
 func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
@@ -413,7 +420,7 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 	var squash := 1.0
 	var rot := 0.0
 	match kind:
-		"bat":
+		"bat", "step":
 			feet = pos + _o + Vector2(0, h * 0.5)
 			face = 1.0 if vel.x >= 0.0 else -1.0
 			squash = 1.0 + sin(t * 24.0) * 0.08

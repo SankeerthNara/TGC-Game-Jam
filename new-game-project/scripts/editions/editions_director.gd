@@ -172,12 +172,29 @@ func start_2k() -> void:
 	main._set_state("boss")
 	comms.say("The villain's tower. A library first, then his opera. Your friends are close, hero. I can feel it.", "narrator", 2.0)
 	var b := _arena("hall")
-	b.level_width = 3840.0
-	b.arena_x = 3200.0
-	b.platforms = [Rect2(620, 470, 220, 20), Rect2(980, 380, 200, 20), Rect2(1360, 470, 240, 20), Rect2(1800, 420, 220, 20), Rect2(2200, 330, 200, 20), Rect2(2540, 450, 240, 20)]
-	b.roamers = [["lancer", Vector2(1100, 600)], ["bat", Vector2(1500, 260)], ["lancer", Vector2(2000, 600)], ["bat", Vector2(2400, 220)], ["lancer", Vector2(2700, 600)]]
-	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AL", 2.0], ["bat", "AR", 3.5], ["lancer", "C", 5.0]]]]
-	b.win_text = "THE HALL IS CLEAR!"
+	# the library is a climb: a locked fight on the ground floor, a bookshelf chimney to wall-jump up,
+	# a gap to air-dash across, paper bats to pogo off, falling books, a locked fight in the upper
+	# reading room, and the door to the opera at the top
+	b.level_width = 1280.0
+	b.level_top = -1720.0
+	b.walls = [Rect2(330, -360, 60, 820), Rect2(590, -360, 60, 820)]
+	b.platforms = [Rect2(650, -360, 220, 20), Rect2(1110, -420, 140, 20), Rect2(480, -860, 280, 20),
+		Rect2(840, -960, 170, 20), Rect2(110, -1080, 1060, 20), Rect2(640, -1200, 180, 20), Rect2(960, -1320, 230, 20)]
+	b.steppers = [Vector2(990, -540), Vector2(800, -700)]
+	b.book_columns = [[1020.0, 2.4], [430.0, 3.1]]
+	b.encounters = [{"at": Rect2(380, 300, 1000, 400), "l": 110.0, "r": 1170.0, "floor": 600.0},
+		{"at": Rect2(0, -1200, 1280, 125), "l": 110.0, "r": 1170.0, "floor": -1080.0}]
+	b.exit_rect = Rect2(1000, -1440, 150, 120)
+	b.route = [Vector2(490, 600), Vector2(620, -360), Vector2(850, -360), Vector2(1180, -420), Vector2(1010, -640), Vector2(820, -800), Vector2(620, -860), Vector2(925, -960), Vector2(640, -1080), Vector2(730, -1200), Vector2(1075, -1320)]
+	b.tips = [
+		{"at": Rect2(390, -360, 200, 830), "text": "WALL JUMP: HOLD TOWARD A WALL TO SLIDE, Z TO KICK OFF", "say": "Up the shelves, hero! Cling to a wall and kick off it with Z, side to side."},
+		{"at": Rect2(650, -470, 230, 110), "text": "AIR DASH: K IN THE AIR (A WALL OR LANDING GIVES IT BACK)", "say": "Too far to jump. Jump, then dash with K in the air!"},
+		{"at": Rect2(1100, -560, 180, 150), "text": "POGO: S + J IN THE AIR BOUNCES YOU OFF BATS AND BOOKS", "say": "Those paper bats are stepping stones. Slash down on them, S and J, and bounce!"},
+		{"at": Rect2(380, -1000, 760, 150), "text": "DIVE STRIKE: S + K IN THE AIR", "say": "The reading room is full of them. Strike down from the air with S and K!"}]
+	b.waves = [[
+		[["lancer", "L", 0.0], ["lancer", "R", 0.5], ["bat", "AL", 2.5]],
+		[["lancer", "L", 0.0], ["bat", "AR", 1.0], ["lancer", "R", 2.0], ["bat", "AL", 4.0], ["lancer", "C", 5.5]]]]
+	b.win_text = "TO THE OPERA!"
 	b.fight_title = "THE LIBRARY"
 	b.intro_lines = ["The deluxe edition. Light blade ready.", "Z jump   J attack (+UP / +DOWN)   K dash   L blade   F heal"]
 	_launch(b)
