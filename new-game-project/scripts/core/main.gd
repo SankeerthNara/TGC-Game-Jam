@@ -29,7 +29,7 @@ var score := ScoreKeeper.new()
 var level_ease: Array[int] = [0, 0, 0, 0]
 var _task_layer: CanvasLayer
 var paused := false ## the whole game is frozen (P / Esc); the UI keeps running
-## "Glitched Out" (144p -> 720p -> 2k). false = the classic game (roll back here).
+## "Glitched Out" (240p -> 720p -> 2k). false = the classic game (roll back here).
 const EDITIONS := true
 var director: EditionsDirector = null
 const PAUSABLE_STATES := ["world", "task", "parkour", "playing", "boss"]
@@ -171,6 +171,8 @@ func _start_game() -> void:
 		# the cheap edition is a quick prologue: 3 and 4 tasks, kinder sabotage
 		level_ease[0] = 1
 		level_ease[1] = 2
+		world.station_dark = Color(0.1, 0.095, 0.18) # the 240p rooms: dark, but readable outside the torch
+		world.station_torch = 2.6
 		director.start()
 		return
 	_set_state("cutscene")
@@ -484,7 +486,7 @@ func _level_complete() -> void:
 	ov.continue_pressed.connect(func() -> void:
 		_clear_overlay()
 		if last and EDITIONS:
-			director.after_144_levels()
+			director.after_240_levels()
 		elif last:
 			_open_bomb_room()
 		else:
@@ -562,7 +564,7 @@ func _restart_level() -> void:
 	_set_paused(false)
 	if director != null and state == "boss" and director.restart_fight():
 		EventBus.level_restarted.emit()
-		return # a fight restarts itself (the 144p rooms reload below)
+		return # a fight restarts itself (the 240p rooms reload below)
 	for c in _task_layer.get_children():
 		c.queue_free()
 	_overlay = null

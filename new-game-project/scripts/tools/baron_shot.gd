@@ -1,5 +1,5 @@
 extends Node
-## The Ink Baron landing (2K and 144p) and the Twins tuning in, with the bosses' comms lines (not part of the game).
+## The Ink Baron landing (2K and 240p) and the Twins tuning in, with the bosses' comms lines (not part of the game).
 
 var _layer: CanvasLayer
 
@@ -17,7 +17,7 @@ func _ready() -> void:
 	_layer = CanvasLayer.new()
 	_layer.layer = 18
 	add_child(_layer)
-	for ed in ["2k", "144p"]:
+	for ed in ["2k", "240p"]:
 		fx.set_edition(ed)
 		comms.clear()
 		var b := BossFight.new()

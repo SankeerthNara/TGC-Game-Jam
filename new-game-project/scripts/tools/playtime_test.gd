@@ -1,11 +1,11 @@
 extends Node
 ## Measures the length of a full Editions run (not part of the game). The story cutscenes auto-advance
 ## (nobody presses Z), the fights are played by simple bots, the settings window is clicked after a
-## few seconds of "reading". The 144p task levels cannot be played by a bot, so they are skipped and
+## few seconds of "reading". The 240p task levels cannot be played by a bot, so they are skipped and
 ## their par times (what the levels are tuned for) are added afterwards.
 ## Prints the time of every part and the total in game seconds.
 
-const LEVEL_PAR := [120.0, 180.0] ## 144p levels 1 and 2 (par times)
+const LEVEL_PAR := [120.0, 180.0] ## 240p levels 1 and 2 (par times)
 const READ := 3.0 ## seconds a first-time player looks at a score card or settings window
 
 var main: Node
@@ -74,7 +74,7 @@ func _process(delta: float) -> void:
 	_total += delta
 	_wait = maxf(0.0, _wait - delta)
 	var ov: Variant = main._overlay
-	# 144p levels: skip them (their par time is added at the end)
+	# 240p levels: skip them (their par time is added at the end)
 	if main.state == "world" and _wait <= 0.0:
 		main._level_complete()
 		_wait = READ
@@ -124,9 +124,9 @@ func _report() -> void:
 	var levels := 0.0
 	for p in LEVEL_PAR:
 		levels += p
-	print("  %-40s %6.1f s (par, not played)" % ["144p task levels", levels])
+	print("  %-40s %6.1f s (par, not played)" % ["240p task levels", levels])
 	print("BOT CLIMB ASSISTS: ", _assists)
-	print("TOTAL %.1f s = %.1f min (measured %.1f + 144p levels %.1f)" % [measured + levels, (measured + levels) / 60.0, measured, levels])
+	print("TOTAL %.1f s = %.1f min (measured %.1f + 240p levels %.1f)" % [measured + levels, (measured + levels) / 60.0, measured, levels])
 
 
 # --- bots (the same as arena_bot_test / brawler_bot_test) ------------------------------------

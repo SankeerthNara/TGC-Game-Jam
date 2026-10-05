@@ -1,5 +1,5 @@
 extends Node
-## Frame rate of the menu and the 144p dark-room level inside the real game scene (not part of the game).
+## Frame rate of the menu and the 240p dark-room level inside the real game scene (not part of the game).
 
 var main: Node
 
@@ -17,9 +17,9 @@ func _ready() -> void:
 		if main.state == "world":
 			break
 		await get_tree().process_frame
-	await measure("144p level 1 (world)")
+	await measure("240p level 1 (world)")
 	main.world._foot += Vector2(300, 0)
-	await measure("144p level 1 (moved)")
+	await measure("240p level 1 (moved)")
 	get_tree().quit()
 
 

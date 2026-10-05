@@ -58,8 +58,8 @@ func _ready() -> void:
 		b._pt = 10.0 # skip the intro card
 		await measure("fight %s (2k)" % stage)
 		b.queue_free()
-	# the 144p filter over a busy fight
-	_fx.set_edition("144p")
+	# the 240p filter over a busy fight
+	_fx.set_edition("240p")
 	var b2 := BossFight.new()
 	b2.heroes = [0]
 	b2.relay = false
@@ -68,7 +68,7 @@ func _ready() -> void:
 	_layer.add_child(b2)
 	await get_tree().process_frame
 	b2._pt = 10.0
-	await measure("Ink Baron fight (144p)")
+	await measure("Ink Baron fight (240p)")
 	get_tree().quit()
 
 

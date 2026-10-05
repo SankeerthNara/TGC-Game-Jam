@@ -1,10 +1,10 @@
 shader_type canvas_item;
-// The "edition" of the picture: renders the whole screen at a lower resolution (144p crushed, 720p
+// The "edition" of the picture: renders the whole screen at a lower resolution (240p crushed, 720p
 // crisp pixel art), with colour crushing, softness, scanlines and digital glitches.
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;
-uniform vec2 res = vec2(256.0, 144.0);
-uniform float soft = 0.0;       // 0..1 blur between low-res pixels (144p mush)
+uniform vec2 res = vec2(400.0, 225.0);
+uniform float soft = 0.0;       // 0..1 blur between low-res pixels (240p mush)
 uniform float levels = 24.0;    // colour levels per channel
 uniform float glitch = 0.0;     // 0..1 tearing and colour split
 uniform float scan = 0.0;       // 0..1 scanline darkness

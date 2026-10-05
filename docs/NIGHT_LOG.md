@@ -520,3 +520,14 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
 - Bots parry and pogo over guards: Ink Baron 33 s (3 parries), opera 53 s (3 parries, 2 criticals),
   Narrator 36 s (4 parries). Flow 0, controls 12/12, parkour 8/8, face 0, anim 18/18. Text updated:
   fight control line, HUD, pause guide, How to Play, README, ITCH_PAGE.
+
+### 10. The first edition is now 240p (Sankeerth: too degraded to play)
+- Renamed 144p -> 240p everywhere (filter preset, director, settings window options, menu badge,
+  comms, cards, tests, README, ITCH_PAGE, EDITIONS_PLAN; code names after_240_levels, _start_boss_240).
+- Filter: 400x225 (was 256x144), blur 0.4 (0.7), 16 colour levels (10), scanlines 0.22 (0.35), grain
+  0.28 (0.6). Decision: a true 426x240 grid would be nearly the same as the 720p filter's 480x270, so
+  720p is now a crisper 640x360 pixel grid (32 levels, lighter scanlines and grain): 225 -> 360 -> 2K
+  stays a clear step each time. Audio lo-fi a little gentler (low-pass 3600 Hz, crush 0.25).
+- The rooms were near-black outside the torch (ambient 0.03): in the Editions the ambient is 0.10 and
+  the torch reaches further, so floors, walls, crates and consoles read; the darkness and the torch
+  stay the point. Captures: `docs/captures/room_240p.png`, `ink_baron_240p.png`. Flow test 0 fails.

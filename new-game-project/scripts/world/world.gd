@@ -103,6 +103,8 @@ var _door_lights := {}
 var _hero_light: PointLight2D
 var _cam: Camera2D
 var _mod: CanvasModulate
+var station_dark := STATION_DARK ## the Editions lift it so the 240p rooms read outside the torch
+var station_torch := 2.1
 var _glints: GlintLayer
 var _ui: CanvasLayer
 var _shop: ShopUI
@@ -327,8 +329,8 @@ func set_active(on: bool) -> void:
 	_ui.visible = on
 	_inv_hud.visible = not station_mode
 	_task_hud.visible = station_mode
-	_mod.color = STATION_DARK if station_mode else DARKNESS
-	_hero_light.texture_scale = 2.1 if station_mode else 2.3
+	_mod.color = station_dark if station_mode else DARKNESS
+	_hero_light.texture_scale = station_torch if station_mode else 2.3
 	if on:
 		_cam.make_current()
 		_cam.position = hero.pos

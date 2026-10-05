@@ -14,7 +14,7 @@ When a masked villain wielding an ink-drinking quill drains the light out of the
 
 ## Three Visual Editions
 
-### 📺 144p Edition — The Crushed Dimension
+### 📺 240p Edition — The Crushed Dimension
 *Choppy frames, muffled lo-fi audio, and pure CRT grit.*
 Step into the pitch-black archives where light is scarce and shadows lurk around every corner. Complete emergency survival tasks, coordinate with allies, evade encroaching ink vampires, and confront **The Ink Baron** in a frantic battle for the first spark of illumination. When the screen can barely hold itself together, it's time to raise the settings...
 
@@ -37,7 +37,7 @@ Reach the pinnacle of visual clarity. Soar through majestic gothic library halls
 - **Mute Music:** Toggle in Pause Menu
 - **Mute SFX:** Toggle in Pause Menu
 
-### 144p Edition (Exploration & Tasks)
+### 240p Edition (Exploration & Tasks)
 - **Move Hero:** Arrow Keys / WASD
 - **Interact with Consoles & Objects:** Z / Space
 - **Delegate Task to Friend:** F

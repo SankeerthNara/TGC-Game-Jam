@@ -23,7 +23,7 @@ var _tex := {}
 
 
 func _ready() -> void:
-	layer = 100 # above the edition filter: the Narrator is always readable, even in 144p
+	layer = 100 # above the edition filter: the Narrator is always readable, even in 240p
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("comms")
 	_draw_node = Control.new()

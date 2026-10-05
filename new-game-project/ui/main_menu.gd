@@ -1,7 +1,7 @@
 class_name MainMenu
 extends Control
 ## Animated comic cover main menu for Glitched Out:
-## Big logo, looming masked villain, 4 hero busts, a "NOW IN 144p" badge, comic buttons.
+## Big logo, looming masked villain, 4 hero busts, a "NOW IN 240p" badge, comic buttons.
 
 const FONT_TITLE := preload("res://assets/fonts/Bangers-Regular.ttf")
 const FONT_BODY := preload("res://assets/fonts/ComicNeue-Bold.ttf")
@@ -138,7 +138,7 @@ func _draw() -> void:
 	draw_polyline(PackedVector2Array([sub_pts[0], sub_pts[1], sub_pts[2], sub_pts[3], sub_pts[0]]), INK, 3.0)
 	draw_string(FONT_TITLE, Vector2(150, 196), "✦ THE EDITIONS: ONE STORY, THREE RESOLUTIONS ✦", HORIZONTAL_ALIGNMENT_CENTER, 610, 20, PAPER)
 
-	# 5. A "NOW IN 144p" badge (the editions joke, upper right)
+	# 5. A "NOW IN 240p" badge (the editions joke, upper right)
 	var bomb_pos := Vector2(1040, 240)
 	
 	# Comic burst tag over bomb
@@ -151,7 +151,7 @@ func _draw() -> void:
 	b_pts.append(b_pts[0])
 	draw_colored_polygon(b_pts, GOLD)
 	draw_polyline(b_pts, INK, 2.5)
-	draw_string(FONT_TITLE, bomb_badge_pos + Vector2(-60, 6), "NOW IN 144p!", HORIZONTAL_ALIGNMENT_CENTER, 120, 14, INK)
+	draw_string(FONT_TITLE, bomb_badge_pos + Vector2(-60, 6), "NOW IN 240p!", HORIZONTAL_ALIGNMENT_CENTER, 120, 14, INK)
 
 	# 6. The pulp hero in the foreground, light blade ready (the four busts if the art is missing)
 	draw_texture_rect(TEX_GLOW, Rect2(Vector2(250, 520) - Vector2(260, 260), Vector2(520, 520)), false, Color(1, 0.85, 0.45, 0.55))

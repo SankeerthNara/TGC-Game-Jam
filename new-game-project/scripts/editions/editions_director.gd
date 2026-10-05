@@ -1,7 +1,7 @@
 class_name EditionsDirector
 extends Node
 ## Runs "Glitched Out": the book opening, then the same story printed in three editions.
-##   144p: two dark-room levels and the Ink Baron. Twist 1: the player raises the settings to 720p.
+##   240p: two dark-room levels and the Ink Baron. Twist 1: the player raises the settings to 720p.
 ##   720p: a pixel-art brawler level and the Static Twins. Fake credits; the cursor moves to 2K by itself.
 ##   2k:   the library hall, the opera arena, the comms die, the Narrator unmasks; the final battle.
 ## The Narrator is the hero's friendly voice on comms until the very end.
@@ -25,7 +25,7 @@ func setup(m: Node) -> void:
 	main.add_child(comms)
 
 
-## 144p rooms: only the picture of the dark rooms is cheap. The filter sits just above the world, so
+## 240p rooms: only the picture of the dark rooms is cheap. The filter sits just above the world, so
 ## the HUD, the consoles, the REVEAL / KILL choice and the score cards stay readable. Everywhere else
 ## (fights, cutscenes, page turns) it covers the whole screen.
 const WORLD_STATES := ["world", "task", "choice", "dead", "levelend", "playing"]
@@ -33,7 +33,7 @@ const WORLD_STATES := ["world", "task", "choice", "dead", "levelend", "playing"]
 
 func _process(_delta: float) -> void:
 	if fx != null and main != null:
-		fx.layer = 4 if act == "144p" and main.state in WORLD_STATES else 95
+		fx.layer = 4 if act == "240p" and main.state in WORLD_STATES else 95
 
 
 # --- the book ------------------------------------------------------------------------------
@@ -51,31 +51,31 @@ func start() -> void:
 func _after_book() -> void:
 	# the light drains: the picture falls apart into the cheap edition
 	EventBus.sound_requested.emit("glitch")
-	fx.sweep_to("144p", 1.4)
+	fx.sweep_to("240p", 1.4)
 	_later(1.6, func() -> void:
-		act = "144p"
-		_set_audio("144p")
+		act = "240p"
+		_set_audio("240p")
 		main._load_level(0))
 
 
-## What the Narrator says when a 144p level starts (replaces the level's own intro).
+## What the Narrator says when a 240p level starts (replaces the level's own intro).
 func level_intro(i: int) -> String:
 	if i == 0:
 		return "NARRATOR: There you are, hero! It's dark, I know. WASD or the ARROW KEYS move, your torch lights the way. Walk to a glowing console and press Z to fix it. Fix them all and the door opens. M shows the map. I'll be right here on comms."
 	return "NARRATOR: Careful. Two vampires in here: one is a friend, one works for the masked villain. Hold your light on one to catch him, then REVEAL or KILL. A revealed friend helps: stand at a console and press F."
 
 
-# --- 144p ----------------------------------------------------------------------------------
+# --- 240p ----------------------------------------------------------------------------------
 
-## Both 144p levels are done: the Ink Baron (the first of the villain's lieutenants).
-func after_144_levels() -> void:
+## Both 240p levels are done: the Ink Baron (the first of the villain's lieutenants).
+func after_240_levels() -> void:
 	main._set_state("cutscene")
 	comms.say("That door leads to the Ink Baron, one of the masked villain's lieutenants. Beat him and we're one step closer to your friends!", "narrator", 2.0)
-	_later(3.0, func() -> void: _swap(_start_boss_144, "THE INK BARON"))
+	_later(3.0, func() -> void: _swap(_start_boss_240, "THE INK BARON"))
 
 
-func _start_boss_144() -> void:
-	_current = _start_boss_144
+func _start_boss_240() -> void:
+	_current = _start_boss_240
 	main._set_state("boss")
 	var b := BossFight.new()
 	b.heroes = [0]
@@ -363,13 +363,13 @@ func _set_audio(edition: String) -> void:
 	var bus := AudioServer.get_bus_index("Master")
 	while AudioServer.get_bus_effect_count(bus) > 0:
 		AudioServer.remove_bus_effect(bus, 0)
-	if edition == "144p":
+	if edition == "240p":
 		var lp := AudioEffectLowPassFilter.new()
-		lp.cutoff_hz = 2600.0
+		lp.cutoff_hz = 3600.0
 		AudioServer.add_bus_effect(bus, lp)
 		var crush := AudioEffectDistortion.new()
 		crush.mode = AudioEffectDistortion.MODE_LOFI
-		crush.drive = 0.35
+		crush.drive = 0.25
 		crush.post_gain = -3.0
 		AudioServer.add_bus_effect(bus, crush)
 	MusicDirector.ensure_limiter() # always last on the master bus

@@ -1,5 +1,5 @@
 extends Node
-## Screenshots of the console tasks as they look in the 144p edition (not part of the game).
+## Screenshots of the console tasks as they look in the 240p edition (not part of the game).
 
 var main: Node
 

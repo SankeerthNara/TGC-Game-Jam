@@ -8,7 +8,7 @@ extends CanvasLayer
 signal finished(choice: String)
 
 const FONT_UI := preload("res://assets/fonts/ComicNeue-Bold.ttf")
-const OPTIONS := ["144p", "360p", "720p", "1080p", "2K"]
+const OPTIONS := ["240p", "360p", "720p", "1080p", "2K"]
 
 var mode := "player"
 var _t := 0.0

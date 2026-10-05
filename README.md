@@ -5,7 +5,7 @@ Jam (themes: **Comic, Twist, Light**) in Godot 4.7.
 
 A masked villain has drained the light from the world, and without light the world loses its detail.
 Your hero escapes, and a friendly voice on his comms machine, the Narrator, guides him to rescue the
-three captured heroes. The story starts in a cheap **144p** edition, gets reprinted in **720p** pixel
+three captured heroes. The story starts in a cheap **240p** edition, gets reprinted in **720p** pixel
 art and ends in a **2K** deluxe edition... and sometimes the story needs *you*, the reader.
 
 ## Play on itch.io
@@ -22,7 +22,7 @@ The web build is exported with the preset "Web" (Project > Export) to `build/web
 
 ## Controls
 
-**144p edition (the dark-room levels)**
+**240p edition (the dark-room levels)**
 - **WASD** or the **arrow keys** move (hold two for diagonals). Your torch lights the way. **M** opens the map.
 - **Z** at a console starts a task (tasks use the mouse and the keys shown in each task). **Esc** leaves a task.
 - Run to the fix console when the villain sabotages something.

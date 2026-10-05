@@ -1,15 +1,15 @@
 class_name EditionFX
 extends CanvasLayer
 ## The picture quality of the current "edition": one full-screen shader over the whole game.
-##   "144p": 256x144, mushy, crushed colours, grain, scanlines (the cheap edition)
-##   "720p": 480x270 crisp pixel art (the pixel edition)
+##   "240p": 400x225, soft, fewer colours, grain, scanlines (the cheap edition: crunchy but readable)
+##   "720p": 640x360 crisp pixel art (the pixel edition)
 ##   "2k":   off, full resolution (the deluxe edition)
 ## glitch() tears the picture for a moment; sweep_to() animates a resolution change.
 
 const SHADER := preload("res://scripts/editions/edition_fx.gdshader")
 const PRESETS := {
-	"144p": {"res": Vector2(256, 144), "soft": 0.7, "levels": 10.0, "scan": 0.35, "noise": 0.6},
-	"720p": {"res": Vector2(480, 270), "soft": 0.0, "levels": 28.0, "scan": 0.12, "noise": 0.15},
+	"240p": {"res": Vector2(400, 225), "soft": 0.4, "levels": 16.0, "scan": 0.22, "noise": 0.28},
+	"720p": {"res": Vector2(640, 360), "soft": 0.0, "levels": 32.0, "scan": 0.1, "noise": 0.1},
 	"2k": {"res": Vector2(1280, 720), "soft": 0.0, "levels": 256.0, "scan": 0.0, "noise": 0.0},
 }
 
