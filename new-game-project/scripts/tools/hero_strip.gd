@@ -4,8 +4,8 @@ extends Node
 ## (crops around the hero). Pass the label with `-- before` or `-- after`.
 
 const SCRIPT := [[0, KEY_RIGHT, true], [40, KEY_RIGHT, false], [56, KEY_LEFT, true], [80, KEY_LEFT, false],
-	[80, KEY_Z, true], [92, KEY_Z, false], [140, KEY_X, true], [142, KEY_X, false], [158, KEY_X, true],
-	[160, KEY_X, false], [176, KEY_X, true], [178, KEY_X, false]]
+	[80, KEY_Z, true], [92, KEY_Z, false], [140, KEY_J, true], [142, KEY_J, false], [158, KEY_J, true],
+	[160, KEY_J, false], [176, KEY_J, true], [178, KEY_J, false]]
 const SHOTS := [30, 44, 50, 60, 66, 74, 88, 104, 124, 146, 164, 184]
 const CROP := Vector2(320, 300)
 

@@ -72,9 +72,9 @@ func _on_gui(event: InputEvent) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if mode != "player" or _phase != "choose" or not (event is InputEventKey) or not event.pressed:
 		return
-	if event.keycode == KEY_UP:
+	if event.keycode in [KEY_UP, KEY_W]:
 		_hover = (maxi(_hover, 0) + OPTIONS.size() - 1) % OPTIONS.size()
-	elif event.keycode == KEY_DOWN:
+	elif event.keycode in [KEY_DOWN, KEY_S]:
 		_hover = (_hover + 1) % OPTIONS.size()
 	elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_Z, KEY_SPACE] and _hover >= 0:
 		_pick(_hover)

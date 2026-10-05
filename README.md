@@ -23,19 +23,19 @@ The web build is exported with the preset "Web" (Project > Export) to `build/web
 ## Controls
 
 **144p edition (the dark-room levels)**
-- **Arrow keys** move (hold two for diagonals). Your torch lights the way. **M** opens the map.
+- **WASD** or the **arrow keys** move (hold two for diagonals). Your torch lights the way. **M** opens the map.
 - **Z** at a console starts a task (tasks use the mouse and the keys shown in each task). **Esc** leaves a task.
 - Run to the fix console when the villain sabotages something.
 - Keep your torch on a vampire to catch him, then choose **Reveal** or **Kill**. A revealed friend
   helps: stand at a console and press **F** to give him that task.
 
 **720p edition (the brawler)**
-- **Arrows** move, **Z** jump, **X** punch (3-hit combo), **C** roll, **V** counter when an enemy's eyes
+- **WASD / arrows** move, **Z** or **Space** jump, **J** punch (3-hit combo), **K** roll, **L** counter when an enemy's eyes
   or laser sight turn **red**.
 
 **2K edition (the deluxe fights)**
-- **Arrows** move, **Z** jump, **X** attack (hold **Up** for an up-slash, **Down** in the air for a
-  down-slash that bounces off enemies), **C** dash, **V** Light Blade (3 ink), **F** heal (6 ink).
+- **WASD / arrows** move, **Z** or **Space** jump, **J** attack (hold **W / Up** for an up-slash, **S / Down** in the air for a
+  down-slash that bounces off enemies), **K** dash, **L** Light Blade (3 ink), **F** heal (6 ink).
   Hits fill the ink meter.
 
 **Everywhere**

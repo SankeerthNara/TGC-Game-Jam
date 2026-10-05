@@ -256,8 +256,8 @@ func _build_help_modal() -> void:
 	var rules := [
 		"1. THE STORY: a masked villain drained the light. Without light, the world loses its detail.",
 		"2. YOUR GUIDE: the Narrator talks to you on your comms machine. Listen to him.",
-		"3. FIRST EDITION: arrows move, your torch lights the dark. [Z] at a console starts a task, [ESC] leaves it. Fix sabotage in time. Vampires: REVEAL or KILL?",
-		"4. LATER EDITIONS: [X] attack, [Z] jump, [C] dash / roll, [V] power or COUNTER when eyes turn red, [F] heal.",
+		"3. FIRST EDITION: WASD or the arrows move, your torch lights the dark. [Z] at a console starts a task, [ESC] leaves it. Fix sabotage in time. Vampires: REVEAL or KILL?",
+		"4. LATER EDITIONS: [J] attack, [Z] or [SPACE] jump, [K] dash / roll, [L] power or COUNTER when eyes turn red, [F] heal.",
 		"5. [P] pauses. [M] shows the map in the first edition.",
 		"6. Sometimes the story needs YOU, the reader. Keep your mouse close.",
 	]

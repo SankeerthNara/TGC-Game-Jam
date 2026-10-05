@@ -61,7 +61,7 @@ func _set_from_x(x: float) -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	if not _done and _t > 1.5 and (Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D)):
+	if not _done and _t > 1.5 and Input.is_action_pressed("move_right"):
 		_value = minf(1.0, _value + delta * 0.35)
 	var c: Node = get_tree().get_first_node_in_group("comms")
 	if not _done and _said < BEGS.size() and _value >= float(BEGS[_said][0]):
@@ -155,7 +155,7 @@ func _draw_ui() -> void:
 	var knob := Vector2(tr.position.x + tr.size.x * _value, tr.get_center().y)
 	ci.draw_circle(knob, 13.0, Color.WHITE)
 	ci.draw_arc(knob, 13.0, 0.0, TAU, 24, Color(0.6, 0.6, 0.65), 2.0)
-	ci.draw_string(FONT_UI, Vector2(450, 690), "Drag the slider to 100%  (or hold RIGHT)", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.15, 0.15, 0.2))
+	ci.draw_string(FONT_UI, Vector2(450, 690), "Drag the slider to 100%  (or hold RIGHT / D)", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.15, 0.15, 0.2))
 
 
 ## The solar flare: sun rays burst out of the hero, a shock ring rolls out, the page burns white.

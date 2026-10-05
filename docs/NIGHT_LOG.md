@@ -337,3 +337,24 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
 - Tests: flow 0 fails; bots win (Ink Baron 23 s, opera 32 s, Narrator 53 s, street 44 s, Twins 25 s,
   a little faster than before since the hero no longer swings at empty air); face test 0 fails.
   Web build re-exported (page title "Glitched Out", index.pck 11.6 MB).
+
+### 3. Controls: WASD, J/K/L, Space (Sankeerth)
+- New InputMap actions in project.godot: move_left/right/up/down (arrows + WASD), jump (Z + Space),
+  attack (J), dash (K), power (L), heal (F). The 2K fights and the 720p brawler read these actions
+  (no hard-coded X/C/V left); X, C and V are in no action. 2K: J attack (W/Up up-slash, S/Down
+  down-slash in the air, S/Down also drops through platforms), K dash, L Light Blade, F heal.
+  720p: J punch combo, K roll, L counter.
+- WASD everywhere arrows were used: the 144p rooms, the rolling chase, the dial and rain tasks
+  already had it; added to the safe-code and Simon tasks, the settings window and the brightness
+  slider (hold D).
+- Clashes found and fixed: the vampire choice used X to strike: now J (and 2); console tasks also
+  closed on X: now Esc only (the hint always said ESC). The classic shop and the classic web chase
+  (not in the Editions) keep their keys. P, M, F, Tab, Esc unchanged; nothing else clashes (tasks use
+  the mouse, arrows/WASD, Space or Enter).
+- Every on-screen mention updated: fight and brawler control lines, the "PRESS L WHEN THE ENEMY'S
+  EYES TURN RED" tip, the Ink Baron's comms line, the Twins briefing, the intro cards, the HUD
+  ("L LIGHT BLADE (3)"), the pause-menu guide, the menu's How to Play, README, ITCH_PAGE (its control
+  list was already wrong: rewritten), and the bots and capture tools (press J/K/L).
+- New `scripts/tools/controls_test.tscn`: D/A move, Space jumps, W+J up-slash, K dash, L Light Blade,
+  X/C/V do nothing (2K); D moves, J punch, K roll, L counter (720p): 11/11 pass. Flow test 0 fails,
+  face test 0 fails, bots win with the new keys, chaos test reaches the end.

@@ -45,17 +45,20 @@ Reach the pinnacle of visual clarity. Soar through majestic gothic library halls
 - **View Map:** M
 
 ### 720p Edition (Brawler & Train Duel)
-- **Move & Crouch:** Arrow Keys / WASD
-- **Light Punch / Combo:** Z / J
-- **Heavy Kick:** X / K
-- **Counter / Parry:** C / L *(Watch for the enemy's eye flash!)*
-- **Jump / Evade:** Space / Up
+- **Move:** WASD / Arrow Keys
+- **Jump:** Z / Space
+- **Punch (3-hit combo):** J
+- **Roll:** K
+- **Counter:** L *(when an enemy's eyes or laser sight turn red)*
 
 ### 2k Edition (Gothic Platforming & Arena Combat)
-- **Run & Leap:** A D / Left Right + Space
-- **Light Blade Slash:** Z / J
-- **Acrobatic Dash:** Shift / C
-- **Solar Flare / Finisher:** Drag brightness slider to 100% when fully charged
+- **Move:** WASD / Arrow Keys
+- **Jump:** Z / Space
+- **Attack:** J *(hold W / Up for an up-slash, S / Down in the air for a down-slash)*
+- **Dash:** K
+- **Light Blade:** L *(3 ink)*
+- **Heal:** F *(6 ink)*
+- **Finale:** drag the Brightness slider to 100% (or hold D / Right)
 
 ---
 

@@ -57,13 +57,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _done or not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	match event.keycode:
-		KEY_LEFT:
+		KEY_LEFT, KEY_A:
 			_sel = (_sel + DIGITS - 1) % DIGITS
-		KEY_RIGHT:
+		KEY_RIGHT, KEY_D:
 			_sel = (_sel + 1) % DIGITS
-		KEY_UP:
+		KEY_UP, KEY_W:
 			_guess[_sel] = (_guess[_sel] + 1) % 10
-		KEY_DOWN:
+		KEY_DOWN, KEY_S:
 			_guess[_sel] = (_guess[_sel] + 9) % 10
 		KEY_ENTER, KEY_KP_ENTER:
 			_submit()

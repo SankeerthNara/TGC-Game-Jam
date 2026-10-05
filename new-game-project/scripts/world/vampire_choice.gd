@@ -60,7 +60,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.keycode in [KEY_Z, KEY_1, KEY_ENTER]:
 		_choose(true)
-	elif event.keycode in [KEY_X, KEY_2]:
+	elif event.keycode in [KEY_J, KEY_2]:
 		_choose(false)
 
 
@@ -90,7 +90,7 @@ func _draw() -> void:
 		_centered("YOU CAUGHT A VAMPIRE!", 380, 62, GOLD)
 		_centered("Friend or villain? There is no way to tell. Choose.", 424, 26, Color("fff3d1"), FONT_BODY)
 		var labels := ["REVEAL", "KILL"]
-		var subs := ["[Z]  unmask him", "[X]  strike him down"]
+		var subs := ["[Z]  unmask him", "[J]  strike him down"]
 		var cols := [Color("2dc653"), Color("e63946")]
 		for i in 2:
 			var b := _btn(i)

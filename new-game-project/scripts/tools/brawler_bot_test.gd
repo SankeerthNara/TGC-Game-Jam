@@ -48,7 +48,7 @@ func _ready() -> void:
 
 
 func _drive(g: BrawlerGame) -> void:
-	for k in [KEY_X, KEY_V, KEY_C, KEY_Z]:
+	for k in [KEY_J, KEY_L, KEY_K, KEY_Z]:
 		press(k, false)
 	if g._phase != "play":
 		press(KEY_LEFT, false)
@@ -68,12 +68,12 @@ func _drive(g: BrawlerGame) -> void:
 	press(KEY_RIGHT, want > g.hero_pos.x + 10.0)
 	for e in g._enemies:
 		if e.counterable() and absf(e.pos.x - g.hero_pos.x) < 300.0 and randf() < 0.5:
-			tap(KEY_V)
+			tap(KEY_L)
 			return
 	if not g._beams.is_empty() and g._ground:
 		tap(KEY_Z)
 	if best != null and best_d < 100.0:
 		if best.state == "windup" and best.attack == "jab" and randf() < 0.3:
-			tap(KEY_C)
+			tap(KEY_K)
 		else:
-			tap(KEY_X)
+			tap(KEY_J)

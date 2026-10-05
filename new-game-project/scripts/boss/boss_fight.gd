@@ -435,11 +435,7 @@ func _update_hero(delta: float) -> void:
 	if _atk_buf > 0.0:
 		_atk_buf -= delta
 		_start_attack()
-	var move := 0.0
-	if Input.is_key_pressed(KEY_LEFT):
-		move -= 1.0
-	if Input.is_key_pressed(KEY_RIGHT):
-		move += 1.0
+	var move := Input.get_axis("move_left", "move_right") # arrows or A / D
 	if _heal_t >= 0.0:
 		_heal_t += delta
 		move = 0.0
@@ -486,7 +482,7 @@ func _update_hero(delta: float) -> void:
 		_vel.y = 0.0
 		_ground = true
 	for rim in platforms:
-		if _vel.y >= 0.0 and prev_y <= rim.position.y + 1.0 and hero_pos.y >= rim.position.y and hero_pos.x > rim.position.x and hero_pos.x < rim.end.x and not Input.is_key_pressed(KEY_DOWN):
+		if _vel.y >= 0.0 and prev_y <= rim.position.y + 1.0 and hero_pos.y >= rim.position.y and hero_pos.x > rim.position.x and hero_pos.x < rim.end.x and not Input.is_action_pressed("move_down"):
 			hero_pos.y = rim.position.y
 			_vel.y = 0.0
 			_ground = true
@@ -579,7 +575,7 @@ func _face_nearest(reach := 300.0) -> void:
 func _start_attack() -> bool:
 	if _atk_cd > 0.0 or _heal_t >= 0.0:
 		return false
-	_atk_dir = "up" if Input.is_key_pressed(KEY_UP) else ("down" if Input.is_key_pressed(KEY_DOWN) and not _ground else "side")
+	_atk_dir = "up" if Input.is_action_pressed("move_up") else ("down" if Input.is_action_pressed("move_down") and not _ground else "side")
 	_atk_t = 0.22
 	_atk_cd = 0.3
 	_atk_buf = 0.0
@@ -680,25 +676,25 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _phase in ["wave", "wave_intro", "explore"]:
 		return
 	if not event.pressed:
-		if event.keycode in [KEY_Z, KEY_SPACE] and _vel.y < -300.0:
+		if event.is_action("jump") and _vel.y < -300.0:
 			_vel.y *= 0.45 # short hop
 		return
-	match event.keycode:
-		KEY_Z, KEY_SPACE:
-			_jump_buf = 0.12
-		KEY_X:
-			if not _start_attack():
-				_atk_buf = 0.2
-		KEY_C:
-			if _dash_cd <= 0.0 and (_ground or _air_dash) and _heal_t < 0.0:
-				_dash(false)
-		KEY_V:
-			_power()
-		KEY_F:
-			if _ink >= 6 and _ground and _hp < max_hp and _heal_t < 0.0:
-				_heal_t = 0.0
-		_:
-			return
+	# the InputMap: Z / Space jump, J attack, K dash, L Light Blade, F heal
+	if event.is_action("jump"):
+		_jump_buf = 0.12
+	elif event.is_action("attack"):
+		if not _start_attack():
+			_atk_buf = 0.2
+	elif event.is_action("dash"):
+		if _dash_cd <= 0.0 and (_ground or _air_dash) and _heal_t < 0.0:
+			_dash(false)
+	elif event.is_action("power"):
+		_power()
+	elif event.is_action("heal"):
+		if _ink >= 6 and _ground and _hp < max_hp and _heal_t < 0.0:
+			_heal_t = 0.0
+	else:
+		return
 	get_viewport().set_input_as_handled()
 
 
@@ -974,7 +970,7 @@ func _draw() -> void:
 		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
 		if _pt < 10.0:
-			draw_string(FONT_BODY, Vector2(210, 700), "ARROWS move   Z jump   X attack (+UP, or +DOWN in the air)   C dash   V power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
+			draw_string(FONT_BODY, Vector2(210, 700), "WASD / ARROWS move   Z / SPACE jump   J attack (+UP, or +DOWN in the air)   K dash   L power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
 	elif _phase == "wave" and _narrator == null:
 		# the objective while there is no boss bar: how many are left on stage
 		var left := _enemies.size() + _pending.size()
@@ -1178,7 +1174,7 @@ func _draw_hud() -> void:
 		var r := Rect2(Vector2(126 + i * 19, 80), Vector2(15, 16))
 		draw_rect(r, INK)
 		draw_rect(r.grow(-2.0), Color("2ec4b6") if i < _ink else Color(0.15, 0.15, 0.2))
-	draw_string(FONT_BODY, Vector2(126, 116), "V %s (3)   F heal (6)" % POWER_BY_KIND[_hero_kind()], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
+	draw_string(FONT_BODY, Vector2(126, 116), "L %s (3)   F heal (6)" % POWER_BY_KIND[_hero_kind()], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD if _ink >= 3 else Color("8d99ae"))
 	# round, wave, bomb (top right)
 	draw_string(FONT_SHOUT, Vector2(930, 46), ("ROUND %d  -  %s" % [_round + 1, ComicArt.HERO_NAMES[kind]]) if fight_title == "" else fight_title, HORIZONTAL_ALIGNMENT_LEFT, 330, 22, GOLD)
 	if bomb_left >= 0.0:
@@ -1192,7 +1188,7 @@ func _draw_hud() -> void:
 		draw_rect(bar, INK)
 		draw_rect(Rect2(bar.position + Vector2(3, 3), Vector2((bar.size.x - 6) * clampf(_narrator.hp / _narrator.max_hp, 0.0, 1.0), bar.size.y - 6)), Color("9d4edd"))
 	elif _phase in ["wave", "wave_intro"] and _wave == 0 and _pt < 8.0:
-		draw_string(FONT_BODY, Vector2(210, 700), "ARROWS move   Z jump   X attack (+UP, or +DOWN in the air)   C dash   V power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
+		draw_string(FONT_BODY, Vector2(210, 700), "WASD / ARROWS move   Z / SPACE jump   J attack (+UP, or +DOWN in the air)   K dash   L power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
 
 
 func _card(title: String, lines: Array, col: Color) -> void:
@@ -1216,11 +1212,11 @@ func _draw_round_card() -> void:
 	else:
 		match _round:
 			0:
-				lines = ["The Narrator locks the stage and conducts his ink choir.", "Power: V DEDUCTION, %s." % POWER_TEXT[0]]
+				lines = ["The Narrator locks the stage and conducts his ink choir.", "Power: L DEDUCTION, %s." % POWER_TEXT[0]]
 			1:
-				lines = ["The detective cleared %d of 2 waves. TAG IN, NINJA!" % mini(_cleared, 2), "Power: V LIGHT DASH, %s." % POWER_TEXT[1]]
+				lines = ["The detective cleared %d of 2 waves. TAG IN, NINJA!" % mini(_cleared, 2), "Power: L LIGHT DASH, %s." % POWER_TEXT[1]]
 			2:
-				lines = ["His shield is cracked %d%%: he is weaker now." % int(crack_share() * 100.0), "Power: V PRISM CANNON, %s." % POWER_TEXT[2]]
+				lines = ["His shield is cracked %d%%: he is weaker now." % int(crack_share() * 100.0), "Power: L PRISM CANNON, %s." % POWER_TEXT[2]]
 	_card(("ROUND %d: %s" % [_round + 1, ComicArt.HERO_NAMES[kind]]) if fight_title == "" else fight_title, lines, GOLD)
 	var k := clampf(_pt / 0.4, 0.0, 1.0)
 	ArenaArt.hero(self, kind, Vector2(640 - 120 * (1.0 - k), 440), 1.0, "idle", _t, 0.0, 1.85)

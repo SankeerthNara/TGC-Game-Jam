@@ -99,7 +99,7 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
-	if event.keycode == KEY_ESCAPE or event.keycode == KEY_X:
+	if event.keycode == KEY_ESCAPE:
 		_finish(_done)
 		get_viewport().set_input_as_handled()
 

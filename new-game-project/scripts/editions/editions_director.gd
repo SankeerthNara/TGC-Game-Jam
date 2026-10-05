@@ -61,7 +61,7 @@ func _after_book() -> void:
 ## What the Narrator says when a 144p level starts (replaces the level's own intro).
 func level_intro(i: int) -> String:
 	if i == 0:
-		return "NARRATOR: There you are, hero! It's dark, I know. ARROW KEYS move, your torch lights the way. Walk to a glowing console and press Z to fix it. Fix them all and the door opens. M shows the map. I'll be right here on comms."
+		return "NARRATOR: There you are, hero! It's dark, I know. WASD or the ARROW KEYS move, your torch lights the way. Walk to a glowing console and press Z to fix it. Fix them all and the door opens. M shows the map. I'll be right here on comms."
 	return "NARRATOR: Careful. Two vampires in here: one is a friend, one works for the masked villain. Hold your light on one to catch him, then REVEAL or KILL. A revealed friend helps: stand at a console and press F."
 
 
@@ -85,10 +85,10 @@ func _start_boss_144() -> void:
 	b.boss_name = "THE INK BARON"
 	b.fight_title = "THE INK BARON"
 	b.win_text = "BARON BUSTED!"
-	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "Power: V LIGHT BLADE, %s." % BossFight.POWER_TEXT_BY_KIND[0]]
+	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "Power: L LIGHT BLADE, %s." % BossFight.POWER_TEXT_BY_KIND[0]]
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]]
 	_launch(b)
-	comms.say("Light him up, hero! Z jump, X attack, C dash. V fires your light blade, F heals.", "narrator", 2.5)
+	comms.say("Light him up, hero! Z or SPACE jump, J attack, K dash. L fires your light blade, F heals.", "narrator", 2.5)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
 		_twist_one())
@@ -118,7 +118,7 @@ func start_720() -> void:
 	_current = start_720
 	act = "720p"
 	main._set_state("boss")
-	comms.say("New look, same mission. The Static Twins guard the line to the villain's tower. Their goons are on this street. Watch their eyes: when they glow RED, hit V and turn it around!", "narrator", 2.5)
+	comms.say("New look, same mission. The Static Twins guard the line to the villain's tower. Their goons are on this street. Watch their eyes: when they glow RED, hit L and turn it around!", "narrator", 2.5)
 	var g := BrawlerGame.new()
 	g.stage = "street"
 	_launch(g)
@@ -179,7 +179,7 @@ func start_2k() -> void:
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AL", 2.0], ["bat", "AR", 3.5], ["lancer", "C", 5.0]]]]
 	b.win_text = "THE HALL IS CLEAR!"
 	b.fight_title = "THE LIBRARY"
-	b.intro_lines = ["The deluxe edition. Light blade ready.", "Z jump   X attack (+UP / +DOWN)   C dash   V blade   F heal"]
+	b.intro_lines = ["The deluxe edition. Light blade ready.", "Z jump   J attack (+UP / +DOWN)   K dash   L blade   F heal"]
 	_launch(b)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
@@ -228,7 +228,7 @@ func _final_boss() -> void:
 	b.boss_hp_scale = 1.3
 	b.narrator_line = "LET ME WRITE YOUR LAST PAGE!"
 	b.win_text = ""
-	b.intro_lines = ["The Narrator. The one who guided you all along.", "Free the three heroes. V LIGHT BLADE, F heal."]
+	b.intro_lines = ["The Narrator. The one who guided you all along.", "Free the three heroes. L LIGHT BLADE, F heal."]
 	_launch(b)
 	comms.say("I wrote every page of you, hero. Even this one.", "narrator_evil", 2.0)
 	b.finished.connect(func(_result: String) -> void:

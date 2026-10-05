@@ -99,7 +99,7 @@ func _process(delta: float) -> void:
 	elif ov is BrawlerGame:
 		_drive_brawler(ov)
 	else:
-		for k in [KEY_LEFT, KEY_RIGHT, KEY_X, KEY_Z, KEY_C, KEY_V, KEY_F, KEY_UP]:
+		for k in [KEY_LEFT, KEY_RIGHT, KEY_J, KEY_Z, KEY_K, KEY_L, KEY_F, KEY_UP]:
 			if k != KEY_RIGHT or not _has_finale():
 				press(k, false)
 	if _total > 3600.0:
@@ -131,7 +131,7 @@ func _report() -> void:
 # --- bots (the same as arena_bot_test / brawler_bot_test) ------------------------------------
 
 func _drive_arena(b: BossFight) -> void:
-	for k in [KEY_X, KEY_Z, KEY_C, KEY_V, KEY_F]:
+	for k in [KEY_J, KEY_Z, KEY_K, KEY_L, KEY_F]:
 		press(k, false)
 	if not b._phase in ["wave", "wave_intro", "explore"]:
 		press(KEY_LEFT, false)
@@ -165,27 +165,27 @@ func _drive_arena(b: BossFight) -> void:
 			press(KEY_RIGHT, float(d["x"]) < hero.x)
 			press(KEY_LEFT, float(d["x"]) >= hero.x)
 	if danger and b._dash_cd <= 0.0 and randf() < 0.1:
-		tap(KEY_C)
+		tap(KEY_K)
 	if best != null and b._atk_cd <= 0.0:
 		var dv := best.center() - b.hero_center()
 		if absf(dv.x) < 120.0 and dv.y < -60.0:
 			press(KEY_UP, true)
-			tap(KEY_X)
+			tap(KEY_J)
 		elif absf(dv.x) < 125.0 and absf(dv.y) < 70.0:
 			press(KEY_UP, false)
-			tap(KEY_X)
+			tap(KEY_J)
 		elif dv.y < -80.0 and absf(dv.x) < 160.0 and b._ground:
 			tap(KEY_Z)
 	else:
 		press(KEY_UP, false)
 	if b._ink >= 3 and best != null and best_d < 300.0 and (b._ink >= 7 or b._hp > 2):
-		tap(KEY_V)
+		tap(KEY_L)
 	if b._hp <= 2 and b._ink >= 6 and not danger:
 		tap(KEY_F)
 
 
 func _drive_brawler(g: BrawlerGame) -> void:
-	for k in [KEY_X, KEY_V, KEY_C, KEY_Z]:
+	for k in [KEY_J, KEY_L, KEY_K, KEY_Z]:
 		press(k, false)
 	if g._phase != "play":
 		press(KEY_LEFT, false)
@@ -205,9 +205,9 @@ func _drive_brawler(g: BrawlerGame) -> void:
 	press(KEY_RIGHT, want > g.hero_pos.x + 10.0)
 	for e in g._enemies:
 		if e.counterable() and absf(e.pos.x - g.hero_pos.x) < 300.0 and randf() < 0.5:
-			tap(KEY_V)
+			tap(KEY_L)
 			return
 	if not g._beams.is_empty() and g._ground:
 		tap(KEY_Z)
 	if best != null and best_d < 100.0:
-		tap(KEY_X)
+		tap(KEY_J)

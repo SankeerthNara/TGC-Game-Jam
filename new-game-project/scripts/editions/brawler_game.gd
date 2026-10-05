@@ -352,11 +352,7 @@ func _update_hero(delta: float) -> void:
 	if _atk_buf > 0.0:
 		_atk_buf -= delta
 		_start_attack()
-	var move := 0.0
-	if Input.is_key_pressed(KEY_LEFT):
-		move -= 1.0
-	if Input.is_key_pressed(KEY_RIGHT):
-		move += 1.0
+	var move := Input.get_axis("move_left", "move_right") # arrows or A / D
 	if _counter_t > 0.0:
 		_counter_t -= delta
 		move = 0.0
@@ -421,29 +417,29 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _phase != "play" or not (event is InputEventKey) or event.echo:
 		return
 	if not event.pressed:
-		if event.keycode in [KEY_Z, KEY_SPACE] and _vel.y < -300.0:
+		if event.is_action("jump") and _vel.y < -300.0:
 			_vel.y *= 0.5
 		return
-	match event.keycode:
-		KEY_Z, KEY_SPACE:
-			if _ground and _roll_t <= 0.0:
-				_vel.y = -860.0
-				_ground = false
-				_anim.jumped()
-				EventBus.sound_requested.emit("hero_jump")
-		KEY_X:
-			if not _start_attack():
-				_atk_buf = 0.25
-		KEY_C:
-			if _roll_cd <= 0.0 and _ground:
-				_roll_t = 0.34
-				_roll_cd = 0.6
-				_inv = maxf(_inv, 0.36)
-				EventBus.sound_requested.emit("dash")
-		KEY_V:
-			_try_counter()
-		_:
-			return
+	# the InputMap: Z / Space jump, J punch, K roll, L counter
+	if event.is_action("jump"):
+		if _ground and _roll_t <= 0.0:
+			_vel.y = -860.0
+			_ground = false
+			_anim.jumped()
+			EventBus.sound_requested.emit("hero_jump")
+	elif event.is_action("attack"):
+		if not _start_attack():
+			_atk_buf = 0.25
+	elif event.is_action("dash"):
+		if _roll_cd <= 0.0 and _ground:
+			_roll_t = 0.34
+			_roll_cd = 0.6
+			_inv = maxf(_inv, 0.36)
+			EventBus.sound_requested.emit("dash")
+	elif event.is_action("power"):
+		_try_counter()
+	else:
+		return
 	get_viewport().set_input_as_handled()
 
 
@@ -772,10 +768,10 @@ func _draw_hud() -> void:
 		draw_rect(Rect2(hp + Vector2(-8, 0), Vector2(16, 6)), col)
 		draw_rect(Rect2(hp + Vector2(-4, 6), Vector2(8, 4)), col)
 	if _counters == 0 and _phase == "play":
-		var msg := "PRESS  V  WHEN THE ENEMY'S EYES TURN RED"
+		var msg := "PRESS  L  WHEN THE ENEMY'S EYES TURN RED"
 		var w := FONT_BODY.get_string_size(msg, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
 		draw_string(FONT_BODY, Vector2(640 - w * 0.5, 70), msg, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("fff3d1"))
-	draw_string(FONT_BODY, Vector2(30, 704), "ARROWS move   Z jump   X punch (combo)   C roll   V counter", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.6))
+	draw_string(FONT_BODY, Vector2(30, 704), "WASD / ARROWS move   Z / SPACE jump   J punch (combo)   K roll   L counter", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.6))
 	if stage == "street" and _phase == "play" and _counters > 0:
 		var obj := ""
 		if _zone_live:

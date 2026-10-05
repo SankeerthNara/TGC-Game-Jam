@@ -415,7 +415,7 @@ func _build_pause_modal(parent: Control) -> void:
 	ctrl_vbox.add_child(ctrl_title)
 
 	var entries: Array[Array] = [
-		["ARROWS / WASD", "Move hero"],
+		["WASD / ARROWS", "Move hero"],
 		["Z / SPACE / ENTER", "Interact / Action / Skip"],
 		["M", "Toggle minimap"],
 		["F", "Give task to friend ally"],
@@ -460,9 +460,9 @@ func _build_pause_modal(parent: Control) -> void:
 	]
 	if editions:
 		chase_entries = [
-			["VILLAIN CHASE", "Arrows lean/roll, Space jump"],
-			["720p BRAWL", "X punch, Z jump, C roll, V counter"],
-			["2K FIGHTS", "X attack, Z jump, C dash, V blade, F heal"]
+			["VILLAIN CHASE", "A / D lean and roll, Space jump"],
+			["720p BRAWL", "J punch, Z jump, K roll, L counter"],
+			["2K FIGHTS", "J attack, Z jump, K dash, L blade, F heal"]
 		]
 
 	for entry in chase_entries:
