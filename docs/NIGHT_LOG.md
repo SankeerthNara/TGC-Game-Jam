@@ -618,3 +618,27 @@ fight structure replicated in our theme with our characters and art (no assets c
 - Start notice: false endings still exist (the credits roll after the Twins and the Ink Scribe fakes
   his death), so the warning stays but now says what to expect: "Credits may roll and bosses may
   fall before then. Don't stop there!" Flow test: 0 fails.
+
+### 16. Richer cutscenes, same length (Sankeerth)
+New visual beats from the art we already have (no new spoken text; all 15 VO clips on their lines):
+- `ComicPanel` can now build a panel from the painted art: a background or a crop of a sprite /
+  portrait, figures, a slow camera move (pan + zoom), and an effect (drain, sweep, crack, mask_fall,
+  drips, eyes, cages). Silent pages are marked `"beat": true` and don't count in the VO ids
+  (`ComicCutscene._vo_page()`), so "book/2/0" etc. still find their clips.
+- **Book**: a new beat where the masked villain drains the light from the painted library (motes of
+  light stream into his quill, the hall darkens, "SHLLRRP!"); an inset of the dripping quill; the
+  captured heroes' ink cages now hang over the painted opera (arena_dark) with a slow pan; an inset
+  of the hero's glowing eyes as the Narrator first speaks.
+- **Reveal**: a two-beat unmasking before "It was YOU": a close-up of the mask cracking ("KRAK!"),
+  then the porcelain mask splits and falls away from the Narrator's grin ("CLATTER!"); the captured
+  heroes over the painted opera.
+- **Ending**: a new beat where sunlight sweeps across the opera (the dark violet painting turns into
+  the lit golden one); the closing book has the villain's quill snapped in two on its cover.
+- Paid for by trimming holds that ran past the voice (book 1.6 -> 0.8 / 0.4, ending 2.4 -> 1.2,
+  2.0 -> 0.8, 3.0 -> 2.4, the ending's opening flash 1.0 -> 0.6).
+- Lengths (`scripts/tools/cutscene_timing.tscn`, VO in game time, no Z): book 29.4 -> 30.2 s (+3%),
+  reveal 31.2 -> 33.6 s (+8%), ending 20.8 -> 21.2 s (+2%). In the playtime run: 31.5 / 36.2 / 22.8 s.
+  Full run 13.5 min (unchanged). Every new panel checked in frames (`scripts/tools/pages_shot.tscn
+  -- book reveal ending_editions at=0.25,0.5,1.0`): no cut-off heads or faces (the unmasking is a
+  deliberate face close-up). Flow 0 fails, VO 0 fails. Web build re-exported.
+- New lines needing VO: none.

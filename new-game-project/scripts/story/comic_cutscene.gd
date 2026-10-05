@@ -94,13 +94,23 @@ func _laugh_fx(_delta: float) -> void:
 		EventBus.sound_requested.emit("glitch")
 
 
+## The page's number for the voice-over ids: silent "beat" pages (pictures only) don't count, so the
+## recorded clips stay on their lines.
+func _vo_page() -> int:
+	var n := 0
+	for i in _page:
+		if not _pages[i].get("beat", false):
+			n += 1
+	return n
+
+
 func _sync_covered() -> void:
 	var vo := VoPlayer.get_vo(get_tree()) if is_inside_tree() else null
 	if vo == null:
 		return
 	var texts: Array = _pages[_page].get("text", [])
 	for i in texts.size():
-		var id := "%s/%d/%d" % [kind, _page, i]
+		var id := "%s/%d/%d" % [kind, _vo_page(), i]
 		if COVERED.has(id):
 			var parent: Array = COVERED[id]
 			var pi := int(String(parent[0]).get_slice("/", 2))
@@ -121,7 +131,8 @@ func _build_page() -> void:
 		var pd: Dictionary = page["panels"][i]
 		var p := ComicPanel.new()
 		p.key = pd["key"]
-		p.params = {"bomb_left": bomb_left, "bomb_secs": 17 * 60.0}
+		p.params = {"bomb_left": bomb_left, "bomb_secs": 17 * 60.0, "quill": pd.get("quill", false)}
+		p.art = pd.get("art", {})
 		var r := _panel_rect(i)
 		p.position = r.position
 		p.size = r.size
@@ -196,7 +207,7 @@ func _process(delta: float) -> void:
 			# a voiced line waits for the voice before it: the page follows the speech
 			for i in texts.size():
 				var at3 := float(texts[i]["at"])
-				if before < at3 and _t >= at3 and vo0.has_clip(String(texts[i]["text"]), "%s/%d/%d" % [kind, _page, i]):
+				if before < at3 and _t >= at3 and vo0.has_clip(String(texts[i]["text"]), "%s/%d/%d" % [kind, _vo_page(), i]):
 					_t = at3 - 0.001
 					break
 		_laugh_fx(delta)
@@ -205,7 +216,7 @@ func _process(delta: float) -> void:
 			if (before < at2 or (before == 0.0 and at2 <= 0.0)) and _t >= at2:
 				var vo := VoPlayer.get_vo(get_tree())
 				if vo != null:
-					vo.queue(String(texts[i]["text"]), "%s/%d/%d" % [kind, _page, i])
+					vo.queue(String(texts[i]["text"]), "%s/%d/%d" % [kind, _vo_page(), i])
 		var hold := float(_pages[_page].get("hold", 2.2))
 		var vo2 := VoPlayer.get_vo(get_tree())
 		if _t > _page_end() + hold and (vo2 == null or not vo2.busy()):

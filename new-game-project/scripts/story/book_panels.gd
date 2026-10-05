@@ -289,6 +289,14 @@ static func _villain(ci: CanvasItem, sz: Vector2, t: float) -> void:
 static func _capture(ci: CanvasItem, sz: Vector2, t: float) -> void:
 	A.fill_bg(ci, sz, Color("0d0618"), Color("2a0e45"))
 	A.halftone(ci, sz, Color(0.7, 0.4, 1.0, 0.14), 14.0, 5.0, Vector2(0.5, 1.0))
+	cages(ci, sz, t)
+	# a pool of ink below
+	for k in 7:
+		ci.draw_circle(Vector2(sz.x * (k / 6.0), sz.y * 1.02 + sin(t + k) * 4.0), sz.y * 0.09, Color("12051f"))
+
+
+## The three captured heroes in their hanging ink cages (no background).
+static func cages(ci: CanvasItem, sz: Vector2, t: float) -> void:
 	var n := 3
 	var gap := minf(sz.x / 3.2, sz.y * 0.42)
 	var s := gap / 300.0
@@ -305,9 +313,6 @@ static func _capture(ci: CanvasItem, sz: Vector2, t: float) -> void:
 			var dt := fposmod(t * 0.8 + d * 0.33 + i * 0.21, 1.0)
 			var dx := cx + (d - 1) * 50.0 * s
 			ci.draw_circle(Vector2(dx, cy + 125.0 * s + dt * sz.y * 0.4), (6.0 - 3.0 * dt) * maxf(s, 0.5), Color(0.1, 0.02, 0.18, 1.0 - dt))
-	# a pool of ink below
-	for k in 7:
-		ci.draw_circle(Vector2(sz.x * (k / 6.0), sz.y * 1.02 + sin(t + k) * 4.0), sz.y * 0.09, Color("12051f"))
 
 
 # --- one hero escaped -------------------------------------------------------------------------------
