@@ -91,6 +91,8 @@ func _ready() -> void:
 	key(KEY_J, false)
 	key(KEY_S, false)
 	ok(bounced and b._air_jump, "pogo: S + J bounces off an enemy and gives a jump back")
+	await frames(6)
+	ok(b._anim.anim == "pogo" and b._anim.key.begins_with("hero_pogo_"), "the pogo frames play after the bounce (%s)" % b._anim.key)
 	# dive strike
 	b.hero_pos = Vector2(470, 330)
 	b._vel = Vector2.ZERO

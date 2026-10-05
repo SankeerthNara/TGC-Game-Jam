@@ -560,3 +560,15 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   no console errors.
 - Disclosed: CREDITS.md (voices George, a Voice Design original, Jett), docs/AI_USAGE.md, the itch
   page text (new "AI disclosure" section) and the in-game credits.
+
+### 13. Antigravity's parkour frames (merged 23d4f2e)
+- Merged hero_wallslide 1-3, walljump 1-3, airdash 1-3, dive 1-3, pogo 1-2 (2K and 720p);
+  conflict in docs/AI_USAGE.md kept both sides; cleanup removed trapped white from two frames.
+- Wired: HeroAnimator already finds wallslide/walljump/airdash/dive by name; new hook: the pogo
+  frames play for 0.3 s after every pogo bounce (enemy, paper bat, book, ink). Decision: the slide
+  frames show the hero facing the wall with a hand on it, so while sliding he now faces the wall
+  (before: away from it). The 720p pixel versions are in the repo; the brawler has no parkour moves.
+- In game (`docs/captures/parkour_frames_ingame.png`, from `scripts/tools/parkour_shot.tscn`):
+  scale and baseline match the other frames, no popping. Parkour test 9/9 (new: the pogo frames
+  play), anim 18/18, flow 0 fails, arena bots win (Ink Baron 34 s, opera 56 s, Narrator 73 s).
+  Web build re-exported. Stopping here for Sankeerth's playtest.

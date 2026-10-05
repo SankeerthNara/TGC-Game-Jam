@@ -122,7 +122,7 @@ var _anim := HeroAnimator.new("hero", {"idle": ["hero_idle"], "run": ["hero_run1
 	"dash": ["hero_dash"], "hurt": ["hero_hurt"], "skid": ["hero_idle"], "land": ["hero_idle"], "heal": ["hero_idle"],
 	"turn": ["hero_idle"], "blade": ["hero_attack"], "ko": ["hero_hurt"],
 	"wallslide": ["hero_jump_6"], "walljump": ["hero_jump_2"], "airdash": ["hero_dash_1", "hero_dash_2", "hero_dash_3"],
-	"dive": ["hero_downslash_2", "hero_downslash_3"],
+	"dive": ["hero_downslash_2", "hero_downslash_3"], "pogo": ["hero_jump_3"],
 	"parry": ["hero_blade_1"], "riposte": ["hero_attack3_1", "hero_attack3_2", "hero_attack3_3", "hero_attack3_4"]},
 	{"attack_up": "upslash", "attack_down": "downslash"})
 var _blade_t := 0.0 ## the Light Blade swing is playing
@@ -137,6 +137,7 @@ var _wj_lock := 0.0 ## after a wall jump the push away from the wall can't be st
 var _sliding := false
 var _air_jump := false ## a pogo refreshes one jump in the air
 var _dive_t := 0.0 ## > 0: the diagonal dive strike
+var _pogo_t := 0.0 ## > 0: just bounced off something (the pogo frames)
 var _slowmo := 0.0
 var _zoom := 0.0
 var _zoom_at := Vector2(640, 360)
@@ -641,6 +642,7 @@ func _update_hero(delta: float) -> void:
 	_coyote = maxf(0.0, _coyote - delta)
 	_wall_coyote = maxf(0.0, _wall_coyote - delta)
 	_wj_lock = maxf(0.0, _wj_lock - delta)
+	_pogo_t = maxf(0.0, _pogo_t - delta)
 	_combo_t = maxf(0.0, _combo_t - delta)
 	_blade_t = maxf(0.0, _blade_t - delta)
 	_parry_t = maxf(0.0, _parry_t - delta)
@@ -699,7 +701,7 @@ func _update_hero(delta: float) -> void:
 		_sliding = not _ground and _wall != 0 and signf(steer) == float(_wall) and _vel.y > 0.0
 		if _sliding:
 			_vel.y = minf(_vel.y, WALL_SLIDE)
-			_face = -float(_wall)
+			_face = float(_wall) # the slide frames face the wall, a hand on it
 			if int(_t * 12.0) != int((_t - delta) * 12.0):
 				_fx.append({"kind": "dust", "pos": hero_pos + Vector2(float(_wall) * 16.0, -60.0), "vel": Vector2(-float(_wall) * 40.0, -30.0), "t": 0.0, "life": 0.35, "size": 3.0})
 	if _ground:
@@ -787,6 +789,7 @@ func _update_hero(delta: float) -> void:
 				if float(d["warn"]) <= 0.0 and box.grow(10.0).has_point(Vector2(float(d["x"]), float(d["y"]))):
 					d["y"] = 9999.0
 					_vel.y = -760.0
+					_pogo_t = 0.3
 					_air_dash = true
 					_air_jump = true
 					_fx.append({"kind": "spark", "pos": Vector2(float(d["x"]), float(d["y"])), "t": 0.0, "life": 0.25, "size": 1.0})
@@ -883,6 +886,7 @@ func _pogo_props(box: Rect2) -> bool:
 
 
 func _bounce_up(at: Vector2) -> void:
+	_pogo_t = 0.3
 	_vel.y = -760.0
 	_air_dash = true
 	_air_jump = true
@@ -932,6 +936,8 @@ func _run_physics(move: float, delta: float) -> float:
 func _anim_name() -> String:
 	if _dive_t > 0.0:
 		return "dive"
+	if _pogo_t > 0.0 and not _ground:
+		return "pogo"
 	if _sliding:
 		return "wallslide"
 	if _wj_lock > 0.0:
@@ -1063,6 +1069,7 @@ func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool, pierce := false) -> void:
 		_vel.y = -760.0
 		_air_dash = true
 		_air_jump = true
+		_pogo_t = 0.3
 	elif _atk_dir == "side":
 		_vel.x -= _face * 140.0
 	if e.dead:

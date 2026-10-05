@@ -26,7 +26,7 @@ var skip := {}
 ## anim -> frames per second
 var rates := {"idle": 8.0, "run": 16.0, "runstart": 18.0, "jump": 10.0, "fall": 10.0, "attack1": 24.0, "attack2": 24.0,
 	"attack3": 18.0, "attack_up": 22.0, "attack_down": 22.0, "dash": 16.0, "roll": 16.0, "hurt": 12.0,
-	"skid": 20.0, "land": 16.0, "heal": 8.0, "counter": 20.0, "turn": 18.0, "blade": 14.0, "ko": 8.0, "parry": 14.0}
+	"skid": 20.0, "land": 16.0, "heal": 8.0, "counter": 20.0, "turn": 18.0, "blade": 14.0, "ko": 8.0, "parry": 14.0, "pogo": 10.0, "wallslide": 8.0, "walljump": 14.0, "airdash": 18.0, "dive": 12.0}
 
 var anim := "idle"
 var t := 0.0 ## time in the current animation
