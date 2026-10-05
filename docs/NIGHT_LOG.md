@@ -425,3 +425,28 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   cycle strip `run_cycles_full.png`): no blade flicker, no size pop, no seam at the wrap.
 - Tests: anim sets 18/18 (new check: 720p run uses all 10 frames), flow 0 fails. Web build re-exported.
   No frames left to redraw.
+
+### 8. Parry reverted; parkour-driven 2K (Sankeerth's correction: "parkour", not "parry")
+- The parry/posture/guard system (698d040) is reverted as a normal revert commit (ff0b588); L stays the
+  Light Blade. `git revert ff0b588` brings it back in one step if it is ever wanted. Telegraphs will be
+  folded into the parkour work where they help.
+- Brief from the reference video (Silksong-style locked arena fight): the fight lives in the air: wall
+  clings, wall jumps, pogo bounces, air dash, diagonal dive strikes, escalating waves.
+
+**Stage 1: the hero's parkour moves (2K)**
+- **Wall slide:** holding toward a wall in the air slides down it slowly (170 px/s), facing away.
+- **Wall jump:** Z on a wall (or within 0.12 s of leaving it) pushes up and away; the push can't be
+  steered for 0.15 s. Walls are the edges of a locked arena and any solid block (new `walls` on
+  BossFight: land on top, bump your head below, cling to the sides).
+- **One air dash** (K in the air), given back by landing, touching a wall or a pogo.
+- **Pogo** (S + J in the air): bounces off enemies and now off falling ink too; it refreshes the air dash
+  and one jump in the air.
+- **Dive strike** (S + K in the air): fast diagonal strike down and forward; it damages and bounces off
+  what it hits (enemy or falling ink), giving the air dash and a jump back; landing kicks up dust.
+- Juice: a frame of pure white on every enemy hit, radial speed lines on dashes, dives and wall jumps,
+  slow motion and a slight camera nudge when a wave is cleared and on dive hits.
+- Animation names for Antigravity (fall back to existing frames until they arrive): `hero_wallslide`,
+  `hero_walljump`, `hero_airdash`, `hero_dive` (_1..N).
+- New `scripts/tools/parkour_test.tscn` (real key presses): wall slide, wall contact, wall jump, one
+  air dash, pogo (bounce + jump back), dive strike (starts, hits, bounces): 8/8. Flow 0 fails,
+  controls 11/11, arena bots win.

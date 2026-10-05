@@ -28,6 +28,7 @@ var state := "enter"
 var st := 0.0 ## time in the current state
 var cd := 1.0 ## cooldown before the next attack
 var flash := 0.0
+var whiteout := 0.0 ## a frame of pure white when hit
 var recoil := 0.0 ## 1 when hit, fades: the body snaps away from the blow
 var recoil_dir := 1.0
 var stagger := 0.0
@@ -86,6 +87,7 @@ func hits(hero_box: Rect2) -> bool:
 func take_hit(dmg: float, from_x: float) -> void:
 	hp -= dmg
 	flash = 1.0
+	whiteout = 0.06
 	recoil = 1.0
 	recoil_dir = signf(pos.x - from_x) if pos.x != from_x else -dir
 	if kind in ["lancer", "bat", "bomb"]:
@@ -103,6 +105,7 @@ func update(dt: float, fight: Node) -> void:
 	t += dt
 	st += dt
 	flash = maxf(0.0, flash - dt * 5.0)
+	whiteout = maxf(0.0, whiteout - dt)
 	recoil = maxf(0.0, recoil - dt * 6.0)
 	stagger = maxf(0.0, stagger - dt)
 	var hero: Vector2 = fight.hero_pos
@@ -425,6 +428,8 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 			elif state in ["lunge", "slam", "charge", "sweep"]:
 				rot = 0.12 * dir
 	var tint := Color(1, 1.0 - flash * 0.6, 1.0 - flash * 0.6, a)
+	if whiteout > 0.0:
+		tint = Color(8, 8, 8, a) # blown out to white for a frame
 	if recoil > 0.0:
 		# knocked back from the side the blow came from (bosses barely budge)
 		var heavy := 0.35 if kind in ["baron", "narrator", "brute"] else 1.0

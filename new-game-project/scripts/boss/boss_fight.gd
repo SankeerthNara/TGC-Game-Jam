@@ -58,6 +58,8 @@ var level_width := 1280.0
 var platforms: Array[Rect2] = []
 var roamers: Array = [] ## [kind, Vector2]
 var arena_x := 0.0
+## Solid blocks (bookshelves, walls): the hero lands on them, bumps his head and clings to their sides.
+var walls: Array[Rect2] = []
 var caged_heroes := false ## the three captured heroes hang in cages (the final stage)
 var _cam := 0.0
 var _lock_l := LEFT_X
@@ -85,10 +87,25 @@ var _anim := HeroAnimator.new("hero", {"idle": ["hero_idle"], "run": ["hero_run1
 	"jump": ["hero_jump"], "fall": ["hero_jump"], "attack1": ["hero_attack"], "attack2": ["hero_attack"],
 	"attack3": ["hero_attack"], "attack_up": ["hero_attack"], "attack_down": ["hero_jump"],
 	"dash": ["hero_dash"], "hurt": ["hero_hurt"], "skid": ["hero_idle"], "land": ["hero_idle"], "heal": ["hero_idle"],
-	"turn": ["hero_idle"], "blade": ["hero_attack"], "ko": ["hero_hurt"]},
+	"turn": ["hero_idle"], "blade": ["hero_attack"], "ko": ["hero_hurt"],
+	"wallslide": ["hero_jump_6"], "walljump": ["hero_jump_2"], "airdash": ["hero_dash_1", "hero_dash_2", "hero_dash_3"],
+	"dive": ["hero_downslash_2", "hero_downslash_3"]},
 	{"attack_up": "upslash", "attack_down": "downslash"})
 var _blade_t := 0.0 ## the Light Blade swing is playing
 var _jump_buf := 0.0
+# --- parkour: wall slide and wall jump, one air dash, pogo, dive strike
+const WALL_SLIDE := 170.0 ## fall speed while sliding down a wall
+const WALL_JUMP := Vector2(520.0, -840.0)
+var _wall := 0 ## -1 / +1: a wall touching the hero's left / right side
+var _wall_side := 0 ## the last wall touched (for the wall jump's coyote time)
+var _wall_coyote := 0.0
+var _wj_lock := 0.0 ## after a wall jump the push away from the wall can't be steered for a moment
+var _sliding := false
+var _air_jump := false ## a pogo refreshes one jump in the air
+var _dive_t := 0.0 ## > 0: the diagonal dive strike
+var _slowmo := 0.0
+var _zoom := 0.0
+var _zoom_at := Vector2(640, 360)
 var _dash_t := 0.0
 var _dash_cd := 0.0
 var _air_dash := true
@@ -341,11 +358,17 @@ func _process(delta: float) -> void:
 	_shake = maxf(0.0, _shake - delta * 40.0)
 	_white = maxf(0.0, _white - delta * 2.5)
 	_hurt_flash = maxf(0.0, _hurt_flash - delta * 2.5)
+	_zoom = maxf(0.0, _zoom - delta * 1.8)
+	pivot_offset = _zoom_at
+	scale = Vector2.ONE * (1.0 + 0.12 * _zoom * _zoom)
 	_update_fx(delta)
 	if _freeze > 0.0:
 		_freeze -= delta # hit-stop: the world holds its breath
 		queue_redraw()
 		return
+	if _slowmo > 0.0:
+		_slowmo -= delta
+		delta *= 0.35
 	match _phase:
 		"round_intro":
 			_gate = move_toward(_gate, 0.0, delta * 2.0)
@@ -376,6 +399,7 @@ func _process(delta: float) -> void:
 			_update_hero(delta)
 			_update_world(delta)
 			if _pending.is_empty() and _enemies.is_empty() and _phase == "wave":
+				_big_hit(hero_center(), 0.4, 0.5)
 				_wave_done()
 		"retry":
 			_anim.update(delta, "ko", Vector2.ZERO, _face, RUN, true)
@@ -429,6 +453,8 @@ func _update_hero(delta: float) -> void:
 	_slow = maxf(0.0, _slow - delta)
 	_jump_buf = maxf(0.0, _jump_buf - delta)
 	_coyote = maxf(0.0, _coyote - delta)
+	_wall_coyote = maxf(0.0, _wall_coyote - delta)
+	_wj_lock = maxf(0.0, _wj_lock - delta)
 	_combo_t = maxf(0.0, _combo_t - delta)
 	_blade_t = maxf(0.0, _blade_t - delta)
 	_land = maxf(0.0, _land - delta * 6.0)
@@ -436,6 +462,9 @@ func _update_hero(delta: float) -> void:
 		_atk_buf -= delta
 		_start_attack()
 	var move := Input.get_axis("move_left", "move_right") # arrows or A / D
+	var steer := move
+	if _wj_lock > 0.0:
+		move = 0.0 # just pushed off a wall
 	if _heal_t >= 0.0:
 		_heal_t += delta
 		move = 0.0
@@ -446,7 +475,9 @@ func _update_hero(delta: float) -> void:
 			_fx.append({"kind": "ring", "pos": hero_center(), "t": 0.0, "life": 0.5, "col": Color("8ef0ff")})
 			_say("HEAL!", hero_center() + Vector2(0, -60), Color("8ef0ff"), 40)
 			EventBus.sound_requested.emit("heal")
-	if _dash_t > 0.0:
+	if _dive_t > 0.0:
+		_update_dive(delta)
+	elif _dash_t > 0.0:
 		_dash_t -= delta
 		_vel.y = 0.0
 		if _light_dash:
@@ -460,15 +491,47 @@ func _update_hero(delta: float) -> void:
 	else:
 		if move != 0.0 and _atk_t <= 0.1:
 			_face = move
-		_vel.x = _run_physics(move, delta)
+		if _wj_lock > 0.0:
+			_vel.x = move_toward(_vel.x, 0.0, 300.0 * delta)
+		else:
+			_vel.x = _run_physics(move, delta)
 		_vel.y = minf(_vel.y + GRAV * delta, 1150.0)
+		# holding toward a wall in the air: slide down it slowly
+		_sliding = not _ground and _wall != 0 and signf(steer) == float(_wall) and _vel.y > 0.0
+		if _sliding:
+			_vel.y = minf(_vel.y, WALL_SLIDE)
+			_face = -float(_wall)
+			if int(_t * 12.0) != int((_t - delta) * 12.0):
+				_fx.append({"kind": "dust", "pos": hero_pos + Vector2(float(_wall) * 16.0, -60.0), "vel": Vector2(-float(_wall) * 40.0, -30.0), "t": 0.0, "life": 0.35, "size": 3.0})
 	if _ground:
 		_coyote = 0.1
 		_air_dash = true
+		_air_jump = false
+	if _wall != 0 and not _ground:
+		_wall_coyote = 0.12
+		_wall_side = _wall
+		_air_dash = true # touching a wall gives the air dash back
 	if _jump_buf > 0.0 and _coyote > 0.0 and _heal_t < 0.0:
 		_vel.y = JUMP_V
 		_ground = false
 		_coyote = 0.0
+		_jump_buf = 0.0
+		_anim.jumped()
+		EventBus.sound_requested.emit("hero_jump")
+	elif _jump_buf > 0.0 and _wall_coyote > 0.0 and not _ground and _heal_t < 0.0:
+		# wall jump: up and away from the wall
+		_vel = Vector2(-float(_wall_side) * WALL_JUMP.x, WALL_JUMP.y)
+		_face = -float(_wall_side)
+		_wj_lock = 0.15
+		_wall_coyote = 0.0
+		_jump_buf = 0.0
+		_dive_t = 0.0
+		_anim.jumped()
+		_fx.append({"kind": "speed", "pos": hero_center(), "dir": Vector2(-float(_wall_side), -1.0).normalized(), "t": 0.0, "life": 0.25})
+		EventBus.sound_requested.emit("hero_jump")
+	elif _jump_buf > 0.0 and _air_jump and not _ground and _heal_t < 0.0:
+		_vel.y = JUMP_V * 0.9 # the jump a pogo gave back
+		_air_jump = false
 		_jump_buf = 0.0
 		_anim.jumped()
 		EventBus.sound_requested.emit("hero_jump")
@@ -486,6 +549,7 @@ func _update_hero(delta: float) -> void:
 			hero_pos.y = rim.position.y
 			_vel.y = 0.0
 			_ground = true
+	_collide_walls(prev_y, delta)
 	# the camera follows in wide levels and frames the locked fight
 	var cam_target := clampf(hero_pos.x - 560.0, 0.0, level_width - 1280.0) if _exploring else clampf(center_x() - 640.0, 0.0, maxf(0.0, level_width - 1280.0))
 	_cam = lerpf(_cam, cam_target, minf(1.0, delta * 5.0))
@@ -508,6 +572,100 @@ func _update_hero(delta: float) -> void:
 			if not _atk_hit.has(e) and e.state != "enter" and e.hurt_box().intersects(box):
 				_atk_hit[e] = true
 				_hit_enemy(e, 1.0, _atk_dir == "down")
+		if _atk_dir == "down" and not _ground:
+			# a down-slash bounces off falling ink too
+			for d in _drops:
+				if float(d["warn"]) <= 0.0 and box.grow(10.0).has_point(Vector2(float(d["x"]), float(d["y"]))):
+					d["y"] = 9999.0
+					_vel.y = -760.0
+					_air_dash = true
+					_air_jump = true
+					_fx.append({"kind": "spark", "pos": Vector2(float(d["x"]), float(d["y"])), "t": 0.0, "life": 0.25, "size": 1.0})
+					EventBus.sound_requested.emit("hit")
+					break
+
+
+## Solid blocks: land on top, bump the head below, stop at the sides (and cling to them).
+## The edges of the stage are walls too.
+func _collide_walls(prev_y: float, delta: float) -> void:
+	_wall = 0
+	var prev_x := hero_pos.x - _vel.x * delta
+	for w in walls:
+		var hb := Rect2(hero_pos + Vector2(-17, -86), Vector2(34, 84))
+		if not hb.intersects(w):
+			continue
+		if prev_y <= w.position.y + 1.0 and _vel.y >= 0.0:
+			hero_pos.y = w.position.y
+			_vel.y = 0.0
+			_ground = true
+		elif prev_y - 86.0 >= w.end.y - 1.0 and _vel.y < 0.0:
+			hero_pos.y = w.end.y + 86.0
+			_vel.y = 0.0
+		elif prev_x <= w.position.x + 17.0:
+			hero_pos.x = w.position.x - 17.0
+			_vel.x = minf(_vel.x, 0.0)
+		else:
+			hero_pos.x = w.end.x + 17.0
+			_vel.x = maxf(_vel.x, 0.0)
+	if _ground:
+		return
+	var body := Rect2(hero_pos + Vector2(-17, -80), Vector2(34, 60))
+	for w in walls:
+		if body.grow_individual(2.0, 0.0, 0.0, 0.0).intersects(w):
+			_wall = -1
+		elif body.grow_individual(0.0, 0.0, 2.0, 0.0).intersects(w):
+			_wall = 1
+	if hero_pos.x <= bound_l() + 0.5:
+		_wall = -1
+	elif hero_pos.x >= bound_r() - 0.5:
+		_wall = 1
+
+
+## Down + K in the air: a fast diagonal strike down and forward; it bounces off whatever it hits.
+func _start_dive() -> void:
+	_dive_t = 0.45
+	_air_dash = false
+	_atk_hit.clear()
+	_invuln = maxf(_invuln, 0.15)
+	_fx.append({"kind": "speed", "pos": hero_center(), "dir": Vector2(_face, 1.2).normalized(), "t": 0.0, "life": 0.3})
+	EventBus.sound_requested.emit("dash")
+
+
+func _update_dive(delta: float) -> void:
+	_dive_t -= delta
+	_vel = Vector2(_face * 640.0, 980.0)
+	var box := _hero_box().grow(18.0)
+	for e in _enemies:
+		if not e.dead and e.state != "enter" and e.hurt_box().intersects(box):
+			_hit_enemy(e, 2.0, false)
+			_dive_bounce()
+			_big_hit(e.center(), 0.5)
+			return
+	for d in _drops:
+		if float(d["warn"]) <= 0.0 and box.has_point(Vector2(float(d["x"]), float(d["y"]))):
+			d["y"] = 9999.0
+			_dive_bounce()
+			return
+	if _ground or _dive_t <= 0.0:
+		_dive_t = 0.0
+		if _ground:
+			shake(6.0)
+			for k in 8:
+				_fx.append({"kind": "dust", "pos": hero_pos + Vector2(randf_range(-20, 20), -4), "vel": Vector2(randf_range(-220, 220), randf_range(-200, -60)), "t": 0.0, "life": 0.45, "size": randf_range(4, 8)})
+
+
+func _dive_bounce() -> void:
+	_dive_t = 0.0
+	_vel = Vector2(-_face * 260.0, -760.0)
+	_air_dash = true
+	_air_jump = true
+
+
+## A camera nudge toward a big hit, and slow motion (a wave cleared).
+func _big_hit(at: Vector2, zoom: float, slow := 0.0) -> void:
+	_zoom = maxf(_zoom, zoom)
+	_zoom_at = at - Vector2(_cam, 0)
+	_slowmo = maxf(_slowmo, slow)
 
 
 ## Ground and air feel: speed builds up and runs out with a short slide, turning at speed skids,
@@ -535,6 +693,14 @@ func _run_physics(move: float, delta: float) -> float:
 
 ## Which animation the hero's state asks for.
 func _anim_name() -> String:
+	if _dive_t > 0.0:
+		return "dive"
+	if _sliding:
+		return "wallslide"
+	if _wj_lock > 0.0:
+		return "walljump"
+	if _dash_t > 0.0 and not _ground:
+		return "airdash"
 	if _hp <= 0:
 		return "ko"
 	if _blade_t > 0.0:
@@ -617,6 +783,7 @@ func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool) -> void:
 	if pogo:
 		_vel.y = -760.0
 		_air_dash = true
+		_air_jump = true
 	elif _atk_dir == "side":
 		_vel.x -= _face * 140.0
 	if e.dead:
@@ -686,7 +853,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not _start_attack():
 			_atk_buf = 0.2
 	elif event.is_action("dash"):
-		if _dash_cd <= 0.0 and (_ground or _air_dash) and _heal_t < 0.0:
+		if not _ground and Input.is_action_pressed("move_down") and _air_dash and _heal_t < 0.0 and _dive_t <= 0.0:
+			_start_dive()
+		elif _dash_cd <= 0.0 and (_ground or _air_dash) and _heal_t < 0.0:
 			_dash(false)
 	elif event.is_action("power"):
 		_power()
@@ -705,6 +874,7 @@ func _dash(light: bool) -> void:
 	_vel.y = 0.0
 	_light_dash = light
 	_atk_hit.clear()
+	_fx.append({"kind": "speed", "pos": hero_center(), "dir": Vector2(_face, 0), "t": 0.0, "life": 0.25})
 	if not _ground:
 		_air_dash = false
 	EventBus.sound_requested.emit("dash")
@@ -1127,6 +1297,14 @@ func _draw_fx(f: Dictionary, off: Vector2) -> void:
 	match String(f["kind"]):
 		"spark":
 			ArenaArt.hit_spark(self, f["pos"], k, float(f["size"]))
+		"speed":
+			# radial speed lines streaming back from a dash or dive
+			var sd: Vector2 = f["dir"]
+			var sp: Vector2 = f["pos"]
+			for i in 9:
+				var off2 := sd.orthogonal() * (i - 4) * 9.0
+				var a0 := sp + off2 - sd * (30.0 + 160.0 * k + (i % 3) * 20.0)
+				draw_line(a0, a0 - sd * (60.0 + (i % 2) * 40.0) * (1.0 - k), Color(1, 0.97, 0.85, 0.7 * (1.0 - k)), 3.0)
 		"ink":
 			draw_circle(f["pos"], maxf(0.5, float(f["size"]) * (1.0 - k)), Color(0.15, 0.06, 0.2, 1.0 - k))
 		"dust":
