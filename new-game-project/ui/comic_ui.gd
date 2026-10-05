@@ -365,6 +365,18 @@ func _build_pause_modal(parent: Control) -> void:
 		btn_sfx.text = "SFX: %s" % ("OFF" if _sfx_muted else "ON"))
 	menu_vbox.add_child(btn_sfx)
 
+	var btn_voice := _make_comic_button("VOICE: 100%")
+	btn_voice.custom_minimum_size = Vector2(0, 42)
+	btn_voice.pressed.connect(func() -> void:
+		var vo := VoPlayer.get_vo(get_tree())
+		if vo == null:
+			return
+		var steps := [1.0, 0.5, 0.0]
+		var nxt: float = steps[(steps.find(vo.volume) + 1) % steps.size()] if steps.has(vo.volume) else 1.0
+		vo.set_volume(nxt)
+		btn_voice.text = "VOICE: %s" % ("OFF" if nxt <= 0.0 else "%d%%" % int(nxt * 100.0)))
+	menu_vbox.add_child(btn_voice)
+
 	var btn_restart := _make_comic_button("RESTART LEVEL")
 	btn_restart.custom_minimum_size = Vector2(0, 42)
 	btn_restart.pressed.connect(func() -> void:

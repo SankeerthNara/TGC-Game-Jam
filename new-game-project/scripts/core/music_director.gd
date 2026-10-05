@@ -204,7 +204,8 @@ static func ensure_limiter() -> void:
 
 func _process(delta: float) -> void:
 	var comms: Node = get_tree().get_first_node_in_group("comms")
-	var speaking: bool = comms != null and comms.busy() and not comms.dead
+	var vo := VoPlayer.get_vo(get_tree())
+	var speaking: bool = (comms != null and comms.busy() and not comms.dead) or (vo != null and vo.busy())
 	_duck = move_toward(_duck, 1.0 if speaking else 0.0, delta * (4.0 if speaking else 1.5))
 	var state: String = main.state if main != null else "menu"
 	if state != _last_state:

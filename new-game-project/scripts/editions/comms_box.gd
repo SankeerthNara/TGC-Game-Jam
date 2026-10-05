@@ -54,7 +54,7 @@ func say(text: String, who := "narrator", hold := 3.5) -> void:
 	while i < lines.size():
 		var chunk := " ".join(lines.slice(i, i + 3))
 		i += 3
-		pages.append({"text": chunk, "who": who, "hold": hold if i >= lines.size() else 1.4, "cont": not pages.is_empty()})
+		pages.append({"text": chunk, "who": who, "hold": hold if i >= lines.size() else 1.4, "cont": not pages.is_empty(), "vo": text if pages.is_empty() else ""})
 	# old waiting lines give way, so the box never lags far behind the game
 	while _queue.size() + pages.size() > 6 and not _queue.is_empty():
 		_queue.pop_front()
@@ -99,6 +99,11 @@ func _next() -> void:
 		return
 	_cur = _queue.pop_front()
 	_t = 0.0
+	if String(_cur.get("vo", "")) != "":
+		var vo := VoPlayer.get_vo(get_tree())
+		if vo != null and vo.has_clip(String(_cur["vo"])):
+			vo.queue(String(_cur["vo"]))
+			_cur["voiced"] = true
 	if not _cur.get("cont", false):
 		EventBus.sound_requested.emit("comms_beep")
 
@@ -109,7 +114,9 @@ func _process(delta: float) -> void:
 	if not _cur.is_empty() and not _held() and not get_tree().paused:
 		_t += delta
 		var full := String(_cur["text"])
-		if _t > full.length() / CPS + float(_cur["hold"]):
+		var vo := VoPlayer.get_vo(get_tree())
+		var talking: bool = _cur.get("voiced", false) and vo != null and vo.busy()
+		if _t > full.length() / CPS + float(_cur["hold"]) and not talking:
 			_next()
 	_draw_node.queue_redraw()
 

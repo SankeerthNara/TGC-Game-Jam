@@ -61,6 +61,9 @@ func show_at(page: int, t: float) -> void:
 
 ## Finishes the cutscene at once (also used by tests).
 func skip() -> void:
+	var vo := VoPlayer.get_vo(get_tree()) if is_inside_tree() else null
+	if vo != null:
+		vo.stop()
 	if not _done:
 		_done = true
 		finished.emit()
@@ -156,9 +159,18 @@ func _process(delta: float) -> void:
 					_punch[int(f["punch"])] = 1.0
 				if f.has("sound"):
 					EventBus.sound_requested.emit(String(f["sound"]))
+		# voice-over: each caption or bubble speaks as it appears (queued, never cut off)
+		var texts: Array = _pages[_page].get("text", [])
+		for i in texts.size():
+			var at2 := float(texts[i]["at"])
+			if (before < at2 or (before == 0.0 and at2 <= 0.0)) and _t >= at2:
+				var vo := VoPlayer.get_vo(get_tree())
+				if vo != null:
+					vo.queue(String(texts[i]["text"]), "%s/%d/%d" % [kind, _page, i])
 		var hold := float(_pages[_page].get("hold", 2.2))
-		if _t > _page_end() + hold:
-			_next()
+		var vo2 := VoPlayer.get_vo(get_tree())
+		if _t > _page_end() + hold and (vo2 == null or not vo2.busy()):
+			_next() # the page waits for its voice to finish
 	_animate_panels()
 	position = Vector2(randf_range(-_shake, _shake), randf_range(-_shake, _shake)) if _shake > 0.0 else Vector2.ZERO
 	queue_redraw()
@@ -236,6 +248,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _t < _page_end():
 		_t = _page_end() # show the whole page first
+	elif VoPlayer.get_vo(get_tree()) != null and VoPlayer.get_vo(get_tree()).busy():
+		VoPlayer.get_vo(get_tree()).stop() # Z again: cut the voice, then turn the page
+		_next()
 	else:
 		_next()
 

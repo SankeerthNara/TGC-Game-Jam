@@ -77,6 +77,7 @@ func _ready() -> void:
 		director = EditionsDirector.new()
 		add_child(director)
 		director.setup(self)
+	add_child(VoPlayer.new()) # voice-over for the cutscenes and the comms (silent until clips exist)
 	var sfx := SfxPlayer.new() # Codex's sound effects (listens to EventBus)
 	sfx.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(sfx)
