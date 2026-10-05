@@ -12,9 +12,13 @@ static func drive(b: BossFight, press: Callable, tap: Callable) -> void:
 			press.call(k, false)
 		_climb(b, press, tap)
 		return
-	for k in [KEY_J, KEY_Z, KEY_K, KEY_L, KEY_F]:
+	for k in [KEY_J, KEY_K, KEY_L, KEY_F]:
 		press.call(k, false)
-	b.set_meta("z_held", false)
+	var zf: int = b.get_meta("z_frames", 0) + 1
+	b.set_meta("z_frames", zf)
+	if b.get_meta("z_held", false) and (zf > 6 and (b._vel.y >= 0.0 or b._ground)):
+		press.call(KEY_Z, false)
+		b.set_meta("z_held", false)
 	if not b._phase in ["wave", "wave_intro", "explore"]:
 		press.call(KEY_LEFT, false)
 		press.call(KEY_RIGHT, false)
@@ -50,6 +54,15 @@ static func drive(b: BossFight, press: Callable, tap: Callable) -> void:
 			press.call(KEY_LEFT, float(d["x"]) >= hero.x)
 	if danger and b._dash_cd <= 0.0 and randf() < 0.1:
 		tap.call(KEY_K)
+	if best != null and best.armoured_against(hero.x) and absf(best.pos.x - hero.x) < 200.0:
+		# the armoured brute: up and over, then pogo or dive onto it
+		var dvb := best.center() - b.hero_center()
+		if b._ground and not b.get_meta("z_held", false):
+			_jump(b, press)
+		elif not b._ground and dvb.y > 40.0 and b._atk_cd <= 0.0:
+			press.call(KEY_DOWN, true)
+			tap.call(KEY_J)
+		return
 	if best != null and b._atk_cd <= 0.0:
 		var dv := best.center() - b.hero_center()
 		if not b._ground and dv.y > 60.0 and absf(dv.x) < 220.0 and signf(dv.x) == b._face and b._air_dash and randf() < 0.3:

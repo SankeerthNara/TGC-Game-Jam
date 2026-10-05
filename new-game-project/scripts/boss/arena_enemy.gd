@@ -17,6 +17,7 @@ const STATS := {
 	"narrator": {"hp": 60.0, "r": 60.0, "h": 170.0, "s": 1.0},
 	"baron": {"hp": 40.0, "r": 62.0, "h": 170.0, "s": 1.0},
 	"step": {"hp": 999.0, "r": 30.0, "h": 50.0, "s": 1.3},
+	"dancer": {"hp": 4.0, "r": 32.0, "h": 80.0, "s": 1.2},
 }
 
 var kind := "lancer"
@@ -57,7 +58,7 @@ func radius() -> float:
 
 
 func flying() -> bool:
-	return kind in ["bat", "bomb", "narrator", "step"]
+	return kind in ["bat", "bomb", "narrator", "step", "dancer"]
 
 
 ## Centre of the body, for hits.
@@ -82,6 +83,8 @@ func hits(hero_box: Rect2) -> bool:
 	var box := hurt_box().grow(-6.0)
 	if kind == "lancer" and state == "lunge":
 		box = box.merge(Rect2(pos + Vector2(dir * 14.0, -64), Vector2(dir * 95.0, 14)).abs())
+	if kind == "dancer" and state != "spin":
+		return false
 	if kind == "brute" and state == "slam" and st < 0.15:
 		box = box.merge(Rect2(pos + Vector2(dir * 35.0, -70), Vector2(dir * 105.0, 70)).abs())
 	return box.intersects(hero_box)
@@ -134,6 +137,8 @@ func update(dt: float, fight: Node) -> void:
 			_fl = fight.bound_l()
 			_fr = fight.bound_r()
 			_bat(dt, hc)
+		"dancer":
+			_dancer(dt, hc, fight)
 		"bomb":
 			_bomb(dt, hc, fight)
 		"brute":
@@ -210,6 +215,48 @@ func _bat(dt: float, hc: Vector2) -> void:
 				st = 0.0
 				cd = randf_range(1.2, 2.2)
 	pos.x = clampf(pos.x, _fl - 10.0, _fr + 10.0)
+
+
+## The aerial dancer: circles high under the ceiling, then spins down at the hero and swirls back up.
+## Out of reach from the floor: wall jumps, the air dash and pogos get you up to it.
+func _dancer(dt: float, hc: Vector2, fight: Node) -> void:
+	var cx: float = fight.center_x()
+	match state:
+		"hover":
+			var ang := t * 0.9 + seed
+			target = Vector2(cx + cos(ang) * 380.0, floor_y - 430.0 + sin(ang * 2.0) * 50.0)
+			pos = pos.move_toward(target, 300.0 * dt)
+			cd -= dt
+			if cd <= 0.0:
+				state = "windup"
+				st = 0.0
+				target = hc
+				EventBus.sound_requested.emit("enemy_windup")
+		"windup":
+			pos += Vector2(sin(t * 50.0) * 2.0, -20.0 * dt)
+			if st > 0.6:
+				state = "spin"
+				st = 0.0
+				vel = (target - pos).normalized() * 620.0
+		"spin":
+			# a curling dive: the path bends a little as it spins
+			vel = vel.rotated(sin(st * 6.0) * 1.2 * dt)
+			pos += vel * dt
+			if st > 0.9 or pos.y > floor_y - 40.0:
+				state = "rise"
+				st = 0.0
+		"rise":
+			pos = pos.move_toward(Vector2(pos.x, floor_y - 430.0), 420.0 * dt)
+			if st > 0.9:
+				state = "hover"
+				st = 0.0
+				cd = randf_range(1.4, 2.4)
+	pos.x = clampf(pos.x, fight.bound_l(), fight.bound_r())
+
+
+## The brass brute's armour: plain blows to its front bounce off.
+func armoured_against(from_x: float) -> bool:
+	return kind == "brute" and not state in ["slam", "charge_wind"] and (absf(from_x - pos.x) < 6.0 or signf(from_x - pos.x) == dir)
 
 
 func _bomb(dt: float, hc: Vector2, fight: Node) -> void:
@@ -381,7 +428,7 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 	var white := flash
 	_telegraph(ci, time)
 	if _draw_sprite(ci, a, time):
-		var warn := state in ["windup", "charge_wind", "fuse"] or (kind == "baron" and state in ["sweep", "lob", "summon"] and st < 0.75)
+		var warn := state in ["windup", "charge_wind", "fuse"] or (kind == "dancer" and state == "windup") or (kind == "baron" and state in ["sweep", "lob", "summon"] and st < 0.75)
 		if warn:
 			var c2 := center() + Vector2(0, -float(STATS[kind]["h"]) * 0.7)
 			ComicArt.shout(ci, "!", c2 + _o, 40, Color("ffd23f"), 8)
@@ -406,8 +453,8 @@ func draw(ci: CanvasItem, time: float, origin := Vector2.ZERO) -> void:
 		ci.draw_set_transform(_o, 0.0, Vector2.ONE)
 
 
-const SPRITE_KEYS := {"step": "enemy_bat", "lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
-const SPRITE_H := {"step": 90.0, "lancer": 160.0, "bat": 96.0, "brute": 220.0, "baron": 255.0, "narrator": 260.0}
+const SPRITE_KEYS := {"dancer": "enemy_lancer", "step": "enemy_bat", "lancer": "enemy_lancer", "bat": "enemy_bat", "brute": "enemy_brute", "baron": "enemy_baron", "narrator": "narrator_boss"}
+const SPRITE_H := {"dancer": 120.0, "step": 90.0, "lancer": 160.0, "bat": 96.0, "brute": 220.0, "baron": 255.0, "narrator": 260.0}
 
 
 func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
@@ -422,6 +469,14 @@ func _draw_sprite(ci: CanvasItem, a: float, time: float) -> bool:
 	match kind:
 		"bat", "step":
 			feet = pos + _o + Vector2(0, h * 0.5)
+		"dancer":
+			# a whirling ink dancer: ribbons trail behind it, it spins hard when it dives
+			feet = pos + _o + Vector2(0, h * 0.5)
+			rot = st * 18.0 if state == "spin" else sin(t * 3.0) * 0.4
+			for k in 3:
+				var ang := t * 4.0 + k * TAU / 3.0
+				var r0 := pos + _o + Vector2.from_angle(ang) * 24.0
+				ci.draw_line(r0, r0 + Vector2.from_angle(ang + 1.2) * 46.0 - vel.normalized() * 30.0, Color(0.75, 0.4, 1.0, 0.7 * a), 5.0)
 			face = 1.0 if vel.x >= 0.0 else -1.0
 			squash = 1.0 + sin(t * 24.0) * 0.08
 		"narrator":

@@ -77,6 +77,11 @@ var book_columns: Array = []
 ## Waypoints through a climb for the test bot (not used by the game itself).
 var route: Array[Vector2] = []
 var bot_assists := 0
+## Chandeliers to stand on: [Rect2, swing amplitude in px]. Added to the platforms; a swinging one
+## carries the hero standing on it.
+var chandeliers: Array = []
+var _chand_idx: Array[int] = []
+var _chand_base: Array[Rect2] = []
 var _cam_y := 0.0
 var _steps: Array[ArenaEnemy] = []
 var _books: Array[Dictionary] = []
@@ -186,6 +191,10 @@ func _ready() -> void:
 				_bg[key] = load(path)
 	if stage == "opera" or stage == "dark":
 		platforms.append(ArenaArt.PODIUM)
+	for ch: Array in chandeliers:
+		_chand_idx.append(platforms.size())
+		_chand_base.append(ch[0])
+		platforms.append(ch[0])
 	for i in 50:
 		_paper.append(Vector3(randf() * 1280.0, randf() * 720.0, randf()))
 	_begin_round(0)
@@ -438,8 +447,23 @@ func _narrator_hp() -> float:
 	return maxf(50.0, 110.0 * (1.0 - 0.4 * crack_share()) * (1.0 - 0.06 * friends_revealed) * (1.0 + 0.15 * friends_killed))
 
 
+func _swing_chandeliers() -> void:
+	for i in _chand_idx.size():
+		var amp := float(chandeliers[i][1])
+		if amp <= 0.0:
+			continue
+		var r: Rect2 = platforms[_chand_idx[i]]
+		var nx := _chand_base[i].position.x + sin(_t * 1.1 + i) * amp
+		var dx := nx - r.position.x
+		if _ground and absf(hero_pos.y - r.position.y) < 1.0 and hero_pos.x > r.position.x and hero_pos.x < r.end.x:
+			hero_pos.x += dx # it carries the hero
+		r.position.x = nx
+		platforms[_chand_idx[i]] = r
+
+
 func _process(delta: float) -> void:
 	_t += delta
+	_swing_chandeliers()
 	_pt += delta
 	_shake = maxf(0.0, _shake - delta * 40.0)
 	_white = maxf(0.0, _white - delta * 2.5)
@@ -739,7 +763,7 @@ func _update_dive(delta: float) -> void:
 	var box := _hero_box().grow(18.0)
 	for e in _enemies:
 		if not e.dead and e.state != "enter" and e.hurt_box().intersects(box):
-			_hit_enemy(e, 2.0, false)
+			_hit_enemy(e, 2.0, false, true)
 			_dive_bounce()
 			_big_hit(e.center(), 0.5)
 			return
@@ -897,9 +921,18 @@ func _attack_box() -> Rect2:
 	return Rect2(c + Vector2(0.0 if _face > 0.0 else -115.0, -55.0), Vector2(115, 95))
 
 
-func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool) -> void:
+func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool, pierce := false) -> void:
 	if e.dead:
 		return # already beaten: hitting him again would restart the hit-stop forever (powers fire during it)
+	if not pogo and not pierce and e.armoured_against(hero_pos.x) and hero_pos.y > e.pos.y - 130.0:
+		# the brute's armoured front: CLANG. From above (pogo, dive), from behind, or the Light Blade.
+		e.flash = 0.6
+		_freeze = 0.04
+		_vel.x = -_face * 280.0
+		_fx.append({"kind": "spark", "pos": e.center().lerp(hero_center(), 0.4), "t": 0.0, "life": 0.2, "size": 0.9})
+		_say("CLANG!", e.center() + Vector2(0, -80), Color("c9d1d9"), 34)
+		EventBus.sound_requested.emit("enemy_grunt")
+		return
 	if e.kind == "bomb":
 		e.dead = true # a slashed bomb fizzles out
 	else:
@@ -1037,7 +1070,7 @@ func _power() -> void:
 			var reach := Rect2(hero_center() + Vector2(0.0 if _face > 0.0 else -260.0, -110.0), Vector2(260, 190))
 			for e in _enemies:
 				if e.state != "enter" and e.hurt_box().intersects(reach):
-					_hit_enemy(e, 4.0, false)
+					_hit_enemy(e, 4.0, false, true)
 			shake(9.0)
 			_say("LIGHT BLADE!", hero_center() + Vector2(0, -80), GOLD, 46)
 			EventBus.sound_requested.emit("power_prism")
@@ -1215,6 +1248,7 @@ func _draw() -> void:
 	elif not art:
 		ArenaArt.stage_floor(self, size)
 	_draw_climb(off)
+	_draw_chandeliers(off)
 	for c in _corpses:
 		_draw_corpse(c, off)
 	draw_set_transform(off)
@@ -1332,6 +1366,23 @@ func _draw() -> void:
 			ComicArt.shout(self, win_text, Vector2(640, 330), 96, GOLD, 14, -0.04)
 		"lost":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0.3, 0.02, 0.05, clampf(_pt * 0.5, 0.0, 0.85)))
+
+
+func _draw_chandeliers(off: Vector2) -> void:
+	draw_set_transform(off)
+	for i in _chand_idx.size():
+		var r: Rect2 = platforms[_chand_idx[i]]
+		var top := Vector2(r.get_center().x if float(chandeliers[i][1]) <= 0.0 else _chand_base[i].get_center().x, r.position.y - 400.0)
+		draw_line(top, r.get_center() + Vector2(0, -2), Color("1a1206"), 4.0)
+		draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(r.get_center() - Vector2(110, 80), Vector2(220, 160)), false, Color(1, 0.8, 0.45, 0.45))
+		draw_rect(Rect2(r.position + Vector2(-4, -2), Vector2(r.size.x + 8, 12)), Color("1a1206"))
+		draw_rect(Rect2(r.position, Vector2(r.size.x, 8)), Color("c9963c"))
+		var n := int(r.size.x / 30.0)
+		for k in n:
+			var cx := r.position.x + 15.0 + k * 30.0
+			draw_rect(Rect2(Vector2(cx - 3, r.position.y - 14), Vector2(6, 14)), Color("f3e7c9"))
+			draw_circle(Vector2(cx, r.position.y - 18), 4.0 + sin(_t * 9.0 + k) * 1.0, Color(1, 0.8, 0.3, 0.9))
+		draw_colored_polygon(PackedVector2Array([r.position + Vector2(10, 8), r.end + Vector2(-10, -12), Vector2(r.get_center().x, r.end.y + 26)]), Color("8a6424"))
 
 
 ## The climb: bookshelf walls (solid blocks) and, once the last fight is won, the door at the top.

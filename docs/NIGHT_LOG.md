@@ -471,3 +471,18 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   jump to a short hop (that also made the old arena bot's jumps tiny).
 - `scripts/tools/climb_bot_test.tscn`: the library as the game builds it, by the bot: finished in about
   60 s with 4 assists. Full game with bots 11.2 min (library 75 s). Flow 0 fails, parkour 8/8.
+
+**Stage 3: the opera as a locked arena fought in the air**
+- Climbable side walls (the arena edges), the inkwell podium, two chandeliers and a high one that
+  swings (and carries the hero standing on it); chandeliers are drawn with chain, candles and glow
+  (`chandeliers` on BossFight).
+- New enemy, the aerial dancer: circles high under the ceiling (out of reach from the floor), winds up
+  ("!") and spin-dives at the hero along a curling path, then swirls back up; it only hurts while
+  spinning. Reach it with wall jumps, the air dash and pogos, or hit it as it comes down.
+- The brass brute's front is armoured: plain slashes to its face "CLANG" off and push the hero back;
+  pogo or dive onto it from above, hit it from behind, or use the Light Blade.
+- Waves like the reference: lancers and a bat -> two aerial dancers -> a bat swarm while the
+  armoured brute charges -> a final mix (brute, dancer, lancer). Shockwave slams send the player up
+  into the air as before. Decision: no ink puddles (the shockwaves already do that job).
+- The bot jumps over the armoured brute and pogoes it. Arena bots: Ink Baron 30 s, opera 68 s (4 waves),
+  Narrator 57 s. Flow 0 fails.

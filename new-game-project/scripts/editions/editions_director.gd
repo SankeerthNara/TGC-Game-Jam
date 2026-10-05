@@ -207,11 +207,17 @@ func start_2k() -> void:
 func _opera() -> void:
 	_current = _opera
 	var b := _arena("opera")
-	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.3], ["bat", "AC", 3.0], ["lancer", "C", 6.0]],
-		[["brute", "C", 0.0], ["bat", "AL", 3.0], ["bomb", "AR", 5.0], ["lancer", "L", 7.0], ["lancer", "R", 9.0]]]]
+	# a locked arena fought in the air: climbable side walls, the inkwell podium, two chandeliers and a
+	# high one that swings; waves like the reference: lancers and bats -> aerial dancers -> a bat
+	# swarm while the armoured brute charges -> a final mix
+	b.chandeliers = [[Rect2(230, 360, 160, 14), 0.0], [Rect2(890, 360, 160, 14), 0.0], [Rect2(565, 220, 150, 14), 110.0]]
+	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AC", 2.5]],
+		[["dancer", "AL", 0.0], ["dancer", "AR", 1.5]],
+		[["brute", "C", 0.0], ["bat", "AL", 1.0], ["bat", "AR", 1.6], ["bat", "AC", 2.4]],
+		[["brute", "L", 0.0], ["dancer", "AR", 1.5], ["lancer", "R", 3.0]]]]
 	b.win_text = "ENCORE!"
 	b.fight_title = "THE OPERA"
-	b.intro_lines = ["The masked villain's opera. His choir is waiting.", "Two waves, then... him."]
+	b.intro_lines = ["The masked villain's opera: fight it in the air.", "Walls, chandeliers, pogo (S+J), dive (S+K). The brute's front is armoured."]
 	_launch(b)
 	comms.say("The masked villain is close. Clear his choir and he'll have to show himself!", "narrator", 2.0)
 	b.finished.connect(func(_result: String) -> void:
