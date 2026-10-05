@@ -531,3 +531,11 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
 - The rooms were near-black outside the torch (ambient 0.03): in the Editions the ambient is 0.10 and
   the torch reaches further, so floors, walls, crates and consoles read; the darkness and the torch
   stay the point. Captures: `docs/captures/room_240p.png`, `ink_baron_240p.png`. Flow test 0 fails.
+
+### 11. Story panel framing
+- "One hero escaped": the composed panel drew the new dash frame large and tilted, so the hero's head
+  left the top of the panel. It now uses the rising-jump frame (hero_jump_3), smaller and less tilted:
+  the whole hero, cape and sword are inside the panel (`docs/captures/panel_escape_fixed.png`).
+- Checked every other story page of the book, the reveal and the ending at their final moment: all
+  heads and faces are inside their panels (the masked villain's and the unmasking close-ups are tight
+  on purpose and keep the whole face).

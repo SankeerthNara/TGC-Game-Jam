@@ -338,8 +338,9 @@ static func _escape(ci: CanvasItem, sz: Vector2, t: float) -> void:
 		ci.draw_colored_polygon(PackedVector2Array([Vector2(bx - 34, sz.y + 4), tip, Vector2(bx + 34, sz.y + 4)]), Color("140621"))
 		ci.draw_circle(tip, 9.0, Color("140621"))
 	A.speed_lines(ci, sz, Vector2(sz.x * 0.5, sz.y * 0.48), t, Color(1, 1, 1, 0.1))
-	var key := "hero_dash" if Sprites.has("hero_dash") else "hero_jump"
-	if not Sprites.draw(ci, key, Vector2(sz.x * 0.52, sz.y * 0.86 - sin(t * 3.0) * 6.0), sz.y * 0.82, 1.0, Color.WHITE, 1.0, -0.32):
+	# the whole hero inside the panel: a rising leap, head well below the top edge
+	var key := "hero_jump_3" if Sprites.has("hero_jump_3") else "hero_jump"
+	if not Sprites.draw(ci, key, Vector2(sz.x * 0.5, sz.y * 0.9 - sin(t * 3.0) * 6.0), sz.y * 0.7, 1.0, Color.WHITE, 1.0, -0.14):
 		A.hero_bust(ci, 0, Vector2(sz.x * 0.48, sz.y * 0.42), sz.y / 330.0, "determined", t)
 
 
