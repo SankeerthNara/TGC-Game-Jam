@@ -425,3 +425,50 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   cycle strip `run_cycles_full.png`): no blade flicker, no size pop, no seam at the wrap.
 - Tests: anim sets 18/18 (new check: 720p run uses all 10 frames), flow 0 fails. Web build re-exported.
   No frames left to redraw.
+
+### 7. Parry-driven 2K combat (Sankeerth)
+- **Parry:** tap L. Window 0.18 s, then 0.32 s cooldown (no spamming); a successful parry resets it
+  at once so a combo can be parried hit by hit. Perfect parry: clash burst and sparks, white flash,
+  0.1 s hit-stop and 0.35 s of slow motion, "PARRY!", counter sting, +2 ink, the hero is briefly
+  safe, and the next J within 1.6 s is a **riposte** (x4 damage, x3 on bosses; knocks the enemy open).
+  Early or late: no protection. **Hold L (0.3 s)** fires the Light Blade (3 ink), which also breaks
+  through a guard. In the classic relay the other heroes keep L as their power.
+- **Telegraphs:** every wind-up shows a "!" and a star glint on the weapon that flares in the last
+  0.22 s (the moment to press L); the enemy is tinted the same colour. GOLD = parryable
+  (lancer thrust, bat dive, brute punch, Ink Baron cane jab, Narrator quill strike).
+  RED = can't be parried, dash or jump away (brute slam and charge, Ink Baron sweep and ink rain,
+  Narrator dash and slam, ink bomb fuse). One-time tips explain gold, red, guard, riposte and broken.
+- **Posture:** parries fill it fast (lancer 3 parries, brute 4, bosses 8-10), hits slowly (6%, bosses
+  3%), Light Blade 30%; it drains after 2 s without pressure. Full: **broken** for 2.3 s (bosses 2.6),
+  "J!" flashes; the next hit is a **critical strike** (kills a regular enemy; 16% + 4 of a boss's
+  health) with a long hit-stop, white flash, paper burst and a camera punch-in. Small posture bars
+  over enemies; the bosses' under their health bar.
+- **Guarding:** lancer, Ink Baron and Narrator block blows to their front while idle or winding up
+  ("BLOCK", pushed back), so mashing J does nothing; parry, riposte, or hit them from behind (and a
+  down-slash gets past a lancer's guard). Decision: guards are on in 2K only; the 144p Ink Baron
+  (before the lesson) already has parryable gold jabs but doesn't guard.
+- Decision: only attacks hurt now (plus the brute's armoured body); before, walking into any enemy
+  hurt, which with guards would punish the player for standing in parry range.
+- **Enemy roles:** lancer thrust combos of 1-3 (a parried thrust leads straight into the next); bat
+  dive (a parry knocks it to the floor, broken; or hit it in the air); brute: red slam and charge,
+  gold punch; Ink Baron: chains of 1-3 gold cane jabs, red sweep, red ink rain, choristers, and an
+  open moment after each chain or sweep; Narrator: chains of gold quill strikes (2 in phase 1, 3 in
+  phase 2) as he glides in beside the hero, red dash and slam, rain and bats; he rests (open) after.
+- **The library:** no longer one corridor. Three locked fights with breathers (the doors open, "GO >>")
+  and ledges: 1. the parry lesson; 2. a lancer waits on a high ledge (he leaps down if you stay below;
+  or go up to him), another and a bat on the floor; 3. lancer combos, bats, a lancer on a ledge above
+  and an ink bomb (the first red flash). Encounters are generic (`encounters` on BossFight).
+- **Teaching it:** at the first fight the Narrator explains on the comms; a lone trainee lancer only
+  makes slow single thrusts; a steady prompt "TAP L THE MOMENT HIS SPEAR FLASHES GOLD" stays until the
+  first parry, then "NOW J: RIPOSTE". The opera's and the Narrator's cards say gold vs red.
+- **Hero frames:** parry uses hero_blade_1 plus a drawn blade glint; the riposte plays the attack3
+  frames. HeroAnimator will pick up `hero_parry_1..3` and `hero_riposte_1..3` when they land.
+- **Bots** (`scripts/tools/arena_bot.gd`, shared by the arena and playtime tests) now parry gold
+  strikes, riposte, avoid red attacks, don't swing into a guard and finish broken enemies. Results:
+  Ink Baron 29 s (5 parries), opera 37 s (7 parries, 2 criticals), Narrator 53 s (3 parries, 3
+  criticals); full game 10.8 min with bots (library 40 s, was 42), so the total stays in range.
+- Text: HUD ("L parry  hold L: LIGHT BLADE (3)"), fight control lines, intro cards, the Ink Baron's
+  comms line, the pause guide, How to Play, README, ITCH_PAGE.
+- GIFs: `docs/captures/parry_2k.gif` (gold flash, parry, riposte) and `critical_2k.gif` (critical
+  strike with the punch-in). Tests: flow 0 fails, controls 12/12, face 0, anim 18/18, chaos test
+  reaches the end. Web build re-exported.

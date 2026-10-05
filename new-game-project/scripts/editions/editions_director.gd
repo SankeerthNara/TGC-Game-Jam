@@ -85,10 +85,11 @@ func _start_boss_144() -> void:
 	b.boss_name = "THE INK BARON"
 	b.fight_title = "THE INK BARON"
 	b.win_text = "BARON BUSTED!"
-	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "Power: L LIGHT BLADE, %s." % BossFight.POWER_TEXT_BY_KIND[0]]
+	b.guards = false # the cheap edition: nobody guards yet (the library teaches the parry properly)
+	b.intro_lines = ["The Ink Baron blocks the way. Beat his choristers, then him.", "L parry (tap as his cane flashes GOLD)   hold L: Light Blade"]
 	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]]
 	_launch(b)
-	comms.say("Light him up, hero! Z or SPACE jump, J attack, K dash. L fires your light blade, F heals.", "narrator", 2.5)
+	comms.say("Light him up, hero! Z or SPACE jump, J attack, K dash, F heals. Tap L as his cane flashes GOLD to parry; hold L for your light blade.", "narrator", 2.5)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
 		_twist_one())
@@ -173,13 +174,18 @@ func start_2k() -> void:
 	comms.say("The villain's tower. A library first, then his opera. Your friends are close, hero. I can feel it.", "narrator", 2.0)
 	var b := _arena("hall")
 	b.level_width = 3840.0
-	b.arena_x = 3200.0
-	b.platforms = [Rect2(620, 470, 220, 20), Rect2(980, 380, 200, 20), Rect2(1360, 470, 240, 20), Rect2(1800, 420, 220, 20), Rect2(2200, 330, 200, 20), Rect2(2540, 450, 240, 20)]
-	b.roamers = [["lancer", Vector2(1100, 600)], ["bat", Vector2(1500, 260)], ["lancer", Vector2(2000, 600)], ["bat", Vector2(2400, 220)], ["lancer", Vector2(2700, 600)]]
-	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AL", 2.0], ["bat", "AR", 3.5], ["lancer", "C", 5.0]]]]
+	# three locked fights with breathers between them, ledges to fight from above and below:
+	# 1. the parry lesson: one slow lancer; 2. a lancer waits on a high ledge, another and a bat on the
+	# floor; 3. lancer combos, bats, a lancer above and an ink bomb (the first red flash)
+	b.encounters = [[560.0, 360.0, 1420.0], [2050.0, 1900.0, 2960.0], [3080.0, 2760.0, 3800.0]]
+	b.platforms = [Rect2(1480, 470, 200, 20), Rect2(1720, 370, 200, 20), Rect2(2080, 460, 220, 20), Rect2(2600, 350, 260, 20), Rect2(2900, 440, 200, 20), Rect2(3420, 360, 240, 20)]
+	b.waves = [[
+		[["lancer", "R", 0.0, {"trainee": true}]],
+		[["lancer", Vector2(2730, 350), 0.0], ["lancer", "R", 0.6], ["bat", "AL", 3.0]],
+		[["lancer", "L", 0.0], ["lancer", "R", 0.5], ["bat", "AR", 2.5], ["lancer", Vector2(3540, 360), 4.0], ["bomb", "AC", 6.5]]]]
 	b.win_text = "THE HALL IS CLEAR!"
 	b.fight_title = "THE LIBRARY"
-	b.intro_lines = ["The deluxe edition. Light blade ready.", "Z jump   J attack (+UP / +DOWN)   K dash   L blade   F heal"]
+	b.intro_lines = ["The deluxe edition. His choir guards: parry them.", "J attack   K dash   L parry (hold L: Light Blade)   F heal"]
 	_launch(b)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
@@ -194,7 +200,7 @@ func _opera() -> void:
 		[["brute", "C", 0.0], ["bat", "AL", 3.0], ["bomb", "AR", 5.0], ["lancer", "L", 7.0], ["lancer", "R", 9.0]]]]
 	b.win_text = "ENCORE!"
 	b.fight_title = "THE OPERA"
-	b.intro_lines = ["The masked villain's opera. His choir is waiting.", "Two waves, then... him."]
+	b.intro_lines = ["The masked villain's opera. Two waves, then... him.", "GOLD flash: parry (L).   RED flash: dash (K) or jump!"]
 	_launch(b)
 	comms.say("The masked villain is close. Clear his choir and he'll have to show himself!", "narrator", 2.0)
 	b.finished.connect(func(_result: String) -> void:
@@ -228,7 +234,7 @@ func _final_boss() -> void:
 	b.boss_hp_scale = 1.3
 	b.narrator_line = "LET ME WRITE YOUR LAST PAGE!"
 	b.win_text = ""
-	b.intro_lines = ["The Narrator. The one who guided you all along.", "Free the three heroes. L LIGHT BLADE, F heal."]
+	b.intro_lines = ["The Narrator. The one who guided you all along.", "Parry his quill (L), dodge the red, strike when he rests."]
 	_launch(b)
 	comms.say("I wrote every page of you, hero. Even this one.", "narrator_evil", 2.0)
 	b.finished.connect(func(_result: String) -> void:

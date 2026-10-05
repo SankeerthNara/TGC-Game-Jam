@@ -35,7 +35,10 @@ The web build is exported with the preset "Web" (Project > Export) to `build/web
 
 **2K edition (the deluxe fights)**
 - **WASD / arrows** move, **Z** or **Space** jump, **J** attack (hold **W / Up** for an up-slash, **S / Down** in the air for a
-  down-slash that bounces off enemies), **K** dash, **L** Light Blade (3 ink), **F** heal (6 ink).
+  down-slash that bounces off enemies), **K** dash, **L** parry (tap as an attack flashes **gold**;
+  **red** attacks can't be parried: dash or jump), hold **L** for the Light Blade (3 ink), **F** heal (6 ink).
+  A parry earns ink and makes your next hit a riposte; guarding enemies only open up to parries, hits
+  from behind or above, and a full posture bar opens a **critical strike** (J).
   Hits fill the ink meter.
 
 **Everywhere**

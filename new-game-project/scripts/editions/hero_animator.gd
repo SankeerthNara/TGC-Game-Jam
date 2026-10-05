@@ -14,7 +14,7 @@ const LOOP := ["idle", "run", "heal"]
 ## Short transitions played once when their frame set exists, then the hero goes on to the next state.
 const LOCOMOTION := ["idle", "run", "skid", "land", "turn", "runstart"]
 ## Animations whose frames follow the attack's progress (0..1) instead of a frame rate.
-const BY_PROGRESS := ["attack1", "attack2", "attack3", "attack_up", "attack_down", "counter", "blade"]
+const BY_PROGRESS := ["attack1", "attack2", "attack3", "attack_up", "attack_down", "counter", "blade", "riposte"]
 
 var prefix := "hero"
 ## anim -> the frames to use when no <prefix>_<anim>_N set exists
@@ -26,7 +26,7 @@ var skip := {}
 ## anim -> frames per second
 var rates := {"idle": 8.0, "run": 16.0, "runstart": 18.0, "jump": 10.0, "fall": 10.0, "attack1": 24.0, "attack2": 24.0,
 	"attack3": 18.0, "attack_up": 22.0, "attack_down": 22.0, "dash": 16.0, "roll": 16.0, "hurt": 12.0,
-	"skid": 20.0, "land": 16.0, "heal": 8.0, "counter": 20.0, "turn": 18.0, "blade": 14.0, "ko": 8.0}
+	"skid": 20.0, "land": 16.0, "heal": 8.0, "counter": 20.0, "turn": 18.0, "blade": 14.0, "ko": 8.0, "parry": 14.0}
 
 var anim := "idle"
 var t := 0.0 ## time in the current animation

@@ -56,7 +56,9 @@ Reach the pinnacle of visual clarity. Soar through majestic gothic library halls
 - **Jump:** Z / Space
 - **Attack:** J *(hold W / Up for an up-slash, S / Down in the air for a down-slash)*
 - **Dash:** K
-- **Light Blade:** L *(3 ink)*
+- **Parry:** tap L as an attack flashes gold *(red flash: dash or jump instead)*; then J for a riposte
+- **Critical strike:** J on an enemy whose posture bar is full
+- **Light Blade:** hold L *(3 ink)*
 - **Heal:** F *(6 ink)*
 - **Finale:** drag the Brightness slider to 100% (or hold D / Right)
 
