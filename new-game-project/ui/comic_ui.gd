@@ -462,7 +462,7 @@ func _build_pause_modal(parent: Control) -> void:
 		chase_entries = [
 			["VILLAIN CHASE", "A / D lean and roll, Space jump"],
 			["720p BRAWL", "J punch, Z jump, K roll, L counter"],
-			["2K FIGHTS", "J attack, Z jump, K dash, L blade, F heal"]
+			["2K FIGHTS", "Z jump / wall jump, K dash, S+J pogo, S+K dive"]
 		]
 
 	for entry in chase_entries:

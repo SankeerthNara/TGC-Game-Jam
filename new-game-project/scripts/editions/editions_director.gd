@@ -196,7 +196,7 @@ func start_2k() -> void:
 		[["lancer", "L", 0.0], ["bat", "AR", 1.0], ["lancer", "R", 2.0], ["bat", "AL", 4.0], ["lancer", "C", 5.5]]]]
 	b.win_text = "TO THE OPERA!"
 	b.fight_title = "THE LIBRARY"
-	b.intro_lines = ["The deluxe edition. Light blade ready.", "Z jump   J attack (+UP / +DOWN)   K dash   L blade   F heal"]
+	b.intro_lines = ["The deluxe edition: climb the library to the opera.", "Z on a wall: wall jump   K in the air: dash   S+J: pogo   S+K: dive"]
 	_launch(b)
 	b.finished.connect(func(_result: String) -> void:
 		_retire(b)
@@ -245,13 +245,14 @@ func _final_boss() -> void:
 	_current = _final_boss
 	var b := _arena("dark")
 	b.caged_heroes = true
+	b.chandeliers = [[Rect2(200, 400, 150, 14), 0.0], [Rect2(930, 400, 150, 14), 0.0], [Rect2(565, 310, 150, 14), 90.0]]
 	b.waves = [[[["narrator", "BALCONY", 0.0]]]]
 	b.boss_name = "THE NARRATOR"
 	b.fight_title = "THE NARRATOR"
 	b.boss_hp_scale = 1.3
 	b.narrator_line = "LET ME WRITE YOUR LAST PAGE!"
 	b.win_text = ""
-	b.intro_lines = ["The Narrator. The one who guided you all along.", "Free the three heroes. L LIGHT BLADE, F heal."]
+	b.intro_lines = ["The Narrator. The one who guided you all along.", "When his ink floods the stage, live on the podium, the chandeliers and the walls."]
 	_launch(b)
 	comms.say("I wrote every page of you, hero. Even this one.", "narrator_evil", 2.0)
 	b.finished.connect(func(_result: String) -> void:

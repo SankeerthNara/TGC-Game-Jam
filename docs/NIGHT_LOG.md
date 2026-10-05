@@ -486,3 +486,16 @@ New `scripts/editions/hero_animator.gd` (HeroAnimator), used by the 2K fights an
   into the air as before. Decision: no ink puddles (the shockwaves already do that job).
 - The bot jumps over the armoured brute and pogoes it. Arena bots: Ink Baron 30 s, opera 68 s (4 waves),
   Narrator 57 s. Flow 0 fails.
+
+**Stage 4: the Narrator as a parkour fight**
+- Phase 1 (above 2/3 health): on the stage, as before. Phase 2: "THE STAGE FLOODS WITH INK!" A wavy
+  ink layer covers the stage floor; standing in it hurts and throws the hero up, so the fight moves to
+  the podium, three chandeliers (the middle one swings) and the walls. Phase 3 (below 1/3): "HE RISES
+  ABOVE THE STAGE!" He hovers high, mostly raining ink (pogo off the drops to climb to him) and dashing;
+  he still slams down and rests after, which is the moment to punish. The comms carry his taunts.
+  The unmasking, the reveal and the brightness finale are unchanged.
+- The bot leaves the flooded floor for the nearest ledge. Arena bots: Ink Baron 23 s, opera 69 s,
+  Narrator 53 s (2 retries).
+- Text: the fight control line ("Z jump (on a wall: wall jump)  S+J in the air: pogo  K dash  S+K in
+  the air: dive"), the library and Narrator cards, the pause guide, How to Play, README, ITCH_PAGE.
+  Flow 0 fails, controls 11/11, parkour 8/8, face 0, anim 18/18.

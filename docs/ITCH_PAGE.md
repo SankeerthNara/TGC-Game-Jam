@@ -56,6 +56,10 @@ Reach the pinnacle of visual clarity. Soar through majestic gothic library halls
 - **Jump:** Z / Space
 - **Attack:** J *(hold W / Up for an up-slash, S / Down in the air for a down-slash)*
 - **Dash:** K
+- **Wall slide / wall jump:** hold toward a wall in the air, Z to kick off
+- **Air dash:** K in the air (a landing, a wall or a pogo gives it back)
+- **Pogo:** S + J in the air bounces off enemies, paper bats, books and ink
+- **Dive strike:** S + K in the air
 - **Light Blade:** L *(3 ink)*
 - **Heal:** F *(6 ink)*
 - **Finale:** drag the Brightness slider to 100% (or hold D / Right)

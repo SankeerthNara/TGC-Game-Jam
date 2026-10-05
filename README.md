@@ -34,9 +34,12 @@ The web build is exported with the preset "Web" (Project > Export) to `build/web
   or laser sight turn **red**.
 
 **2K edition (the deluxe fights)**
-- **WASD / arrows** move, **Z** or **Space** jump, **J** attack (hold **W / Up** for an up-slash, **S / Down** in the air for a
-  down-slash that bounces off enemies), **K** dash, **L** Light Blade (3 ink), **F** heal (6 ink).
-  Hits fill the ink meter.
+- **WASD / arrows** move, **Z** or **Space** jump, **J** attack (hold **W / Up** for an up-slash), **K** dash,
+  **L** Light Blade (3 ink), **F** heal (6 ink). Hits fill the ink meter.
+- Parkour: hold toward a wall in the air to **wall slide**, **Z** on a wall to **wall jump**; **K** in the air
+  is one **air dash** (landing, a wall or a pogo gives it back); **S + J** in the air **pogoes** off enemies,
+  paper bats, books and falling ink; **S + K** in the air is a **dive strike**. The brass brute's front is
+  armoured: hit it from above, from behind, or with the Light Blade.
 
 **Everywhere**
 - **P** pauses. **Z** skips / continues story pages, **Esc** skips a whole cutscene.

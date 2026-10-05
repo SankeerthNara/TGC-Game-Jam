@@ -1,5 +1,5 @@
 extends Node
-## The opera arena mid-fight: chandeliers, dancers, the brute (not part of the game).
+## The opera arena mid-fight, and the Narrator's flood and high phases (not part of the game).
 
 var _keys := {}
 
@@ -43,4 +43,28 @@ func _ready() -> void:
 		if f in [300, 420, 540]:
 			get_viewport().get_texture().get_image().save_png("user://opera_%d.png" % n)
 			n += 1
+	b.queue_free()
+	var nb := BossFight.new()
+	nb.stage = "dark"
+	nb.caged_heroes = true
+	nb.heroes = [0]
+	nb.relay = false
+	nb.bomb_left = -1.0
+	nb.max_hp = 6
+	nb.checkpoints = true
+	nb.chandeliers = [[Rect2(200, 400, 150, 14), 0.0], [Rect2(930, 400, 150, 14), 0.0], [Rect2(565, 310, 150, 14), 90.0]]
+	nb.waves = [[[["narrator", "BALCONY", 0.0]]]]
+	layer.add_child(nb)
+	for i in 5:
+		await get_tree().process_frame
+	nb._pt = 10.0
+	for f in 900:
+		ArenaBot.drive(nb, press, tap)
+		await get_tree().process_frame
+		if nb._narrator != null and f == 200:
+			nb._narrator.hp = nb._narrator.max_hp * 0.5
+		if nb._narrator != null and f == 520:
+			nb._narrator.hp = nb._narrator.max_hp * 0.25
+		if f in [440, 800]:
+			get_viewport().get_texture().get_image().save_png("user://narr_%d.png" % f)
 	get_tree().quit()

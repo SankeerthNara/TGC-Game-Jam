@@ -54,6 +54,19 @@ static func drive(b: BossFight, press: Callable, tap: Callable) -> void:
 			press.call(KEY_LEFT, float(d["x"]) >= hero.x)
 	if danger and b._dash_cd <= 0.0 and randf() < 0.1:
 		tap.call(KEY_K)
+	if b._flood > 0.4 and b._ground and hero.y >= BossFight.FLOOR_Y - 0.5:
+		# the floor is ink: to the nearest ledge
+		var best_x := hero.x
+		var best_dx := 1e9
+		for r in b.platforms:
+			if r.position.y > BossFight.FLOOR_Y - 220.0 and absf(r.get_center().x - hero.x) < best_dx:
+				best_dx = absf(r.get_center().x - hero.x)
+				best_x = r.get_center().x
+		press.call(KEY_LEFT, best_x < hero.x - 10.0)
+		press.call(KEY_RIGHT, best_x > hero.x + 10.0)
+		if best_dx < 140.0 and not b.get_meta("z_held", false):
+			_jump(b, press)
+		return
 	if best != null and best.armoured_against(hero.x) and absf(best.pos.x - hero.x) < 200.0:
 		# the armoured brute: up and over, then pogo or dive onto it
 		var dvb := best.center() - b.hero_center()

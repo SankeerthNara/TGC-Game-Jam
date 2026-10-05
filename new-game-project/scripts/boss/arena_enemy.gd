@@ -358,16 +358,23 @@ func _baron_rest() -> void:
 	cd = randf_range(1.0, 1.8)
 
 
+## The Narrator's three phases: 1 on the stage, 2 the stage floods with ink, 3 he floats high above it.
+func stage_phase() -> int:
+	return 1 if hp > max_hp * 0.66 else (2 if hp > max_hp * 0.33 else 3)
+
+
 func _narrator(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
-	phase2 = hp < max_hp * 0.5
+	phase2 = stage_phase() >= 2
+	var high := stage_phase() == 3
 	var sp: float = fight.enemy_speed() * (1.25 if phase2 else 1.0)
 	match state:
 		"hover":
-			target = Vector2(fight.center_x() + sin(t * 0.6) * 360.0, 320.0 + sin(t * 1.1) * 30.0)
+			target = Vector2(fight.center_x() + sin(t * 0.6) * 360.0, (170.0 if high else 320.0) + sin(t * 1.1) * 30.0)
 			pos = pos.move_toward(target, 220.0 * sp * dt)
 			cd -= dt * sp
 			if cd <= 0.0:
-				var picks := ["dash", "rain", "slam", "summon"]
+				# high above the stage he rains ink (to pogo off on the way up to him) and still slams down
+				var picks := ["rain", "rain", "dash", "slam", "summon"] if high else ["dash", "rain", "slam", "summon"]
 				state = picks[randi() % picks.size()]
 				st = 0.0
 				target = hc

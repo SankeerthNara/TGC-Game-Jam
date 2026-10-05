@@ -82,6 +82,8 @@ var bot_assists := 0
 var chandeliers: Array = []
 var _chand_idx: Array[int] = []
 var _chand_base: Array[Rect2] = []
+var _flood := 0.0 ## 0..1: the Narrator's ink flooding the stage floor (his second and third phases)
+var _boss_phase := 1
 var _cam_y := 0.0
 var _steps: Array[ArenaEnemy] = []
 var _books: Array[Dictionary] = []
@@ -335,6 +337,48 @@ func _entered_fight() -> bool:
 
 
 ## The climb between the fights: stepping bats, falling books, tips, a safe spot to come back to.
+## The Narrator's phases: the ink flood (the stage floor hurts and throws the hero up, so he lives on
+## the podium, the chandeliers and the walls), then the Narrator rises high above the stage.
+func _update_flood(delta: float) -> void:
+	var ph := _narrator.stage_phase() if _narrator != null and _narrator.kind == "narrator" else 1
+	if ph != _boss_phase and _narrator != null and _narrator.kind == "narrator":
+		_boss_phase = ph
+		var comms: Node = get_tree().get_first_node_in_group("comms")
+		if ph == 2:
+			_say("THE STAGE FLOODS WITH INK!", Vector2(640, 250), Color("c77dff"), 46)
+			shake(12.0)
+			EventBus.sound_requested.emit("narrator_attack")
+			if comms != null:
+				comms.say("Drown in my ink, hero! Stay off my stage!", "narrator_evil", 2.0)
+		elif ph == 3:
+			_say("HE RISES ABOVE THE STAGE!", Vector2(640, 250), Color("c77dff"), 46)
+			if comms != null:
+				comms.say("Up here, the story is mine. You'll never reach me!", "narrator_evil", 2.0)
+	_flood = move_toward(_flood, 1.0 if _boss_phase >= 2 and _narrator != null else 0.0, delta * 0.6)
+	if _flood > 0.6 and _ground and hero_pos.y >= FLOOR_Y - 0.5 and _invuln <= 0.0:
+		_hurt(hero_pos.x)
+		_vel.y = -820.0 # the ink throws him up: get onto a ledge
+		_ground = false
+		for k in 10:
+			_fx.append({"kind": "ink", "pos": hero_pos + Vector2(randf_range(-20, 20), -4), "vel": Vector2(randf_range(-200, 200), randf_range(-420, -160)), "t": 0.0, "life": 0.6, "size": randf_range(3, 7)})
+
+
+func _draw_flood(off: Vector2) -> void:
+	if _flood <= 0.0:
+		return
+	draw_set_transform(off)
+	var top := FLOOR_Y - 26.0 * _flood
+	var pts := PackedVector2Array([Vector2(_lock_l - 80.0, FLOOR_Y + 130.0)])
+	for i in 33:
+		var x := _lock_l - 80.0 + i * (_lock_r - _lock_l + 160.0) / 32.0
+		pts.append(Vector2(x, top + sin(_t * 3.0 + i * 0.7) * 5.0 * _flood))
+	pts.append(Vector2(_lock_r + 80.0, FLOOR_Y + 130.0))
+	draw_colored_polygon(pts, Color(0.12, 0.03, 0.2, 0.9 * _flood))
+	for i in 12:
+		var bx := _lock_l + fposmod(i * 97.0 + _t * 30.0, _lock_r - _lock_l)
+		draw_circle(Vector2(bx, top + 10.0 + sin(_t * 4.0 + i) * 4.0), 3.0 + (i % 3), Color(0.6, 0.3, 0.9, 0.5 * _flood))
+
+
 func _update_climb(delta: float) -> void:
 	if _ground:
 		_safe_pos = hero_pos
@@ -1159,6 +1203,7 @@ func _update_world(delta: float) -> void:
 				_fx.append({"kind": "paper", "pos": e.center(), "vel": Vector2.from_angle(ang) * randf_range(250, 700), "t": 0.0, "life": 1.6, "size": randf_range(5, 11)})
 			_fx.append({"kind": "spark", "pos": e.center(), "t": 0.0, "life": 0.6, "size": 3.5})
 			_win()
+	_update_flood(delta)
 	for w in _waves:
 		w["x"] = float(w["x"]) + float(w["dir"]) * 470.0 * et
 		w["life"] = float(w["life"]) - et
@@ -1295,6 +1340,7 @@ func _draw() -> void:
 		draw_rect(Rect2(-14, -3, 28, 4), Color("e0c27a"))
 		draw_set_transform(off)
 	_draw_hero(off)
+	_draw_flood(off)
 	draw_set_transform(off)
 	for b in _beams:
 		var k := float(b["t"]) / 0.35
@@ -1336,7 +1382,7 @@ func _draw() -> void:
 		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
 		if _pt < 10.0:
-			draw_string(FONT_BODY, Vector2(210, 700), "WASD / ARROWS move   Z / SPACE jump   J attack (+UP, or +DOWN in the air)   K dash   L power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
+			draw_string(FONT_BODY, Vector2(120, 700), "WASD move   Z jump (on a wall: wall jump)   J attack   S+J in the air: pogo   K dash   S+K in the air: dive   L blade   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, PAPER)
 	elif _phase == "wave" and _narrator == null:
 		# the objective while there is no boss bar: how many are left on stage
 		var left := _enemies.size() + _pending.size()
@@ -1620,7 +1666,7 @@ func _draw_hud() -> void:
 		draw_rect(bar, INK)
 		draw_rect(Rect2(bar.position + Vector2(3, 3), Vector2((bar.size.x - 6) * clampf(_narrator.hp / _narrator.max_hp, 0.0, 1.0), bar.size.y - 6)), Color("9d4edd"))
 	elif _phase in ["wave", "wave_intro"] and _wave == 0 and _pt < 8.0:
-		draw_string(FONT_BODY, Vector2(210, 700), "WASD / ARROWS move   Z / SPACE jump   J attack (+UP, or +DOWN in the air)   K dash   L power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
+		draw_string(FONT_BODY, Vector2(120, 700), "WASD move   Z jump (on a wall: wall jump)   J attack   S+J in the air: pogo   K dash   S+K in the air: dive   L blade   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, PAPER)
 
 
 func _card(title: String, lines: Array, col: Color) -> void:
