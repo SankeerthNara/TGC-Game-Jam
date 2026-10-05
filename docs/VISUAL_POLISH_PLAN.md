@@ -94,7 +94,7 @@ Notes from doing T1-T5:
 - Tools: `scripts/tools/climb_shot.tscn` (library climb frames). It starts the 2K act directly, so the
   frames still show the 240p filter; that's a tool artifact, not the game.
 
-## T6. More on screen: Status: TODO
+## T6. More on screen: Status: DONE (opera waves 4/4/5 with tighter delays; bot 45-51 s; full run 12.8 min)
 - Opera waves (`scripts/editions/editions_director.gd` `_opera()`): wave 2 and 3 get one or two
   extra light enemies (bat, dancer), so 3-5 are on screen. Re-run arena_bot_test (the opera must
   still be won) and playtime_test (the total must stay 10-15 min).

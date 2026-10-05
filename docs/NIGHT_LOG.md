@@ -665,3 +665,4 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
   centre during 2K fights. T5 bigger white slash arcs on every swing, a white flash and a burst of
   paper petals on every landed hit. Darkness 0.62 -> 0.5. Flow 0 fails; bots win (Ink Baron 30 s,
   opera 52 s, Scribe 64 s, Narrator 36 s); parkour, controls, anim tests 0 fails.
+- T6: opera waves now 4 / 4 / 5 enemies with tighter delays (a crowd like the reference); bot 45-51 s; playtime 12.8 min.

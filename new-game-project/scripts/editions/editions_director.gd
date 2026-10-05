@@ -230,9 +230,10 @@ func _opera() -> void:
 	# high one that swings; waves like the reference: lancers and bats -> aerial dancers -> a bat
 	# swarm while the armoured brute charges -> a final mix
 	b.chandeliers = [[Rect2(230, 360, 160, 14), 0.0], [Rect2(890, 360, 160, 14), 0.0], [Rect2(565, 220, 150, 14), 110.0]]
-	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AC", 2.5]],
-		[["brute", "C", 0.0], ["dancer", "AL", 1.0], ["bat", "AR", 1.6], ["bat", "AC", 2.4]],
-		[["brute", "L", 0.0], ["dancer", "AR", 1.5], ["lancer", "R", 3.0]]]]
+	# a crowd like the reference fights: 4-5 on stage at once, mostly light fliers
+	b.waves = [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AC", 1.2], ["bat", "AL", 1.8]],
+		[["brute", "C", 0.0], ["dancer", "AL", 0.6], ["bat", "AR", 1.0], ["bat", "AC", 1.6]],
+		[["brute", "L", 0.0], ["dancer", "AR", 0.8], ["lancer", "R", 1.6], ["bat", "AL", 2.2], ["dancer", "AC", 3.0]]]]
 	b.win_text = "ENCORE!"
 	b.fight_title = "THE OPERA"
 	b.intro_lines = ["The masked villain's opera: fight it in the air.", "Walls, chandeliers, pogo (S+J), dive (S+K). The brute's front is armoured."]
