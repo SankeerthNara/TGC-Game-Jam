@@ -279,6 +279,285 @@ def process_group2_idle():
     make_pixel_composite([frames_720[0], frames_720[1], frames_720[2]], BG_720_NEON, "preview_idle_720.png", y_ground=236, spacing=80)
     print("Group 2 Idle complete.")
 
+# =========================================================================
+# GROUP 3: ATTACKS (10 frames 2K, 17 frames 720p combat)
+# =========================================================================
+def process_group3_attacks():
+    print("\n--- Processing Group 3: Attacks & Combat ---")
+    att_path = os.path.join(BRAIN_DIR, "hero_attacks_grid_1791195558475.jpg")
+    att_img = Image.open(att_path)
+    gw, gh = att_img.size
+    cols, rows = 5, 2
+    cw = gw / cols
+    
+    scale_att = 1.30
+    names_2k = [
+        "hero_attack1_1", "hero_attack1_2", "hero_attack1_3",
+        "hero_attack2_1", "hero_attack2_2", "hero_attack2_3",
+        "hero_attack3_1", "hero_attack3_2", "hero_attack3_3", "hero_attack3_4"
+    ]
+    
+    frames_2k = []
+    for idx in range(10):
+        r = idx // 5
+        c = idx % 5
+        y0 = 0 if r == 0 else 356
+        y1 = 356 if r == 0 else gh
+        cell = att_img.crop((int(c * cw), y0, int((c + 1) * cw), y1))
+        cut = clean_floodfill(cell)
+        
+        nw = int(round(cut.width * scale_att))
+        nh = int(round(cut.height * scale_att))
+        resized = cut.resize((nw, nh), Image.Resampling.LANCZOS)
+        
+        base_y = 354 if r == 0 else 379
+        if idx == 8:  # impact flash cell rests on ground
+            base_y = 398
+            
+        canvas = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+        arr_c = np.array(cut)
+        hy0, hy1 = (120, 240) if r == 0 else (150, 260)
+        torso_mask = (arr_c[hy0:hy1, :, 3] > 80)
+        torso_x = np.where(torso_mask)[1]
+        hip_x = torso_x.mean() if len(torso_x) > 0 else cut.width / 2.0
+        
+        scaled_hip_x = hip_x * scale_att
+        canvas_x = int(round(256 - scaled_hip_x))
+        canvas_y = 511 - int(round(base_y * scale_att))
+        
+        canvas.paste(resized, (canvas_x, canvas_y), resized)
+        frames_2k.append(canvas)
+        save_sprite(names_2k[idx], canvas)
+        
+    # Update master fallback hero_attack.png
+    save_sprite("hero_attack", frames_2k[1])
+    
+    # 720p Brawler Combat frames from px_hero_combat_grid
+    cb_path = os.path.join(BRAIN_DIR, "px_hero_combat_grid_1791195669073.jpg")
+    cb_img = Image.open(cb_path)
+    cb_w, cb_h = cb_img.size
+    cb_cols, cb_rows = 4, 4
+    cb_cw, cb_rh = cb_w / cb_cols, cb_h / cb_rows
+    
+    scale_px = 54.0 / 168.0
+    names_px_combat = [
+        "px_hero_punch1_1", "px_hero_punch1_2", "px_hero_punch1_3",
+        "px_hero_punch2_1", "px_hero_punch2_2", "px_hero_punch2_3",
+        "px_hero_punch3_1", "px_hero_punch3_2", "px_hero_punch3_3", "px_hero_punch3_4",
+        "px_hero_roll_1", "px_hero_roll_2", "px_hero_roll_3", "px_hero_roll_4",
+        "px_hero_counter_1", "px_hero_counter_2"
+    ]
+    
+    frames_px = []
+    for idx in range(16):
+        r = idx // 4
+        c = idx % 4
+        cell = cb_img.crop((int(c * cb_cw), int(r * cb_rh), int((c + 1) * cb_cw), int((r + 1) * cb_rh)))
+        cut = clean_floodfill(cell)
+        
+        arr_c = np.array(cut)
+        torso_mask = (arr_c[70:120, :, 3] > 80)
+        torso_x = np.where(torso_mask)[1]
+        hip_x = torso_x.mean() if len(torso_x) > 0 else cut.width / 2.0
+        
+        nw = int(round(cut.width * scale_px))
+        nh = int(round(cut.height * scale_px))
+        resized = cut.resize((nw, nh), Image.Resampling.BILINEAR)
+        
+        canvas = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+        canvas_x = int(round(32 - hip_x * scale_px))
+        canvas_y = 63 - int(round(191 * scale_px))
+        canvas.paste(resized, (canvas_x, canvas_y), resized)
+        
+        # Hard 1-bit alpha and 24-color quantization
+        arr = np.array(canvas)
+        hard_alpha = (arr[:, :, 3] > 80).astype(np.uint8) * 255
+        rgb_img = Image.fromarray(arr[:, :, :3], mode='RGB')
+        mask = Image.fromarray(hard_alpha, mode='L')
+        quant = rgb_img.quantize(colors=24, method=Image.Quantize.MEDIANCUT).convert('RGB')
+        quant.putalpha(mask)
+        
+        frames_px.append(quant)
+        for s_dir in DESTS_SPRITES:
+            quant.save(os.path.join(s_dir, f"{names_px_combat[idx]}.png"))
+            
+    # px_hero_counter_3: Counter recovery returning to ready stance
+    counter_3 = frames_px[14].copy()
+    frames_px.append(counter_3)
+    for s_dir in DESTS_SPRITES:
+        counter_3.save(os.path.join(s_dir, "px_hero_counter_3.png"))
+        
+    # Update master fallbacks
+    for s_dir in DESTS_SPRITES:
+        frames_px[1].save(os.path.join(s_dir, "px_hero_punch.png"))
+        frames_px[7].save(os.path.join(s_dir, "px_hero_kick.png"))
+        frames_px[11].save(os.path.join(s_dir, "px_hero_roll.png"))
+        
+    # Preview GIFs
+    save_preview_gif("hero_attack_combo_2k.gif", frames_2k, fps=10)
+    save_preview_gif("hero_attack1_2k.gif", frames_2k[0:3], fps=10)
+    save_preview_gif("hero_attack2_2k.gif", frames_2k[3:6], fps=10)
+    save_preview_gif("hero_attack3_2k.gif", frames_2k[6:10], fps=9)
+    save_preview_gif("hero_combat_720.gif", frames_px, fps=10, scale_factor=3)
+    save_preview_gif("px_hero_punch_720.gif", frames_px[0:10], fps=10, scale_factor=3)
+    save_preview_gif("px_hero_roll_720.gif", frames_px[10:14], fps=10, scale_factor=3)
+    
+    # Composites
+    make_composite([frames_2k[1], frames_2k[4], frames_2k[7], frames_2k[8]], BG_2K_ARENA, "preview_attacks_2k.png", y_ground=880, spacing=280)
+    make_pixel_composite([frames_px[1], frames_px[4], frames_px[7], frames_px[11]], BG_720_NEON, "preview_attacks_720.png", y_ground=236, spacing=75)
+    print("Group 3 Attacks complete.")
+
+# =========================================================================
+# GROUP 4: SPECIAL MOVES (21 frames 2K, plus 720p editions)
+# =========================================================================
+def process_group4_specials():
+    print("\n--- Processing Group 4: Special Moves ---")
+    imga_path = os.path.join(BRAIN_DIR, "hero_specials_grid_a_1791195598432.jpg")
+    imga = Image.open(imga_path)
+    cwa = imga.width / 7.0
+    scale_a = 1.30
+    
+    names_a = [
+        "hero_dash_1", "hero_dash_2", "hero_dash_3",
+        "hero_upslash_1", "hero_upslash_2", "hero_upslash_3",
+        "hero_downslash_1", "hero_downslash_2", "hero_downslash_3",
+        "hero_blade_1", "hero_blade_2", "hero_blade_3", "hero_blade_4"
+    ]
+    
+    frames_2k_specials = {}
+    frames_720_specials = {}
+    
+    for idx in range(13):
+        r = idx // 7
+        c = idx % 7
+        y0 = 0 if r == 0 else 356
+        y1 = 356 if r == 0 else imga.height
+        cell = imga.crop((int(c * cwa), y0, int((c + 1) * cwa), y1))
+        cut = clean_floodfill(cell)
+        
+        nw = int(round(cut.width * scale_a))
+        nh = int(round(cut.height * scale_a))
+        resized = cut.resize((nw, nh), Image.Resampling.LANCZOS)
+        
+        base_y = 354 if r == 0 else (735 - 356)
+        
+        canvas = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+        arr_c = np.array(cut)
+        hy0, hy1 = (100, 240) if r == 0 else (120, 260)
+        torso_mask = (arr_c[hy0:hy1, :, 3] > 80)
+        torso_x = np.where(torso_mask)[1]
+        hip_x = torso_x.mean() if len(torso_x) > 0 else cut.width / 2.0
+        
+        scaled_hip_x = hip_x * scale_a
+        canvas_x = int(round(256 - scaled_hip_x))
+        canvas_y = 511 - int(round(base_y * scale_a))
+        
+        canvas.paste(resized, (canvas_x, canvas_y), resized)
+        px_canvas = make_pixel_art_720(canvas)
+        
+        name = names_a[idx]
+        frames_2k_specials[name] = canvas
+        frames_720_specials[f"px_{name}"] = px_canvas
+        save_sprite(name, canvas, px_canvas)
+        
+    # Update master fallback hero_dash.png
+    save_sprite("hero_dash", frames_2k_specials["hero_dash_2"], frames_720_specials["px_hero_dash_2"])
+    
+    # Specials Grid B (Heal, Hurt, KO)
+    imgb_path = os.path.join(BRAIN_DIR, "hero_specials_grid_b_1791195635827.jpg")
+    imgb = Image.open(imgb_path)
+    cwb, rhb = imgb.width / 4.0, imgb.height / 2.0
+    scale_b = 1.24
+    
+    names_b = [
+        "hero_heal_1", "hero_heal_2", "hero_heal_3", "hero_hurt_1",
+        "hero_hurt_2", "hero_ko_1", "hero_ko_2", "hero_ko_3"
+    ]
+    
+    for idx in range(8):
+        r = idx // 4
+        c = idx % 4
+        cell = imgb.crop((int(c * cwb), int(r * rhb), int((c + 1) * cwb), int((r + 1) * rhb)))
+        cut = clean_floodfill(cell)
+        
+        nw = int(round(cut.width * scale_b))
+        nh = int(round(cut.height * scale_b))
+        resized = cut.resize((nw, nh), Image.Resampling.LANCZOS)
+        
+        base_y = 384 if r == 0 else 375
+        
+        canvas = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+        arr_c = np.array(cut)
+        hy0, hy1 = (120, 260) if r == 0 else (100, 260)
+        torso_mask = (arr_c[hy0:hy1, :, 3] > 80)
+        torso_x = np.where(torso_mask)[1]
+        hip_x = torso_x.mean() if len(torso_x) > 0 else cut.width / 2.0
+        
+        scaled_hip_x = hip_x * scale_b
+        canvas_x = int(round(256 - scaled_hip_x))
+        canvas_y = 511 - int(round(base_y * scale_b))
+        
+        canvas.paste(resized, (canvas_x, canvas_y), resized)
+        px_canvas = make_pixel_art_720(canvas)
+        
+        name = names_b[idx]
+        frames_2k_specials[name] = canvas
+        frames_720_specials[f"px_{name}"] = px_canvas
+        save_sprite(name, canvas, px_canvas)
+        
+    # Update master fallbacks hero_hurt.png & px_hero_hurt.png
+    save_sprite("hero_hurt", frames_2k_specials["hero_hurt_1"], frames_720_specials["px_hero_hurt_1"])
+    
+    # Previews for Special Moves
+    dash_2k = [frames_2k_specials[f"hero_dash_{i}"] for i in range(1, 4)]
+    dash_720 = [frames_720_specials[f"px_hero_dash_{i}"] for i in range(1, 4)]
+    save_preview_gif("hero_dash_2k.gif", dash_2k, fps=10)
+    save_preview_gif("hero_dash_720.gif", dash_720, fps=10, scale_factor=3)
+    
+    upslash_2k = [frames_2k_specials[f"hero_upslash_{i}"] for i in range(1, 4)]
+    upslash_720 = [frames_720_specials[f"px_hero_upslash_{i}"] for i in range(1, 4)]
+    save_preview_gif("hero_upslash_2k.gif", upslash_2k, fps=10)
+    save_preview_gif("hero_upslash_720.gif", upslash_720, fps=10, scale_factor=3)
+    
+    downslash_2k = [frames_2k_specials[f"hero_downslash_{i}"] for i in range(1, 4)]
+    downslash_720 = [frames_720_specials[f"px_hero_downslash_{i}"] for i in range(1, 4)]
+    save_preview_gif("hero_downslash_2k.gif", downslash_2k, fps=10)
+    save_preview_gif("hero_downslash_720.gif", downslash_720, fps=10, scale_factor=3)
+    
+    blade_2k = [frames_2k_specials[f"hero_blade_{i}"] for i in range(1, 5)]
+    blade_720 = [frames_720_specials[f"px_hero_blade_{i}"] for i in range(1, 5)]
+    save_preview_gif("hero_blade_2k.gif", blade_2k, fps=8)
+    save_preview_gif("hero_blade_720.gif", blade_720, fps=8, scale_factor=3)
+    
+    heal_2k = [frames_2k_specials[f"hero_heal_{i}"] for i in range(1, 4)]
+    heal_720 = [frames_720_specials[f"px_hero_heal_{i}"] for i in range(1, 4)]
+    save_preview_gif("hero_heal_2k.gif", heal_2k, fps=8)
+    save_preview_gif("hero_heal_720.gif", heal_720, fps=8, scale_factor=3)
+    
+    hurt_2k = [frames_2k_specials[f"hero_hurt_{i}"] for i in range(1, 3)]
+    hurt_720 = [frames_720_specials[f"px_hero_hurt_{i}"] for i in range(1, 3)]
+    save_preview_gif("hero_hurt_2k.gif", hurt_2k, fps=8)
+    save_preview_gif("hero_hurt_720.gif", hurt_720, fps=8, scale_factor=3)
+    
+    ko_2k = [frames_2k_specials[f"hero_ko_{i}"] for i in range(1, 4)]
+    ko_720 = [frames_720_specials[f"px_hero_ko_{i}"] for i in range(1, 4)]
+    save_preview_gif("hero_ko_2k.gif", ko_2k, fps=6)
+    save_preview_gif("hero_ko_720.gif", ko_720, fps=6, scale_factor=3)
+    
+    # Composites
+    make_composite([
+        frames_2k_specials["hero_dash_2"], frames_2k_specials["hero_upslash_2"],
+        frames_2k_specials["hero_blade_3"], frames_2k_specials["hero_heal_2"]
+    ], BG_2K_ARENA, "preview_specials_2k.png", y_ground=880, spacing=280)
+    
+    make_pixel_composite([
+        frames_720_specials["px_hero_dash_2"], frames_720_specials["px_hero_upslash_2"],
+        frames_720_specials["px_hero_blade_3"], frames_720_specials["px_hero_heal_2"]
+    ], BG_720_NEON, "preview_specials_720.png", y_ground=236, spacing=75)
+    print("Group 4 Special Moves complete.")
+
 if __name__ == "__main__":
     process_group1_touchup()
     process_group2_idle()
+    process_group3_attacks()
+    process_group4_specials()
