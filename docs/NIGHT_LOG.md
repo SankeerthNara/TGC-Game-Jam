@@ -222,3 +222,11 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
      falls leaves him on 1 heart: the win stands.
 - Dying during a cutscene can't happen by design: fights are frozen ("retired") once won, and story
   pages, twists and the finale have no damage.
+
+## Game feel pass (after the 8:20 reset)
+- 2K controller checked: coyote time, jump buffer and variable jump height were already in.
+- 144p rooms: dark by design even without the filter; the torch flickers; the colour banding in the
+  torch glow is part of the cheap-edition look. Left as is.
+- Story bug fixed: the level-intro card of the 144p level 2 showed the Noir Detective ("SHADOWS IN THE
+  RAINY PRECINCT"), one of the captured heroes; the card picked the hero by level (old relay design).
+  In the Editions it is always the pulp hero, with his painted portrait.
