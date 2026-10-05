@@ -17,6 +17,7 @@
 | 2026-10-05 | Antigravity | Glitched Out Group 2 Hero Idle Animation Frames (AI Image Generation Model & Animation Pipeline): Delivered 6 painted 2K animation frames (hero_idle_1..6; 512x512 RGBA, right-facing, grounded at bottom edge y=511, chest breathing cycle, pulsing blade glow, seamless loop); 4 true pixel art 720p frames (px_hero_idle_1..4; 64x64 RGBA, <=24 colors, hard 1-bit alpha); game-speed preview GIFs (hero_idle_2k.gif @ 8 FPS, hero_idle_720.gif @ 8 FPS); polished hero_run_3 blade trail; composite checks on hall_far.jpg and neon_mid.png. | `new-game-project/assets/editions/sprites/hero_idle_*`, `new-game-project/assets/editions/reference/anim_previews/*` |
 | 2026-10-05 | Antigravity | Glitched Out Group 3 Hero Attacks & Combat Animation Frames (AI Image Generation Model & Animation Pipeline): Delivered 10 painted 2K attack frames (hero_attack1_1..3 horizontal slash combo, hero_attack2_1..3 backhand slash combo, hero_attack3_1..4 overhead finisher smash combo; 512x512 RGBA, right-facing, bottom-grounded y=511, leap apex y=507, ground flash y=511); 17 true pixel art 720p frames (px_hero_punch1_1..3 jab, px_hero_punch2_1..3 cross, px_hero_punch3_1..4 spinning kick finisher, px_hero_roll_1..4 low dive roll, px_hero_counter_1..3 parry counter; 64x64 RGBA, <=24 colors, hard 1-bit alpha); game-speed preview GIFs (hero_attack_combo_2k.gif, hero_attack1..3_2k.gif, hero_combat_720.gif, px_hero_punch_720.gif, px_hero_roll_720.gif); validation composite checks on arena_far.jpg and neon_mid.png x3. | `new-game-project/assets/editions/sprites/hero_attack*`, `px_hero_punch*`, `px_hero_roll*`, `px_hero_counter*`, `new-game-project/assets/editions/reference/anim_previews/*` |
 | 2026-10-05 | Antigravity | Glitched Out Group 4 Hero Special Moves & Reactions (AI Image Generation Model & Animation Pipeline): Delivered 21 painted 2K special moves & reaction frames (hero_dash_1..3, hero_upslash_1..3, hero_downslash_1..3, hero_blade_1..4 Light Blade charge & release, hero_heal_1..3, hero_hurt_1..2, hero_ko_1..3; 512x512 RGBA, right-facing, bottom-grounded y=511, KO collapse to floor); 21 true pixel art 720p frames (px_hero_dash_1..3, px_hero_upslash_1..3, px_hero_downslash_1..3, px_hero_blade_1..4, px_hero_heal_1..3, px_hero_hurt_1..2, px_hero_ko_1..3; 64x64 RGBA, <=24 colors, hard 1-bit alpha); game-speed preview GIFs for all 7 special actions (dash, upslash, downslash, blade, heal, hurt, ko in both 2K and 720p); composite checks on arena_far.jpg and neon_mid.png x3. | `new-game-project/assets/editions/sprites/hero_dash*`, `hero_upslash*`, `hero_downslash*`, `hero_blade*`, `hero_heal*`, `hero_hurt*`, `hero_ko*`, `px_hero_*`, `new-game-project/assets/editions/reference/anim_previews/*` |
+| 2026-10-05 | Antigravity | Glitched Out Run Animation Fixes (hero_run_3 glowing blade & hero_run_6 scale fix): Replaced thin stick blade in hero_run_3 (2K) and px_hero_run_3 (720p) with authentic glowing white-gold light blade matching run_2 and run_4 (length 165px, angle 48.5°, warm amber bloom, white core, glove grip wrapping); rescaled hero_run_6 (2K) by 1.064x to 430px body height and px_hero_run_6 (720p) to match neighbours run_5 and run_7 (same head size, leg length, feet on bottom edge); rebuilt 16 FPS seamless run GIFs and composites. | `new-game-project/assets/editions/sprites/hero_run_3.png`, `hero_run_6.png`, `px_hero_run_3.png`, `px_hero_run_6.png`, `new-game-project/assets/editions/reference/anim_previews/hero_run_*.gif`, `preview_movement_*.png` |
 
 
 ## Prompt Log: The Editions Character Art & Sprites (2026-10-05)
@@ -166,3 +167,24 @@
    - *Master Fallbacks*: Updated `hero_hurt.png`, `px_hero_hurt.png`.
    - *720p Pixel Art*: 21 frames downscaled to 64x64 (`px_hero_dash_1..3`, `px_hero_upslash_1..3`, `px_hero_downslash_1..3`, `px_hero_blade_1..4`, `px_hero_heal_1..3`, `px_hero_hurt_1..2`, `px_hero_ko_1..3`) with hard 1-bit alpha and <=24 colors.
    - *Verification Previews*: 14 GIFs (dash, upslash, downslash, blade, heal, hurt, ko in 2K and 720p); composite checks `preview_specials_2k.png` and `preview_specials_720.png`.
+
+
+### Glitched Out: Run Animation Fixes (2026-10-05)
+
+**Task**: Fix `hero_run_3` light blade and `hero_run_6` character scale to eliminate skips and enable smooth 12-frame (2K) and 10-frame (720p) run cycles at 16 FPS.
+
+1. **`hero_run_3.png` & `px_hero_run_3.png` (Glowing White-Gold Light Blade)**:
+   - Interpolated authentic light blade geometry from `hero_run_2` and `hero_run_4`.
+   - Trajectory: Right-hand trailing hilt at `(216, 287)`, tip at `(326, 411)`, length `165.4px`, angle `48.55°`.
+   - Multi-layer luminous rendering: outer amber/orange bloom (`rgba(255, 185, 60, 160)` with gaussian blur), solid golden core (`rgba(255, 245, 190, 240)`), pure white interior core streak (`rgba(255, 255, 255, 255)`), and dark glove finger wrap over hilt.
+   - 720p downscale with hard 1-bit alpha and 24-color quantization.
+
+2. **`hero_run_6.png` & `px_hero_run_6.png` (Character Scale & Grounding Fix)**:
+   - Rescaled figure by `1.0644x` from 404px to 430px body height to match neighbor frames `hero_run_5` (428px) and `hero_run_7` (437px).
+   - Centered horizontally on hips and pinned feet to the bottom canvas edge (`y = 511` in 2K, `y = 64` in 720p).
+   - Completely clean transparent canvas with 0 artifacts or rogue pixels.
+
+3. **16 FPS Preview GIFs & Composites**:
+   - `hero_run_2k.gif` (12 frames @ 16 FPS / 60ms, seamless loop, no blade jump, no size pop).
+   - `hero_run_720.gif` (10 frames @ 16 FPS / 60ms, 3x scale).
+   - Updated `preview_movement_2k.png` and `preview_movement_720.png`.
