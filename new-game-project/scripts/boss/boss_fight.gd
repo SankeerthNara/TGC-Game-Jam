@@ -552,6 +552,8 @@ func _hurt(from_x: float) -> void:
 	if _invuln > 0.0 or _dash_t > 0.0 or not _phase in ["wave", "wave_intro", "explore"]:
 		return
 	_hp -= 1
+	if _hp <= 0 and _narrator != null and _narrator.dead:
+		_hp = 1 # the boss fell on this very frame: the hero's blow counts, he stays on his feet
 	_invuln = 1.3
 	_heal_t = -1.0
 	_hurt_flash = 1.0
@@ -699,7 +701,7 @@ func _update_world(delta: float) -> void:
 		EventBus.sound_requested.emit("enemy_spawn")
 	for e in _enemies:
 		e.update(et, self)
-		if e.hits(_hero_box()):
+		if not e.dead and e.hits(_hero_box()):
 			_hurt(e.pos.x)
 	var dead: Array[ArenaEnemy] = []
 	for e in _enemies:

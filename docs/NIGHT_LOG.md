@@ -211,3 +211,14 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   the brawler's bottom line and counter tip, the library's explore prompt, each arena's first wave),
   and retries already restart in about 2 s with progress kept. The missing piece was objectives in
   arena waves without a boss bar: they now show "CLEAR THE STAGE (n left)" at the top.
+- Targeted edge tests (`scripts/tools/edge_test.tscn`, the playtime bot plus two set-ups; both runs reach
+  the final screen):
+  1. Pause the moment the street fight is won (the game is still pausable while the page turn to the
+     Twins is pending), hold 6 s, unpause: the game held still (the swap waits for unpause) and the
+     Twins started normally.
+  2. The hero takes a lethal hit on the frame the Ink Baron takes his killing blow: it used to count as
+     a death (retry, the kill lost), and an already-beaten enemy could still hurt the hero on the frame
+     he fell. Now beaten enemies can't hit, and a blow that would kill the hero on the frame the boss
+     falls leaves him on 1 heart: the win stands.
+- Dying during a cutscene can't happen by design: fights are frozen ("retired") once won, and story
+  pages, twists and the finale have no damage.
