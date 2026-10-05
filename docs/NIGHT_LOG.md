@@ -207,3 +207,7 @@ Rules for the night: work only on `claude/editions` (pushed to `origin/editions`
   fights and the finale; it reports STUCK if one screen lasts 4 minutes. Two runs: both reached the
   final screen (12.7 and 12.2 min including the random pauses). No soft-lock found besides the
   Light Blade one fixed above.
+- Clarity audit: controls are stated when they change (144p comms intro, the Ink Baron's comms line,
+  the brawler's bottom line and counter tip, the library's explore prompt, each arena's first wave),
+  and retries already restart in about 2 s with progress kept. The missing piece was objectives in
+  arena waves without a boss bar: they now show "CLEAR THE STAGE (n left)" at the top.

@@ -874,6 +874,14 @@ func _draw() -> void:
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
 		if _pt < 10.0:
 			draw_string(FONT_BODY, Vector2(210, 700), "ARROWS move   Z jump   X attack (+UP, or +DOWN in the air)   C dash   V power   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, PAPER)
+	elif _phase == "wave" and _narrator == null:
+		# the objective while there is no boss bar: how many are left on stage
+		var left := _enemies.size() + _pending.size()
+		if left > 0:
+			var obj2 := "CLEAR THE STAGE  (%d left)" % left
+			var ow2 := FONT_SHOUT.get_string_size(obj2, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
+			draw_string_outline(FONT_SHOUT, Vector2(640 - ow2 * 0.5, 120), obj2, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, 6, INK)
+			draw_string(FONT_SHOUT, Vector2(640 - ow2 * 0.5, 120), obj2, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
 	match _phase:
 		"round_intro":
 			_draw_round_card()
