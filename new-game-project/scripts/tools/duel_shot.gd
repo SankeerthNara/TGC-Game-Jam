@@ -35,6 +35,8 @@ func _ready() -> void:
 	b.boss_hp_scale = 1.3
 	b.lamps.assign([Vector2(150, 400), Vector2(470, 330), Vector2(810, 330), Vector2(1130, 400)])
 	b.waves = [[[["scribe", Vector2(640, 300), 0.0]]]] if scribe else [[[["narrator", "BALCONY", 0.0]]]]
+	b.boss_name = "THE INK SCRIBE" if scribe else "THE NARRATOR"
+	b.boss_sub = "Archivist of the Masked One" if scribe else "The Storyteller"
 	if "opera" in OS.get_cmdline_user_args():
 		b.stage = "opera"
 		b.caged_heroes = false
@@ -54,6 +56,10 @@ func _ready() -> void:
 	var late := "late" in OS.get_cmdline_user_args()
 	var n := 0
 	var last := ""
+	for i in 110:
+		ArenaBot.drive(b, press, tap)
+		await get_tree().process_frame
+	get_viewport().get_texture().get_image().save_png("user://title.png")
 	for f in 2400:
 		ArenaBot.drive(b, press, tap)
 		if late and b._narrator != null and b._narrator.hp > b._narrator.max_hp * 0.6:
@@ -61,7 +67,7 @@ func _ready() -> void:
 			late = false
 		await get_tree().process_frame
 		var st: String = b._narrator.state if b._narrator != null else ""
-		if st != last and st in ["lunge", "throw", "airdash_wind", "whirl", "stagger", "airdash", "cast_wind", "charge", "slam", "fake_death", "laugh", "hover"] and n < 10 and (not scribe or st != "hover" or b._floor_broken):
+		if st != last and st in ["lunge", "throw", "airdash_wind", "whirl", "stagger", "airdash", "cast_wind", "charge", "slam", "fake_death", "laugh", "hover", "stunned"] and n < 10 and (not scribe or st != "hover" or b._floor_broken):
 			for i in 6:
 				await get_tree().process_frame
 			get_viewport().get_texture().get_image().save_png("user://duel_%d.png" % n)

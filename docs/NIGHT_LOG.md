@@ -674,3 +674,11 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
   The wall-jump tip and "Z on a wall: wall jump" on the intro card are removed (wall jumps still work
   wherever there is a wall). Bot route updated. Flow 0 fails. climb_bot_test: win in 66 s, but the
   bot stalls on two steps (its jump logic; 2 assists there): a player climbs each step in one jump.
+
+### 20. Reference formats (autonomous, Sankeerth out)
+- H1: boss titles like the reference (a small line over a big name, shown over the fight, no card):
+  'Archivist of the Masked One / THE INK SCRIBE', 'The Storyteller / THE NARRATOR' (BossFight.boss_sub).
+  The objective line is hidden in boss fights.
+- H2: the Ink Scribe gets stunned like the Soul Master: 12% of his health in a run of hits knocks
+  him to the floor for 1.6 s (free hits), then he teleports away. He lies on the floor line (stun and
+  fake death). Flow 0 fails; bots: Scribe 73 s, Narrator 36 s.

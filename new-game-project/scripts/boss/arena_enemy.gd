@@ -1136,6 +1136,7 @@ func _draw_narrator(ci: CanvasItem, white: float, a: float, time: float) -> void
 
 var orbs: Array[Dictionary] = [] ## his ink orbs: pos, vel, t, wait (hover before homing), ring (no homing)
 var fake_dead := false ## the fake death has happened (second phase)
+var _stun_hp := -1.0 ## his health at the last stun: a run of hits (12%) knocks him down
 var _slams := 0
 
 
@@ -1165,7 +1166,23 @@ func _scribe(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
 		orbs.clear()
 		fight.scribe_fake_death(self)
 		return
+	if _stun_hp < 0.0:
+		_stun_hp = hp
+	if not state in ["fake_death", "laugh", "crash", "stunned", "tele_out", "tele_in"] and _stun_hp - hp >= max_hp * 0.12:
+		# knocked out of the air, like the Soul Master: down on the floor, open to free hits
+		_go("stunned")
+		vel = Vector2.ZERO
+		_stun_hp = hp
+		fight._say("STUNNED!", center() + Vector2(0, -90), Color("ffd23f"), 40)
+		fight.shake(8.0)
+		EventBus.sound_requested.emit("enemy_grunt")
+		return
 	match state:
+		"stunned":
+			pos.y = move_toward(pos.y, floor_y - SPRITE_H["scribe"] * 0.55, 1400.0 * dt) # lying on the floor
+			if st > 1.6:
+				_stun_hp = hp
+				_scribe_tele(fight, Vector2(cx + randf_range(-250, 250), floor_y - 300.0), "hover_in", 0.0)
 		"hover":
 			dir = signf(hero.x - pos.x) if hero.x != pos.x else dir
 			target = Vector2(cx + sin(t * 0.7) * 280.0, floor_y - 300.0 + sin(t * 1.6) * 24.0)
@@ -1248,7 +1265,7 @@ func _scribe(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
 				cd = randf_range(0.4, 0.8) if fake_dead else randf_range(0.8, 1.4)
 		"fake_death":
 			# he drops to the floor and lies still: THE END?
-			pos.y = move_toward(pos.y, floor_y - 40.0, 900.0 * dt)
+			pos.y = move_toward(pos.y, floor_y - SPRITE_H["scribe"] * 0.55, 900.0 * dt)
 			if st > 3.0:
 				_go("laugh")
 				fight.scribe_laugh(self)
@@ -1261,6 +1278,7 @@ func _scribe(dt: float, hero: Vector2, hc: Vector2, fight: Node) -> void:
 			pos += vel * dt
 			if pos.y >= floor_y - 60.0:
 				fake_dead = true
+				_stun_hp = hp
 				fight.scribe_break_floor(self)
 				floor_y = fight.floor_y
 				pos.y = floor_y - 300.0
@@ -1350,7 +1368,7 @@ func _scribe_frame() -> String:
 			return _anim_frame("boss_scribe", "slam", 2, 0.0)
 		"tele_out", "tele_in":
 			return _anim_frame("boss_scribe", "tele", 1, 10.0)
-		"fake_death", "crash":
+		"fake_death", "crash", "stunned":
 			return _anim_frame("boss_scribe", "fall", 2 if st > 0.25 else 1, 0.0)
 	return _anim_frame("boss_scribe", "float", 1, 6.0)
 

@@ -215,6 +215,7 @@ func _scribe() -> void:
 	b.lamps.assign([Vector2(180, 380), Vector2(500, 300), Vector2(780, 300), Vector2(1100, 380)])
 	b.waves = [[[["scribe", Vector2(640, 300), 0.0]]]]
 	b.boss_name = "THE INK SCRIBE"
+	b.boss_sub = "Archivist of the Masked One"
 	b.fight_title = "THE INK SCRIBE"
 	b.win_text = "SCRIBE ERASED!"
 	b.intro_lines = ["The Ink Scribe, the villain's archivist.", "Dodge his orbs (or slash them), parry his gold charge, punish the slam."]
@@ -271,6 +272,7 @@ func _final_boss() -> void:
 	b.lamps.assign([Vector2(150, 400), Vector2(470, 330), Vector2(810, 330), Vector2(1130, 400)])
 	b.waves = [[[["narrator", "BALCONY", 0.0]]]]
 	b.boss_name = "THE NARRATOR"
+	b.boss_sub = "The Storyteller"
 	b.fight_title = "THE NARRATOR"
 	b.boss_hp_scale = 1.3
 	b.narrator_line = "LET ME WRITE YOUR LAST PAGE!"

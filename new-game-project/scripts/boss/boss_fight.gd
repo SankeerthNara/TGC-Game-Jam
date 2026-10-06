@@ -48,6 +48,10 @@ var relay := true ## rounds before the last end in the scripted THE END
 var intro_lines: Array = [] ## replaces the round card text when set
 var win_text := "SOLAR FLARE!"
 var boss_name := "THE NARRATOR"
+## A boss title like the reference fights: a small line over a big name, shown over the fight (no
+## card, no pause). When set, the round card is skipped.
+var boss_sub := ""
+var _title_t := -1.0
 var boss_hp_scale := 1.0
 var narrator_line := "ENOUGH! I'LL END THIS MYSELF!"
 var fight_title := "" ## the Editions name each fight; empty = the classic "ROUND n: hero"
@@ -649,13 +653,17 @@ func _process(delta: float) -> void:
 		_freeze -= delta # hit-stop: the world holds its breath
 		queue_redraw()
 		return
+	if _title_t >= 0.0:
+		_title_t += delta
 	if _slowmo > 0.0:
 		_slowmo -= delta
 		delta *= 0.35
 	match _phase:
 		"round_intro":
 			_gate = move_toward(_gate, 0.0, delta * 2.0)
-			if _pt > 3.4:
+			if _pt > (0.4 if boss_sub != "" else 3.4):
+				if boss_sub != "":
+					_title_t = 0.0
 				_gate = 0.0
 				if _exploring:
 					_phase = "explore"
@@ -1709,6 +1717,7 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, 0.5 * _white))
 	_draw_hud()
 	_draw_hints()
+	_draw_boss_title()
 	if _phase == "explore":
 		if _pt < 6.0:
 			ComicArt.shout(self, "GO  >>", Vector2(1100, 300), 48, GOLD, 10, 0.0)
@@ -1718,7 +1727,7 @@ func _draw() -> void:
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
 		if _pt < 10.0 and _hints_on():
 			draw_string(FONT_BODY, Vector2(70, 700), "WASD move   Z jump (on a wall: wall jump)   J attack   S+J in the air: pogo   K dash   S+K in the air: dive   L parry (hold: blade)   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, PAPER)
-	elif _phase == "wave" and _narrator == null:
+	elif _phase == "wave" and _narrator == null and boss_sub == "":
 		# the objective while there is no boss bar: how many are left on stage
 		var left := _enemies.size() + _pending.size()
 		if left > 0:
@@ -1734,7 +1743,8 @@ func _draw() -> void:
 		draw_string(FONT_SHOUT, ta, _tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, GOLD)
 	match _phase:
 		"round_intro":
-			_draw_round_card()
+			if boss_sub == "":
+				_draw_round_card()
 		"wave_intro":
 			var k := clampf(_pt / 0.3, 0.0, 1.0)
 			ComicArt.shout(self, "WAVE %d" % _global_wave(), Vector2(640, 300), int(90 * k) + 1, GOLD, 14, -0.04)
@@ -2104,6 +2114,23 @@ func _card(title: String, lines: Array, col: Color) -> void:
 		var s := String(lines[i])
 		var w := FONT_BODY.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 		draw_string(FONT_BODY, Vector2(640 - w * 0.5, 470 + i * 32), s, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, INK)
+
+
+func _draw_boss_title() -> void:
+	if _title_t < 0.6 or _title_t > 4.6:
+		return
+	var lt := _title_t - 0.6
+	var a := clampf(lt / 0.5, 0.0, 1.0) * clampf((4.0 - lt) / 1.0, 0.0, 1.0)
+	var col := Color(1, 0.97, 0.9, a)
+	var sw := FONT_BODY.get_string_size(boss_sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+	draw_string_outline(FONT_BODY, Vector2(640 - sw * 0.5, 470), boss_sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, 6, Color(0, 0, 0, a * 0.8))
+	draw_string(FONT_BODY, Vector2(640 - sw * 0.5, 470), boss_sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, col)
+	var nw := FONT_SHOUT.get_string_size(boss_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 92).x
+	draw_string_outline(FONT_SHOUT, Vector2(640 - nw * 0.5, 560), boss_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 92, 12, Color(0, 0, 0, a * 0.85))
+	draw_string(FONT_SHOUT, Vector2(640 - nw * 0.5, 560), boss_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 92, col)
+	var lw := nw * 0.5 + 40.0
+	draw_line(Vector2(640 - lw, 486), Vector2(640 - sw * 0.5 - 16.0, 486), col, 2.0)
+	draw_line(Vector2(640 + sw * 0.5 + 16.0, 486), Vector2(640 + lw, 486), col, 2.0)
 
 
 func _draw_round_card() -> void:

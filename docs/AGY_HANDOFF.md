@@ -39,7 +39,7 @@ overlay, and the library's staircase (no forced wall climb). See `docs/VISUAL_PO
 
 ## Tasks
 
-### H1. Boss title like Hollow Knight: Status: see NIGHT_LOG
+### H1. Boss title like Hollow Knight: Status: DONE (Narrator + Scribe; Twins title still TODO)
 When a boss fight starts, show a non-blocking title over the play area (the fight runs underneath):
 a small line above, a big name below, fading in for 0.5 s, holding 2 s, fading out over 1 s.
 - Ink Scribe: "Archivist of the Masked One" / "THE INK SCRIBE"
@@ -50,7 +50,7 @@ Code: `scripts/boss/boss_fight.gd` (`_draw()` after `_draw_hud()`; a `boss_title
 set by `scripts/editions/editions_director.gd` in `_scribe()` / `_final_boss()`), and
 `scripts/editions/brawler_game.gd` for the Twins.
 
-### H2. Soul Master stun (Ink Scribe): Status: see NIGHT_LOG
+### H2. Soul Master stun (Ink Scribe): Status: DONE
 Like the Soul Master, a run of hits (12% of his max health since the last stun) knocks him out of
 the air: he drops to the floor and lies stunned for 1.6 s (free hits), then teleports away. Code:
 `scripts/boss/arena_enemy.gd`, the `_scribe()` state machine (add a state "stunned"; count damage in
