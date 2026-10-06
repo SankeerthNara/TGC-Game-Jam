@@ -24,16 +24,35 @@ func tap(k: Key) -> void:
 func _ready() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
-	var runs := 1
+	var configs := [
+		{"name": "ink baron (240p)", "guards": false, "stage": "opera", "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.6], ["bat", "AC", 3.5]], [["baron", "C", 0.0]]]], "scale": 1.0},
+		{"name": "opera (2k)", "stage": "opera", "chandeliers": [[Rect2(230, 360, 160, 14), 0.0], [Rect2(890, 360, 160, 14), 0.0], [Rect2(565, 220, 150, 14), 110.0]], "waves": [[[["lancer", "L", 0.0], ["lancer", "R", 0.4], ["bat", "AC", 1.2], ["bat", "AL", 1.8]], [["brute", "C", 0.0], ["dancer", "AL", 0.6], ["bat", "AR", 1.0], ["bat", "AC", 1.6]], [["brute", "L", 0.0], ["dancer", "AR", 0.8], ["lancer", "R", 1.6], ["bat", "AL", 2.2], ["dancer", "AC", 3.0]]]], "scale": 1.0},
+		{"name": "ink scribe (2k library boss)", "stage": "hall", "waves": [[[["scribe", Vector2(640, 300), 0.0]]]], "scale": 1.0},
+		{"name": "narrator (2k final)", "stage": "dark", "waves": [[[["narrator", "BALCONY", 0.0]]]], "scale": 1.6},
+	]
+	var runs := configs.size()
 	for run in runs:
 		var b := BossFight.new()
-		b.bomb_left = 900.0
+		b.bomb_left = -1.0
+		var cfgd: Dictionary = configs[run]
+		b.stage = cfgd["stage"]
+		if not cfgd.get("classic", false):
+			b.heroes = [cfgd.get("hero", 0)]
+			b.relay = false
+			b.waves = cfgd["waves"]
+			b.boss_hp_scale = cfgd["scale"]
+			b.max_hp = 6
+			b.checkpoints = true
+			b.chandeliers = cfgd.get("chandeliers", [])
+			b.guards = cfgd.get("guards", true)
 		layer.add_child(b)
 		var result := [""]
 		b.finished.connect(func(r: String) -> void: result[0] = r)
 		var frames := 0
 		var log_phase := ""
 		var shots := 0
+		var retries := 0
+		var was_retry := false
 		while result[0] == "" and frames < 60 * 600:
 			await get_tree().process_frame
 			frames += 1
@@ -41,68 +60,19 @@ func _ready() -> void:
 			var ph := "%s r%d w%d" % [b._phase, b._round, b._wave]
 			if ph != log_phase:
 				log_phase = ph
-				print("  t=%5.1f  %s  hp %d  enemies %d" % [b._t, ph, b._hp, b._enemies.size()])
+			if b._phase == "retry" and not was_retry:
+				retries += 1
+			was_retry = b._phase == "retry"
 			if DisplayServer.get_name() != "headless" and frames % 900 == 450 and shots < 8:
 				get_viewport().get_texture().get_image().save_png("user://arena_%d.png" % shots)
 				shots += 1
 		for k in _keys.keys():
 			press(k, false)
-		print("run %d: %s after %.0f s (cracked %.0f%%)" % [run, result[0], b._t, b.crack_share() * 100.0])
+		print("run %d %s: %s after %.0f s, hero hp %d, retries %d, parries %d, ripostes %d, criticals %d" % [run, configs[run]["name"], result[0], b._t, b._hp, retries, b.parries, b.ripostes, b.criticals])
 		b.queue_free()
 		await get_tree().process_frame
 	get_tree().quit()
 
 
 func _drive(b: BossFight) -> void:
-	for k in [KEY_X, KEY_Z, KEY_C, KEY_V, KEY_F]:
-		press(k, false)
-	if not b._phase in ["wave", "wave_intro"]:
-		press(KEY_LEFT, false)
-		press(KEY_RIGHT, false)
-		return
-	var hero := b.hero_pos
-	var best: ArenaEnemy = null
-	var best_d := 1e9
-	for e in b._enemies:
-		if e.state == "enter":
-			continue
-		var d := e.center().distance_to(b.hero_center())
-		if d < best_d:
-			best_d = d
-			best = e
-	var want := 640.0
-	if best != null:
-		want = best.pos.x - signf(best.pos.x - hero.x) * 70.0
-	# keep away from danger: lunges, charges, dives, fuses
-	var danger := false
-	for e in b._enemies:
-		if e.state in ["windup", "charge_wind", "fuse", "dive", "lunge", "charge", "dash"] and e.center().distance_to(b.hero_center()) < 200.0:
-			danger = true
-			want = hero.x + signf(hero.x - e.pos.x) * 200.0
-	press(KEY_LEFT, want < hero.x - 12.0)
-	press(KEY_RIGHT, want > hero.x + 12.0)
-	for w in b._waves:
-		if absf(float(w["x"]) - hero.x) < 120.0 and signf(hero.x - float(w["x"])) == float(w["dir"]) and b._ground:
-			tap(KEY_Z)
-	for d in b._drops:
-		if absf(float(d["x"]) - hero.x) < 40.0:
-			press(KEY_RIGHT, float(d["x"]) < hero.x)
-			press(KEY_LEFT, float(d["x"]) >= hero.x)
-	if danger and b._dash_cd <= 0.0 and randf() < 0.1:
-		tap(KEY_C)
-	if best != null and b._atk_cd <= 0.0:
-		var dv := best.center() - b.hero_center()
-		if absf(dv.x) < 120.0 and dv.y < -60.0:
-			press(KEY_UP, true)
-			tap(KEY_X)
-		elif absf(dv.x) < 125.0 and absf(dv.y) < 70.0:
-			press(KEY_UP, false)
-			tap(KEY_X)
-		elif dv.y < -80.0 and absf(dv.x) < 160.0 and b._ground:
-			tap(KEY_Z)
-	else:
-		press(KEY_UP, false)
-	if b._ink >= 3 and best != null and best_d < 300.0 and (b._ink >= 7 or b._hp > 2):
-		tap(KEY_V)
-	if b._hp <= 2 and b._ink >= 6 and not danger:
-		tap(KEY_F)
+	ArenaBot.drive(b, press, tap)

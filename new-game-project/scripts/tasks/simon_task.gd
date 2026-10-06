@@ -83,13 +83,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	match event.keycode:
-		KEY_UP:
+		KEY_UP, KEY_W:
 			_press(0)
-		KEY_RIGHT:
+		KEY_RIGHT, KEY_D:
 			_press(1)
-		KEY_DOWN:
+		KEY_DOWN, KEY_S:
 			_press(2)
-		KEY_LEFT:
+		KEY_LEFT, KEY_A:
 			_press(3)
 
 

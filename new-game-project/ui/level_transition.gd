@@ -29,6 +29,8 @@ const HERO_NAMES := [
 	"THE SPACE HERO"
 ]
 
+const PORTRAIT := "res://assets/editions/portraits/hero.png"
+
 const HERO_SUBTITLES := [
 	"DEFENDER OF THE METROPOLIS",
 	"SHADOWS IN THE RAINY PRECINCT",
@@ -112,8 +114,13 @@ func _draw_card(ci: Control) -> void:
 	ComicArt.disc(ci, portrait_center, frame_r, Color(0, 0, 0, 0), 5.0)
 
 	# Draw Hero Bust
-	var kind := clampi(level_index, 0, 3)
-	ComicArt.hero_bust(ci, kind, portrait_center, 1.45, "determined", _time)
+	# the Editions have one hero (the other three are captured): always the pulp hero, painted if possible
+	var editions := get_tree().get_first_node_in_group("editions_director") != null
+	var kind := 0 if editions else clampi(level_index, 0, 3)
+	if kind == 0 and ResourceLoader.exists(PORTRAIT):
+		ComicArt.portrait_disc(ci, load(PORTRAIT), portrait_center, frame_r, Vector2(0.5, 0.42), 0.4)
+	else:
+		ComicArt.hero_bust(ci, kind, portrait_center, 1.45, "determined", _time)
 
 	# Right side text block
 	var text_x := 530.0

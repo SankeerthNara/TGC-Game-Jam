@@ -1,6 +1,6 @@
 class_name ComicUI
 extends CanvasLayer
-## Comic UI for Mirror Page: HUD, Narrator Caption Box, Audio triggers, Pause Menu and Level Clear / Twist banners.
+## Comic UI for Glitched Out: HUD, Narrator Caption Box, Audio triggers, Pause Menu and Level Clear / Twist banners.
 ## Listens strictly to EventBus signals as specified in docs/ARCHITECTURE.md.
 
 const FONT_TITLE := preload("res://assets/fonts/Bangers-Regular.ttf")
@@ -365,6 +365,18 @@ func _build_pause_modal(parent: Control) -> void:
 		btn_sfx.text = "SFX: %s" % ("OFF" if _sfx_muted else "ON"))
 	menu_vbox.add_child(btn_sfx)
 
+	var btn_voice := _make_comic_button("VOICE: 100%")
+	btn_voice.custom_minimum_size = Vector2(0, 42)
+	btn_voice.pressed.connect(func() -> void:
+		var vo := VoPlayer.get_vo(get_tree())
+		if vo == null:
+			return
+		var steps := [1.0, 0.5, 0.0]
+		var nxt: float = steps[(steps.find(vo.volume) + 1) % steps.size()] if steps.has(vo.volume) else 1.0
+		vo.set_volume(nxt)
+		btn_voice.text = "VOICE: %s" % ("OFF" if nxt <= 0.0 else "%d%%" % int(nxt * 100.0)))
+	menu_vbox.add_child(btn_voice)
+
 	var btn_restart := _make_comic_button("RESTART LEVEL")
 	btn_restart.custom_minimum_size = Vector2(0, 42)
 	btn_restart.pressed.connect(func() -> void:
@@ -415,7 +427,7 @@ func _build_pause_modal(parent: Control) -> void:
 	ctrl_vbox.add_child(ctrl_title)
 
 	var entries: Array[Array] = [
-		["ARROWS / WASD", "Move hero"],
+		["WASD / ARROWS", "Move hero"],
 		["Z / SPACE / ENTER", "Interact / Action / Skip"],
 		["M", "Toggle minimap"],
 		["F", "Give task to friend ally"],
@@ -445,8 +457,9 @@ func _build_pause_modal(parent: Control) -> void:
 	sep.add_theme_constant_override("separation", 10)
 	ctrl_vbox.add_child(sep)
 
+	var editions: bool = load("res://scripts/core/main.gd").get_script_constant_map().get("EDITIONS", false)
 	var chase_title := Label.new()
-	chase_title.text = "CHASE CONTROLS"
+	chase_title.text = "CHASE & FIGHT CONTROLS" if editions else "CHASE CONTROLS"
 	chase_title.add_theme_font_override("font", FONT_TITLE)
 	chase_title.add_theme_font_size_override("font_size", 16)
 	chase_title.add_theme_color_override("font_color", Color("18151d"))
@@ -457,6 +470,12 @@ func _build_pause_modal(parent: Control) -> void:
 		["LEVEL 3 RUN", "Up jump, Down slide"],
 		["LEVEL 4 SWING", "Space swing, Shift reel, X web"]
 	]
+	if editions:
+		chase_entries = [
+			["VILLAIN CHASE", "A / D lean and roll, Space jump"],
+			["720p BRAWL", "J punch, Z jump, K roll, L counter"],
+			["2K FIGHTS", "L parry (hold: blade), Z wall jump, K dash, S+J pogo, S+K dive"]
+		]
 
 	for entry in chase_entries:
 		var row := HBoxContainer.new()
@@ -558,6 +577,8 @@ func _on_game_state_changed(state: String) -> void:
 	_info_box.visible = in_puzzle
 	_action_bar.visible = in_puzzle
 	_pause_modal.visible = state == "paused"
+	# the pause menu must sit above everything (fights and tasks are on layer 18, the edition filter 95)
+	layer = 110 if state == "paused" else 10
 	_end_modal.visible = false # the run's end screens are drawn by main (bomb room, Earth blast)
 
 
@@ -574,6 +595,8 @@ func _on_level_loaded(index: int, data: Dictionary) -> void:
 
 
 func _on_caption_changed(text: String) -> void:
+	if get_tree().get_first_node_in_group("comms") != null and text.begins_with("NARRATOR:"):
+		return # the editions show the Narrator on the comms box instead
 	var clean := text.strip_edges()
 	if clean.is_empty():
 		_caption_box.visible = false

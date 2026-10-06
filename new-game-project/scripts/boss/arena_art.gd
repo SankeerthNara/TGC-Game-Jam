@@ -11,7 +11,8 @@ const GLOW := Color("ffb46b")
 const FLOOR_Y := 600.0
 const PODIUM := Rect2(520, 505, 240, 18) ## the rim of the giant inkwell: a platform
 const TEX_GLOW := preload("res://assets/art/radial_glow.png")
-const HERO_SCALE := 1.35
+const HERO_SCALE := 1.62 ## +20% (the hero reads like the reference fights)
+static var land_squash := 0.0 ## 0..1, set by the fight for the frame after a landing
 
 const HERO_MAIN := [Color("1d4ed8"), Color("c2a878"), Color("1f2a44"), Color("ff70a6")]
 const HERO_ACCENT := [Color("e63946"), Color("3d3f4a"), Color("f77f00"), Color("2ec4b6")]
@@ -167,6 +168,8 @@ static func foreground(ci: CanvasItem, sz: Vector2) -> void:
 ## A hero (kind: ComicArt hero index 1 noir, 2 ninja, 3 space) at feet position `f`, facing `dir` (1 or -1).
 ## pose: idle | run | jump | fall | dash | attack | attack_up | attack_down | hurt | heal
 static func hero(ci: CanvasItem, kind: int, f: Vector2, dir: float, pose: String, t: float, flash := 0.0, sc := 1.0) -> void:
+	if kind == 0 and _hero_sprite(ci, f, dir, pose, t, flash, sc):
+		return
 	var main: Color = HERO_MAIN[kind]
 	var acc: Color = HERO_ACCENT[kind]
 	if flash > 0.0:
@@ -207,6 +210,17 @@ static func hero(ci: CanvasItem, kind: int, f: Vector2, dir: float, pose: String
 	# coat / cape / scarf behind the body
 	var flow := sin(t * 9.0) * 4.0 - (10.0 if pose in ["run", "dash"] else 0.0)
 	match kind:
+		0: # the pulp hero's long torn crimson cape, whipping behind him
+			var whip := sin(t * 7.0) * 6.0 + (-16.0 if pose in ["run", "dash"] else 0.0) + (10.0 if pose in ["jump", "fall"] else 0.0)
+			var c0 := neck + Vector2(-5, -2)
+			var c1 := neck + Vector2(5, 0)
+			var c2 := hip + Vector2(-26 + whip, 28)
+			var c3 := hip + Vector2(-44 + whip * 1.3, 22)
+			poly(ci, PackedVector2Array([c0, c1, c2, c3]), acc, 3.0)
+			# torn ends
+			ci.draw_colored_polygon(PackedVector2Array([c2, c2.lerp(c3, 0.5) + Vector2(-2, 10), c2.lerp(c3, 0.5)]), acc)
+			ci.draw_colored_polygon(PackedVector2Array([c2.lerp(c3, 0.5), c3 + Vector2(-4, 12), c3]), acc)
+			ci.draw_line(neck + Vector2(-4, 2), hip + Vector2(-20 + whip, 14), acc.darkened(0.35), 3.0)
 		1: # trench coat tails
 			poly(ci, PackedVector2Array([neck + Vector2(-6, 4), neck + Vector2(8, 4), hip + Vector2(10, 8), hip + Vector2(-16 + flow, 12)]), main, 3.0)
 		2: # long scarf
@@ -218,6 +232,12 @@ static func hero(ci: CanvasItem, kind: int, f: Vector2, dir: float, pose: String
 	ci.draw_line(hip, neck, main, 15.0)
 	if kind == 2:
 		ci.draw_line(hip + Vector2(-5, -6), neck + Vector2(6, 6), acc, 4.0)
+	elif kind == 0:
+		# gold lightning emblem and a high collar
+		var em := (hip + neck) * 0.5 + Vector2(2, -2)
+		ci.draw_colored_polygon(PackedVector2Array([em + Vector2(0, -6), em + Vector2(5, 0), em + Vector2(0, 6), em + Vector2(-5, 0)]), GOLD)
+		ci.draw_polyline(PackedVector2Array([em + Vector2(1, -4), em + Vector2(-2, 1), em + Vector2(2, 1), em + Vector2(-1, 5)]), Color("e63946"), 1.5)
+		poly(ci, PackedVector2Array([neck + Vector2(-9, 4), neck + Vector2(-11, -12), neck + Vector2(-2, -4)]), acc, 2.0)
 	# arms: the weapon arm depends on the pose
 	var hand := neck + Vector2(10, 14)
 	match pose:
@@ -237,6 +257,15 @@ static func hero(ci: CanvasItem, kind: int, f: Vector2, dir: float, pose: String
 	# head
 	var head := neck + Vector2(3, -13)
 	match kind:
+		0: # the pulp hero: swept black hair, domino mask, glowing white eyes
+			ci.draw_circle(head, 12.5, INK)
+			ci.draw_circle(head, 10.5, Color("e8b48a") if flash <= 0.0 else Color.WHITE)
+			ci.draw_colored_polygon(PackedVector2Array([head + Vector2(-12, -2), head + Vector2(-10, -12), head + Vector2(2, -15), head + Vector2(13, -9), head + Vector2(10, -6), head + Vector2(-4, -8)]), INK)
+			ci.draw_colored_polygon(PackedVector2Array([head + Vector2(-9, -10), head + Vector2(-21, -17), head + Vector2(-5, -14)]), INK)
+			ci.draw_rect(Rect2(head + Vector2(-6, -5), Vector2(18, 6)), INK)
+			ci.draw_circle(head + Vector2(7, -2), 4.0, Color(1, 1, 1, 0.35))
+			ci.draw_circle(head + Vector2(7, -2), 2.2, Color.WHITE)
+			ci.draw_line(head + Vector2(4, 5), head + Vector2(10, 4), INK, 2.0)
 		1: # noir detective: skin, fedora
 			ci.draw_circle(head, 12.0, INK)
 			ci.draw_circle(head, 10.0, Color("ffd2a6") if flash <= 0.0 else Color.WHITE)
@@ -259,6 +288,36 @@ static func hero(ci: CanvasItem, kind: int, f: Vector2, dir: float, pose: String
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
+## The painted pulp hero (Antigravity's sprite frames), if they exist.
+static func _hero_sprite(ci: CanvasItem, f: Vector2, dir: float, pose: String, t: float, flash: float, sc: float) -> bool:
+	var key := "hero_idle"
+	var squash := 1.0 + sin(t * 3.0) * 0.015
+	var rot := 0.0
+	var bob := 0.0
+	match pose:
+		"run":
+			key = "hero_run1" if int(t * 9.0) % 2 == 0 else "hero_run2"
+			squash = 1.0 + absf(sin(t * 28.0)) * 0.03
+			bob = -absf(sin(t * 28.0)) * 4.0 * sc
+			rot = 0.07 * dir
+		"jump", "fall", "attack_down":
+			key = "hero_jump"
+		"attack", "attack_up":
+			key = "hero_attack"
+			rot = -0.2 * dir if pose == "attack_up" else 0.1 * dir
+			squash = 0.95
+		"dash":
+			key = "hero_dash"
+		"hurt":
+			key = "hero_hurt"
+	if not Sprites.has(key):
+		key = "hero_idle"
+	if land_squash > 0.0:
+		squash *= 1.0 - 0.18 * land_squash
+	var tint := Color(1, 1, 1, 0.55) if flash > 0.0 else Color.WHITE
+	return Sprites.draw(ci, key, f + Vector2(0, 4 + bob), 128.0 * sc, dir, tint, squash, rot)
+
+
 static func _weapon(ci: CanvasItem, kind: int, hand: Vector2, pose: String) -> void:
 	var tip := hand + Vector2(30, -6)
 	if pose == "attack_up":
@@ -268,6 +327,12 @@ static func _weapon(ci: CanvasItem, kind: int, hand: Vector2, pose: String) -> v
 	elif pose in ["idle", "run", "jump", "fall", "hurt", "heal"]:
 		tip = hand + Vector2(18, 20)
 	match kind:
+		0: # blade of light
+			var tip2 := hand + (tip - hand) * 1.5
+			ci.draw_line(hand, tip2, Color(1, 0.95, 0.7, 0.35), 9.0)
+			ci.draw_line(hand, tip2, Color("fff6d5"), 3.5)
+			ci.draw_line(hand - (tip - hand).normalized() * 8.0, hand, INK, 5.0)
+			ci.draw_circle(hand, 3.5, GOLD)
 		1: # torch-baton
 			ci.draw_line(hand, tip, INK, 7.0)
 			ci.draw_line(hand, tip, Color("6b6f80"), 4.0)
@@ -284,7 +349,7 @@ static func _weapon(ci: CanvasItem, kind: int, hand: Vector2, pose: String) -> v
 ## The white crescent of a slash (the arc follows the attack direction).
 static func slash(ci: CanvasItem, c: Vector2, dir: Vector2, k: float, big := false) -> void:
 	var a := dir.angle()
-	var r := 62.0 if not big else 90.0
+	var r := 92.0 if not big else 130.0
 	var span := 1.6
 	var pts := PackedVector2Array()
 	var n := 14
@@ -293,11 +358,12 @@ static func slash(ci: CanvasItem, c: Vector2, dir: Vector2, k: float, big := fal
 		pts.append(c + Vector2.from_angle(a - span * 0.5 + span * u) * r)
 	for i in n + 1:
 		var u := 1.0 - float(i) / n
-		var thick := maxf(1.5, sin(u * PI) * (16.0 if not big else 26.0))
+		var thick := maxf(1.5, sin(u * PI) * (22.0 if not big else 34.0))
 		pts.append(c + Vector2.from_angle(a - span * 0.5 + span * u) * (r - thick))
 	var alpha := clampf(1.0 - k, 0.0, 1.0)
 	ci.draw_colored_polygon(pts, Color(1, 1, 1, 0.95 * alpha))
-	ci.draw_arc(c, r + 4.0, a - span * 0.5, a + span * 0.5, 16, Color(1, 0.9, 0.6, 0.5 * alpha), 3.0)
+	ci.draw_arc(c, r + 4.0, a - span * 0.5, a + span * 0.5, 16, Color(1, 1, 0.95, 0.7 * alpha), 4.0)
+	ci.draw_arc(c, r + 12.0, a - span * 0.4, a + span * 0.4, 16, Color(1, 1, 1, 0.3 * alpha), 8.0)
 
 
 ## A white starburst where a hit lands.

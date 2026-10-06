@@ -22,6 +22,11 @@ func _ready() -> void:
 	EventBus.request_start_game.emit()
 	await frames(3)
 	main._overlay.skip()
+	# the editions glitch into the first level a moment after the book
+	for i in 2000:
+		if main.state == "world":
+			break
+		await get_tree().process_frame
 	await frames(3)
 	main._level_complete()
 	await frames(3)

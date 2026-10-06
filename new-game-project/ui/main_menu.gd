@@ -1,7 +1,7 @@
 class_name MainMenu
 extends Control
-## Animated comic cover main menu for Mirror Page:
-## Big logo, looming masked villain, 4 hero busts, ticking 17:00 bomb, comic buttons.
+## Animated comic cover main menu for Glitched Out:
+## Big logo, looming masked villain, 4 hero busts, a "NOW IN 240p" badge, comic buttons.
 
 const FONT_TITLE := preload("res://assets/fonts/Bangers-Regular.ttf")
 const FONT_BODY := preload("res://assets/fonts/ComicNeue-Bold.ttf")
@@ -12,6 +12,7 @@ const PAPER := Color("fff3d1")
 const GOLD := Color("ffd23f")
 const RED := Color("e63946")
 
+const TEX_GLOW := preload("res://assets/art/radial_glow.png")
 var _help_modal: Control
 var _credits_modal: Control
 var _sfx_player: AudioStreamPlayer
@@ -21,7 +22,6 @@ const HERO_NAMES := ["PULP", "NOIR", "NINJA", "SPACE"]
 
 
 func _ready() -> void:
-	set_deferred("size", Vector2(1280, 720))
 	custom_minimum_size = Vector2(1280, 720)
 	
 	_sfx_player = AudioStreamPlayer.new()
@@ -96,28 +96,36 @@ func _draw() -> void:
 	draw_string(FONT_BODY, Vector2(36, 92), "BY THE", HORIZONTAL_ALIGNMENT_CENTER, 48, 10, INK)
 	draw_string(FONT_TITLE, Vector2(36, 112), "COMICS CODE", HORIZONTAL_ALIGNMENT_CENTER, 48, 10, RED)
 
-	# 3. Looming Masked Villain (Center-Top background)
+	# 3. Looming Masked Villain (centre background): the painted villain in a purple glow
 	var villain_y := 275.0 + sin(_time * 1.8) * 6.0
 	var villain_pos := Vector2(680, villain_y)
-	
-	# Ominous aura burst behind villain
-	ComicArt.disc(self, villain_pos, 160.0, Color(0.18, 0.04, 0.22, 0.35), 0.0)
-	# Draw Masked Villain: mask_off = 0.0 (masked!), mood = "grin"
-	ComicArt.narrator(self, villain_pos, 1.75, 0.0, "grin", _time)
+	ComicArt.burst(self, sz, Vector2(700, 330), Color(0.55, 0.3, 0.75, 0.0), Color(0.55, 0.3, 0.75, 0.14), 20, _time * 0.05)
+	draw_texture_rect(TEX_GLOW, Rect2(Vector2(700, 380) - Vector2(330, 330), Vector2(660, 660)), false, Color(0.45, 0.1, 0.6, 0.45))
+	if not Sprites.draw(self, "masked_villain", Vector2(705, 712 + sin(_time * 1.8) * 5.0), 600.0, -1.0, Color(0.92, 0.85, 1.0)):
+		ComicArt.disc(self, villain_pos, 160.0, Color(0.18, 0.04, 0.22, 0.35), 0.0)
+		ComicArt.narrator(self, villain_pos, 1.75, 0.0, "grin", _time)
 
 	# Villain speech / whisper bubble
-	var speech_c := villain_pos + Vector2(170, -70)
+	var speech_c := Vector2(990, 262) + Vector2(0, sin(_time * 1.8) * 5.0)
 	var speech_rect := Rect2(speech_c - Vector2(100, 24), Vector2(200, 48))
 	draw_rect(Rect2(speech_rect.position + Vector2(3, 3), speech_rect.size), Color(0, 0, 0, 0.35))
 	draw_rect(speech_rect, PAPER)
 	draw_rect(speech_rect, INK, false, 2.5)
-	draw_colored_polygon(PackedVector2Array([speech_c + Vector2(-60, 24), speech_c + Vector2(-75, 38), speech_c + Vector2(-45, 24)]), PAPER)
-	draw_polyline(PackedVector2Array([speech_c + Vector2(-60, 24), speech_c + Vector2(-75, 38), speech_c + Vector2(-45, 24)]), INK, 2.5)
-	draw_string(FONT_TITLE, speech_c + Vector2(-90, 7), "THE CLOCK IS TICKING...", HORIZONTAL_ALIGNMENT_CENTER, 180, 16, RED)
+	var tail := PackedVector2Array([speech_c + Vector2(-100, -10), speech_c + Vector2(-136, -16), speech_c + Vector2(-100, 8)])
+	draw_colored_polygon(tail, PAPER)
+	draw_polyline(tail, INK, 2.5)
+	draw_string(FONT_TITLE, speech_c + Vector2(-90, 7), "THE LIGHT IS MINE...", HORIZONTAL_ALIGNMENT_CENTER, 180, 16, RED)
 
-	# 4. Big MIRROR PAGE Logo
+	# 4. Big GLITCHED OUT Logo
 	var logo_pos := Vector2(460, 130)
-	ComicArt.shout(self, "MIRROR PAGE", logo_pos, 82, GOLD, 14, -0.02, 1.0)
+	# the title glitches now and then: cyan and magenta ghosts jump apart for a moment
+	var burst := fposmod(_time, 3.2) < 0.18
+	var split := (10.0 + 6.0 * sin(_time * 90.0)) if burst else 3.0
+	var lw := FONT_TITLE.get_string_size("GLITCHED OUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 82).x
+	var base := logo_pos + Vector2(-lw * 0.5, 82 * 0.33)
+	draw_string(FONT_TITLE, base + Vector2(-split, 0), "GLITCHED OUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 82, Color(0.2, 1.0, 1.0, 0.8))
+	draw_string(FONT_TITLE, base + Vector2(split, 2), "GLITCHED OUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 82, Color(1.0, 0.2, 0.6, 0.8))
+	ComicArt.shout(self, "GLITCHED OUT", logo_pos + (Vector2(randf_range(-4, 4), 0) if burst else Vector2.ZERO), 82, GOLD, 14, -0.02, 1.0)
 
 	# Subtitle ribbon
 	var sub_pts := PackedVector2Array([
@@ -128,12 +136,10 @@ func _draw() -> void:
 	])
 	draw_colored_polygon(sub_pts, RED)
 	draw_polyline(PackedVector2Array([sub_pts[0], sub_pts[1], sub_pts[2], sub_pts[3], sub_pts[0]]), INK, 3.0)
-	draw_string(FONT_TITLE, Vector2(150, 196), "✦ A DARK COMIC RACE AGAINST THE BOMB! ✦", HORIZONTAL_ALIGNMENT_CENTER, 610, 20, PAPER)
+	draw_string(FONT_TITLE, Vector2(150, 196), "✦ THE EDITIONS: ONE STORY, THREE RESOLUTIONS ✦", HORIZONTAL_ALIGNMENT_CENTER, 610, 20, PAPER)
 
-	# 5. Ticking Bomb (Upper-Right) showing 17:00
+	# 5. A "NOW IN 240p" badge (the editions joke, upper right)
 	var bomb_pos := Vector2(1040, 240)
-	var bomb_urgent := (int(_time * 3.0) % 2 == 0)
-	ComicArt.bomb(self, bomb_pos, 54.0, 1020.0, _time, bomb_urgent)
 	
 	# Comic burst tag over bomb
 	var bomb_badge_pos := bomb_pos + Vector2(0, -78)
@@ -145,35 +151,30 @@ func _draw() -> void:
 	b_pts.append(b_pts[0])
 	draw_colored_polygon(b_pts, GOLD)
 	draw_polyline(b_pts, INK, 2.5)
-	draw_string(FONT_TITLE, bomb_badge_pos + Vector2(-60, 6), "17:00 ZERO HOUR!", HORIZONTAL_ALIGNMENT_CENTER, 120, 14, INK)
+	draw_string(FONT_TITLE, bomb_badge_pos + Vector2(-60, 6), "NOW IN 240p!", HORIZONTAL_ALIGNMENT_CENTER, 120, 14, INK)
 
-	# 6. Four Hero Busts (Bottom-Left Spread)
+	# 6. The pulp hero in the foreground, light blade ready (the four busts if the art is missing)
+	draw_texture_rect(TEX_GLOW, Rect2(Vector2(250, 520) - Vector2(260, 260), Vector2(520, 520)), false, Color(1, 0.85, 0.45, 0.55))
+	if Sprites.draw(self, "hero_idle", Vector2(250, 716), 470.0, 1.0, Color.WHITE, 1.0 + sin(_time * 2.2) * 0.008):
+		var tag := Rect2(Vector2(96, 252), Vector2(300, 30))
+		draw_rect(Rect2(tag.position + Vector2(3, 3), tag.size), Color(0, 0, 0, 0.3))
+		draw_rect(tag, RED)
+		draw_rect(tag, INK, false, 2.0)
+		draw_string(FONT_TITLE, tag.position + Vector2(0, 21), "THE LAST HERO STANDING!", HORIZONTAL_ALIGNMENT_CENTER, tag.size.x, 18, PAPER)
+		return
 	var h_panel := Rect2(Vector2(40, 465), Vector2(740, 215))
 	draw_rect(Rect2(h_panel.position + Vector2(4, 4), h_panel.size), Color(0, 0, 0, 0.25))
 	draw_rect(h_panel, Color(1, 0.98, 0.93, 0.95))
 	draw_rect(h_panel, INK, false, 4.0)
-
-	# Hero panel banner tag
 	var h_tag := Rect2(h_panel.position + Vector2(16, -15), Vector2(240, 28))
 	draw_rect(h_tag, RED)
 	draw_rect(h_tag, INK, false, 2.0)
 	draw_string(FONT_TITLE, h_tag.position + Vector2(12, 19), "✦ 4 SUPERHEROES MUST UNITE! ✦", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, PAPER)
-
-	var h_start_x := 130.0
-	var h_spacing := 170.0
 	for i in 4:
-		var hc := Vector2(h_start_x + i * h_spacing, 565)
-
-		# Portrait circle framing
-		var circle_r := 52.0
-		ComicArt.disc(self, hc, circle_r + 4.0, INK, 0.0)
-		ComicArt.disc(self, hc, circle_r, Color("ffe680"), 0.0)
-		ComicArt.disc(self, hc, circle_r, Color(0, 0, 0, 0), 3.5)
-
-		# Hero bust
+		var hc := Vector2(130.0 + i * 170.0, 565)
+		ComicArt.disc(self, hc, 56.0, INK, 0.0)
+		ComicArt.disc(self, hc, 52.0, Color("ffe680"), 0.0)
 		ComicArt.hero_bust(self, i, hc, 0.72, "determined", _time)
-
-		# Name label pill
 		var pill_rect := Rect2(Vector2(hc.x - 48, hc.y + 54), Vector2(96, 22))
 		draw_rect(pill_rect, INK)
 		draw_string(FONT_TITLE, Vector2(hc.x - 46, hc.y + 70), HERO_NAMES[i], HORIZONTAL_ALIGNMENT_CENTER, 92, 14, GOLD)
@@ -252,12 +253,12 @@ func _build_help_modal() -> void:
 	vbox.add_child(title)
 
 	var rules := [
-		"1. THE BOMB: 17 minutes on the clock for the whole run. Finish a level to win a key; 4 keys open the bomb room.",
-		"2. MOVE with arrows / WASD. It is dark: only your torch lights the way. [M] opens the map.",
-		"3. TASKS: walk to a console and press [Z]. Finish every task to fill the progress bar. [ESC] leaves a task.",
-		"4. SABOTAGE: the villain breaks things. Run to the fix console before the timer ends or lose hearts.",
-		"5. VAMPIRES: hold your torch on one, then REVEAL or KILL. One is your friend, one is the villain. Pure chance!",
-		"6. Out of hearts? Back to the start of the level, but the bomb keeps its time.",
+		"1. THE STORY: a masked villain drained the light. Without light, the world loses its detail.",
+		"2. YOUR GUIDE: the Narrator talks to you on your comms machine. Listen to him.",
+		"3. FIRST EDITION: WASD or the arrows move, your torch lights the dark. [Z] at a console starts a task, [ESC] leaves it. Fix sabotage in time. Vampires: REVEAL or KILL?",
+		"4. LATER EDITIONS: [J] attack, [Z]/[SPACE] jump (on a wall: wall jump), [K] dash / roll, [S]+[J] in the air: pogo, [S]+[K]: dive, [L] PARRY a gold flash (hold L: Light Blade; 720p: COUNTER on red eyes), [F] heal.",
+		"5. [P] pauses. [M] shows the map in the first edition.",
+		"6. Sometimes the story needs YOU, the reader. Keep your mouse close.",
 	]
 
 	for r in rules:
@@ -318,7 +319,7 @@ func _build_credits_modal() -> void:
 	vbox.add_child(title)
 
 	var text := Label.new()
-	text.text = "MIRROR PAGE\nCreated for TGC Game Jam (100 Hours)\n\nDesigner & Team Lead: Sankeerth Nara\nEngine: Godot 4.7 (Compatibility Renderer)\nFonts: Bangers (SIL OFL), Comic Neue (SIL OFL)\nAudio: Procedural CC0 synthesized sounds\n\nFull attribution logged in CREDITS.md."
+	text.text = "GLITCHED OUT\nCreated for TGC Game Jam (100 Hours)\n\nStory, design & team lead: Sankeerth Nara (team Game it)\nEngine: Godot 4.7 (Compatibility Renderer)\nFonts: Bangers, Comic Neue (SIL OFL)\nArt: drawn in code + AI-generated backgrounds and sprites (Antigravity)\nMusic & sounds: synthesised by our own scripts (CC0)\nAI tools used (disclosed): Claude Code, Antigravity, ChatGPT/Codex, ElevenLabs (voices)\n\nFull attribution: CREDITS.md and docs/AI_USAGE.md."
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_theme_font_override("font", FONT_BODY)

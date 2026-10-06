@@ -168,9 +168,9 @@ func _draw() -> void:
 		draw_string(FONT_SHOUT, Vector2(right - 200, y), "%d PTS" % total_score, HORIZONTAL_ALIGNMENT_RIGHT, 160, 42, RED)
 		_rank_badge(Vector2(right - 20, y - 10), 28.0, overall_rank)
 		y += 34.0
-		draw_string(FONT_BODY, Vector2(left + 10, y), "Total Run Time: %s    Bomb Clock Remaining: %s" % [_fmt(total_time), _fmt(bomb_left)], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, INK)
+		draw_string(FONT_BODY, Vector2(left + 10, y), ("Total Run Time: %s    Bomb Clock Remaining: %s" % [_fmt(total_time), _fmt(bomb_left)]) if bomb_left >= 0.0 else "Total Run Time: %s" % _fmt(total_time), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, INK)
 		y += 26.0
-		draw_string(FONT_BODY, Vector2(left + 10, y), "Thanks for playing Mirror Page!" if won else "Play again and save the first hero.", HORIZONTAL_ALIGNMENT_LEFT, 680, 18, Color("5c5470"))
+		draw_string(FONT_BODY, Vector2(left + 10, y), "Thanks for playing Glitched Out!" if won else "Play again and save the first hero.", HORIZONTAL_ALIGNMENT_LEFT, 680, 18, Color("5c5470"))
 	else:
 		for ln in lines:
 			var pts: int = ln[1]
@@ -188,7 +188,7 @@ func _draw() -> void:
 		var par_note := "Time: %s   Par: %s   [%s]    Total: %d pts" % [_fmt(level_time), _fmt(par), "UNDER PAR" if under else "OVER PAR", total_score]
 		draw_string(FONT_BODY, Vector2(left + 10, y), par_note, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("2d6a4f") if under else Color("5c5470"))
 		y += 26.0
-		var note := "🗝 Bomb Key %d of %d secured! Checkpoint saved." % [keys_found, key_total]
+		var note := ("🗝 Bomb Key %d of %d secured! Checkpoint saved." % [keys_found, key_total]) if key_total > 0 else "Checkpoint saved. The Narrator is proud of you."
 		if to_bomb_room:
 			note = "🗝 ALL 4 KEYS COLLECTED! The Bomb Room awaits with %s on the clock!" % _fmt(bomb_left)
 		elif easier_next:

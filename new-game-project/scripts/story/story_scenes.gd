@@ -14,6 +14,12 @@ static func pages(kind: String) -> Array:
 			return _earth_blast()
 		"ending_sun":
 			return _ending_sun()
+		"book":
+			return _book()
+		"reveal":
+			return _reveal()
+		"ending_editions":
+			return _ending_editions()
 		"ending_lava":
 			return _ending_lava()
 	return []
@@ -21,6 +27,22 @@ static func pages(kind: String) -> Array:
 
 static func _p(key: String, x: float, y: float, w: float, h: float, at := 0.0, enter := "fade") -> Dictionary:
 	return {"key": key, "rect": Rect2(x, y, w, h), "at": at, "enter": enter}
+
+
+const SPR := "res://assets/editions/sprites/"
+const PORT := "res://assets/editions/portraits/"
+const BG2 := "res://assets/editions/2k/"
+
+
+## A cinematic panel from the painted art (see ComicPanel._draw_art for the keys).
+static func _art(x: float, y: float, w: float, h: float, at: float, enter: String, art: Dictionary) -> Dictionary:
+	var d := _p("art", x, y, w, h, at, enter)
+	d["art"] = art
+	return d
+
+
+static func _cages(x: float, y: float, w: float, h: float, at: float, enter: String) -> Dictionary:
+	return _art(x, y, w, h, at, enter, {"bg": BG2 + "arena_dark.jpg", "cam": [Vector2(0.3, 0.45), 1.3], "cam2": [Vector2(0.7, 0.5), 1.15], "dur": 6.0, "fx": "cages"})
 
 
 static func _cap(text: String, panel: int, at: float, where := "tl", width := 440.0) -> Dictionary:
@@ -33,6 +55,22 @@ static func _say(text: String, panel: int, at: float, pos: Vector2, tail: Vector
 
 static func _sfx(text: String, panel: int, at: float, pos: Vector2, size := 64, color := Color("ffd23f"), rot := -0.08) -> Dictionary:
 	return {"text": text, "panel": panel, "at": at, "pos": pos, "size": size, "color": color, "rot": rot}
+
+
+## A camera moment on a page: shake, white flash, a zoom punch on one panel, a sound.
+static func _fx(at: float, shake := 0.0, flash := 0.0, punch := -1, sound := "") -> Dictionary:
+	var d := {"at": at, "shake": shake, "flash": flash}
+	if punch >= 0:
+		d["punch"] = punch
+	if sound != "":
+		d["sound"] = sound
+	return d
+
+
+## The same line, typed slower (for the lines that should land).
+static func _slow(d: Dictionary, cps: float) -> Dictionary:
+	d["cps"] = cps
+	return d
 
 
 static func _opening() -> Array:
@@ -173,4 +211,118 @@ static func _ending_lava() -> Array:
 			_say("Turn the page, reader. Try again... if you dare.", 0, 2.2, Vector2(0.78, 0.75), Vector2(0.95, 0.95), "narrator", 300.0)],
 		 "sfx": [_sfx("THE END?", 0, 3.6, Vector2(0.5, 0.45), 96, Color("c77dff"), -0.04)],
 		 "hold": 3.0},
+	]
+
+
+## The editions opening: a comic book is opened and read; the story glitches into the game.
+static func _book() -> Array:
+	return [
+		{"panels": [_p("book_cover", 0, 0, 1, 1, 0.0, "settle")],
+		 "text": [_cap("Every story has a narrator. This one has a secret.", 0, 1.2, "bl", 420.0)],
+		 "sfx": [_sfx("GLITCHED OUT", 0, 0.3, Vector2(0.5, 0.42), 110, Color("ffd23f"), -0.03)],
+		 "hold": 1.4, "turn": "dive"},
+		{"panels": [
+			_p("bk_peace", 0, 0, 0.58, 1, 0.0, "left"),
+			_p("bk_heroes", 0.58, 0, 0.42, 1, 1.6, "right")],
+		 "text": [
+			_cap("Once, the Earth shone with light...", 0, 0.3, "tl", 340.0),
+			_cap("...guarded by four heroes.", 1, 2.0, "bl", 300.0)],
+		 "hold": 0.8},
+		{"beat": true,
+		 "panels": [_art(0, 0, 1, 1, 0.0, "fade", {"bg": BG2 + "hall_far.jpg", "cam": [Vector2(0.45, 0.5), 1.0], "cam2": [Vector2(0.55, 0.45), 1.15], "dur": 2.8,
+			"figs": [[SPR + "masked_villain.png", Vector2(0.8, 1.04), 0.98, true]], "fx": "drain", "fx_at": Vector2(0.63, 0.46), "fx_t": 0.2})],
+		 "sfx": [_sfx("SHLLRRP!", 0, 0.7, Vector2(0.3, 0.78), 66, Color("c77dff"), -0.06)],
+		 "fx": [_fx(0.7, 4.0, 0.0, -1, "glitch")],
+		 "hold": 1.2},
+		{"panels": [
+			_p("bk_villain", 0, 0, 0.5, 1, 0.0, "left"),
+			_cages(0.5, 0, 0.5, 1, 2.0, "right"),
+			_art(0.02, 0.56, 0.17, 0.4, 1.0, "pop", {"bg_col": Color("1a0d2a"), "crop": [SPR + "masked_villain.png", Vector2(0.71, 0.32), 0.36],
+				"cam": [Vector2(0.5, 0.45), 1.0], "cam2": [Vector2(0.5, 0.6), 1.15], "dur": 4.0, "fx": "drips", "fx_at": Vector2(0.86, 0.66)})],
+		 "text": [
+			_cap("Then a masked villain drank the light from the sky. Without light, the world began to lose its detail.", 0, 0.3, "tl", 360.0),
+			_cap("He took three of the heroes.", 1, 2.4, "bl", 300.0)],
+		 "sfx": [_sfx("HA HA HA!", 0, 1.2, Vector2(0.62, 0.82), 60, Color("c77dff"), -0.1)],
+		 "hold": 0.4},
+		{"panels": [
+			_p("bk_escape", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("bk_comms", 0.5, 0, 0.5, 1, 1.8, "right"),
+			_art(0.02, 0.7, 0.3, 0.26, 4.4, "left", {"crop": [PORT + "hero.png", Vector2(0.6, 0.39), 0.17], "cam": [Vector2(0.5, 0.5), 1.0], "cam2": [Vector2(0.55, 0.5), 1.08], "dur": 3.0,
+				"fx": "eyes", "eyes": [Vector2(0.17, 0.5), Vector2(0.84, 0.5)]})],
+		 "text": [
+			_cap("One hero escaped.", 0, 0.3, "tl", 260.0),
+			_say("Can you hear me, hero? I'm the Narrator. I'll guide you. Let's bring your friends home.", 1, 2.4, Vector2(0.5, 0.2), Vector2(0.62, 0.42), "narrator", 320.0)],
+		 "sfx": [_sfx("BZZT!", 1, 2.0, Vector2(0.8, 0.7), 46, Color("4cc9f0"), 0.1)],
+		 "hold": 2.2},
+	]
+
+
+## The comms die; the masked villain steps out and unmasks: it was the Narrator all along.
+static func _reveal() -> Array:
+	return [
+		{"panels": [
+			_p("bk_comms_dead", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("masked_closeup", 0.5, 0, 0.5, 1, 1.8, "right")],
+		 "text": [
+			_cap("The comms went dead.", 0, 0.2, "tl", 260.0),
+			_slow(_say("Lost your friendly voice, hero?", 1, 2.4, Vector2(0.35, 0.2), Vector2(0.45, 0.36), "narrator", 240.0), 32.0)],
+		 "sfx": [_sfx("KZZZT!", 0, 0.6, Vector2(0.72, 0.62), 56, Color("4cc9f0"), 0.1)],
+		 "fx": [_fx(0.6, 8.0, 0.0, 0, "static"), _fx(1.8, 4.0, 0.0, -1, "enemy_windup")],
+		 "hold": 1.4},
+		{"beat": true,
+		 "panels": [
+			_art(0, 0, 0.5, 1, 0.0, "fade", {"bg_col": Color("140a22"), "crop": [SPR + "masked_villain.png", Vector2(0.51, 0.2), 0.22], "cam": [Vector2(0.5, 0.5), 1.0], "cam2": [Vector2(0.5, 0.48), 1.12], "dur": 2.0,
+				"fx": "crack", "fx_at": Vector2(0.5, 0.42), "fx_t": 0.2, "fx_size": 0.3}),
+			_art(0.5, 0, 0.5, 1, 0.9, "pop", {"bg_col": Color("2a0e45"), "crop": [SPR + "narrator_boss.png", Vector2(0.385, 0.27), 0.22], "cam": [Vector2(0.5, 0.5), 1.08], "cam2": [Vector2(0.5, 0.45), 1.0], "dur": 1.6,
+				"fx": "mask_fall", "fx_at": Vector2(0.5, 0.36), "fx_t": 0.3, "fx_size": 0.42})],
+		 "sfx": [_sfx("KRAK!", 0, 0.25, Vector2(0.72, 0.8), 64, Color("e9d3ff"), 0.1), _sfx("CLATTER!", 1, 1.5, Vector2(0.5, 0.86), 50, Color("ffd23f"), -0.06)],
+		 "fx": [_fx(0.25, 10.0, 0.3, 0, "punch_heavy"), _fx(1.2, 6.0, 0.0, 1, "glitch")],
+		 "hold": 0.6},
+		{"panels": [
+			_p("unmask", 0, 0, 0.42, 1, 0.0, "left"),
+			_p("narrator_reveal", 0.42, 0, 0.58, 1, 1.4, "pop")],
+		 "text": [
+			_say("...that VOICE. It was YOU on the comms?!", 0, 0.3, Vector2(0.5, 0.12), Vector2(0.4, 0.3), "hero", 240.0, true),
+			_slow(_say("This is the perfect ending I've been waiting for all these years.", 1, 1.8, Vector2(0.78, 0.22), Vector2(0.6, 0.4), "narrator", 300.0), 30.0),
+			_slow(_say("You fell into my trap perfectly.", 1, 4.6, Vector2(0.24, 0.78), Vector2(0.42, 0.62), "narrator", 260.0), 24.0)],
+		 "sfx": [_sfx("RIIIP!", 0, 0.9, Vector2(0.7, 0.3), 60, Color("e63946"), 0.12)],
+		 "fx": [_fx(0.9, 18.0, 0.75, 0, "reveal_villain"), _fx(1.4, 10.0, 0.0, 1, "shockwave"), _fx(4.6, 5.0, 0.0, 1, "enemy_windup")],
+		 "hold": 2.2},
+		{"panels": [_cages(0, 0, 1, 1, 0.0, "fade")],
+		 "text": [
+			_cap("Above the stage hung the three captured heroes.", 0, 0.2, "tl", 380.0),
+			_slow(_say("Now watch me write THE END.", 0, 1.6, Vector2(0.78, 0.8), Vector2(0.95, 0.95), "narrator", 260.0), 30.0)],
+		 "hold": 1.6},
+	]
+
+
+## The editions ending: sunlight, the Narrator's last words, the heroes together, the book closes.
+static func _ending_editions() -> Array:
+	return [
+		{"beat": true,
+		 "panels": [_art(0, 0, 1, 1, 0.0, "fade", {"bg": BG2 + "arena_dark.jpg", "bg2": BG2 + "arena_far.jpg", "cam": [Vector2(0.5, 0.5), 1.15], "cam2": [Vector2(0.5, 0.45), 1.0], "dur": 2.4,
+			"fx": "sweep", "fx_t": 0.15, "fx_dur": 1.5})],
+		 "fx": [_fx(0.15, 6.0, 0.0, -1, "power_solar"), _fx(1.6, 0.0, 0.35)],
+		 "hold": 1.8},
+		{"panels": [
+			_p("bk_flare", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("bk_melt", 0.5, 0, 0.5, 1, 1.2, "right")],
+		 "text": [
+			_cap("Every hero's light, and the reader's hand, flooded the stage with sunlight.", 0, 0.2, "tl", 360.0),
+			_slow(_say("I guess this is how it was always meant to happen.", 1, 2.2, Vector2(0.5, 0.16), Vector2(0.5, 0.34), "narrator", 280.0), 30.0)],
+		 "sfx": [_sfx("FWOOOSH!", 0, 0.8, Vector2(0.55, 0.82), 70, Color("ffb703"), -0.1)],
+		 "fx": [_fx(0.0, 0.0, 0.6), _fx(0.8, 10.0, 0.3, 0, "power_solar")],
+		 "hold": 1.2},
+		{"panels": [
+			_p("bk_heroes", 0, 0, 0.5, 1, 0.0, "left"),
+			_p("bk_sunlit", 0.5, 0, 0.5, 1, 1.2, "fade")],
+		 "text": [
+			_cap("Four heroes, together again.", 0, 0.3, "tl", 300.0),
+			_cap("And light returned to the Earth, in every detail.", 1, 1.8, "br", 340.0)],
+		 "hold": 0.8},
+		{"panels": [_p("book_cover", 0, 0, 1, 1, 0.0, "pullback").merged({"quill": true})],
+		 "text": [_cap("The story was finally told the way it was always meant to be.", 0, 0.6, "bl", 420.0)],
+		 "sfx": [_sfx("THE END", 0, 1.6, Vector2(0.5, 0.45), 120, Color("ffd23f"), -0.03)],
+		 "fx": [_fx(1.6, 12.0, 0.25, -1, "punch_heavy")],
+		 "hold": 2.4},
 	]

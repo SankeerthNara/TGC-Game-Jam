@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tools/bot_gif.gd" id="1"]
+
+[node name="BotGif" type="Node"]
+script = ExtResource("1")

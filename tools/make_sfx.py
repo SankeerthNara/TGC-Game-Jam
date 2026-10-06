@@ -1,10 +1,10 @@
-"""Generate the short, comic sound effects used by Mirror Page.
+"""Generate the short, comic sound effects used by Glitched Out.
 
 All sounds are synthesised here from elementary oscillators and noise. No samples or
 audio packages are used; NumPy is the only dependency. The output is CC0.
 
 Run from the repository root: python tools/make_sfx.py
-Writes 32 mono 16-bit WAVs at 22050 Hz to new-game-project/assets/audio/.
+Writes 65 mono 16-bit WAVs at 22050 Hz to new-game-project/assets/audio/.
 """
 
 from __future__ import annotations
@@ -173,6 +173,104 @@ def sounds() -> dict[str, np.ndarray]:
     fx["door_unlocked"] = place([(0, tone(1200, .08, .56, "metal", decay=.13)),
                                  (.07, tone(620, .15, .54, "metal", decay=.23)),
                                  (.17, tone(980, .26, .52, "metal", decay=.34))])
+
+    # The Editions: pulp-hero combat, resolution glitches, and comms cues.
+    fx["punch"] = place([(0, sweep(175, 64, .17, .78, "soft", release=.13)),
+                          (.008, noise(.08, .24, .07, False)),
+                          (.012, tone(92, .19, .43, "soft", decay=.2))])
+    fx["punch_heavy"] = place([(0, sweep(125, 38, .34, .92, "sine", release=.29)),
+                                (.012, noise(.19, .42, .17, False)),
+                                (.045, tone(52, .43, .38, "soft", decay=.44))])
+    fx["kick"] = place([(0, sweep(150, 42, .2, .82, "sine", release=.17)),
+                         (.006, tone(68, .16, .34, "soft", decay=.21))])
+    fx["counter_flash"] = place([(0, sweep(390, 1480, .13, .54, "square", release=.1)),
+                                  (.105, tone(1320, .1, .36, "metal", decay=.16))])
+    fx["counter_hit"] = place([(0, noise(.13, .4, .1, False)),
+                                (.006, sweep(240, 72, .24, .8, "soft", release=.19)),
+                                (.012, tone(1040, .22, .4, "metal", decay=.32))])
+    fx["enemy_grunt"] = place([(0, sweep(205, 88, .3, .58, "soft", release=.25)),
+                                (.025, tone(112, .28, .34, "soft", decay=.32, vibrato=.08)),
+                                (.03, noise(.17, .11, .15))])
+
+    glitch = place([(0, sweep(180, 1600, .29, .4, "square", release=.24)),
+                    (0, noise(.3, .3, .26, False)),
+                    (.11, sweep(1200, 270, .16, .46, "square", release=.13))])
+    glitch_t = np.arange(len(glitch)) / SR
+    glitch_gate = (np.sin(2 * np.pi * 31.0 * glitch_t) > -0.12).astype(np.float64)
+    fx["glitch"] = glitch * glitch_gate
+    fx["static"] = place([(0, noise(.42, .5, .38, False)),
+                           (.03, sweep(2600, 480, .34, .23, "square", release=.3))])
+    fx["comms_beep"] = place([(0, tone(720, .085, .42, "square", decay=.13)),
+                              (.105, tone(980, .1, .4, "square", decay=.15)),
+                              (.23, tone(720, .09, .3, "square", decay=.13))])
+    fx["comms_dead"] = place([(0, noise(.23, .2, .2, False)),
+                               (.025, tone(880, .13, .4, "square", decay=.16)),
+                               (.19, tone(510, .18, .36, "square", decay=.22)),
+                               (.42, tone(260, .28, .3, "square", decay=.33))])
+    fx["resolution_change"] = place([(0, sweep(125, 1480, .68, .52, "sine", release=.58)),
+                                      (.12, sweep(360, 2200, .48, .22, "square", release=.4)),
+                                      (.53, chord((784, 1047, 1319), .31, .3, .01, .26))])
+    fx["cursor_click"] = place([(0, tone(1180, .045, .48, "metal", decay=.075)),
+                                 (.018, tone(720, .055, .24, "metal", decay=.08))])
+    fx["typewriter"] = place([(0, noise(.035, .38, .026, False)),
+                               (.012, tone(1320, .036, .28, "metal", decay=.055)),
+                               (.06, noise(.052, .3, .041, False)),
+                               (.079, tone(840, .06, .28, "metal", decay=.09))])
+    fx["credits_whoosh"] = place([(0, noise(.62, .33, .56)),
+                                   (.015, sweep(900, 180, .68, .28, "sine", release=.6)),
+                                   (.46, tone(523, .3, .16, "metal", decay=.44))])
+    fx["light_swell"] = place([(0, chord((220, 330, 440, 523, 659), 1.15, .68, .42, .58)),
+                               (.58, tone(880, .52, .27, "metal", attack=.12, decay=.7))])
+
+    # Final battle cues. `kill` above is shared with the existing vampire ejection.
+    fx["slash"] = place([(0, noise(.2, .25, .17)),
+                          (.005, sweep(1280, 240, .22, .55, "sine", release=.18))])
+    fx["hit"] = place([(0, noise(.11, .38, .085, False)),
+                        (.006, sweep(190, 58, .19, .78, "soft", release=.15)),
+                        (.018, tone(840, .1, .19, "metal", decay=.16))])
+    fx["hero_hurt"] = place([(0, sweep(250, 62, .27, .7, "soft", release=.22)),
+                             (.01, noise(.15, .32, .12, False)),
+                             (.06, tone(94, .28, .32, "soft", decay=.31))])
+    fx["hero_jump"] = place([(0, sweep(115, 480, .17, .48, "sine", release=.14)),
+                             (.12, tone(540, .13, .22, "metal", decay=.19))])
+    fx["dash"] = place([(0, noise(.22, .28, .19)),
+                         (.012, sweep(220, 1450, .18, .5, "sine", release=.15))])
+    fx["heal"] = chord((440, 554, 659, 880), .62, .54, .13, .38)
+    fx["power_deduction"] = place([(0, tone(784, .12, .3, "metal", decay=.2)),
+                                   (.11, tone(988, .17, .32, "metal", decay=.26)),
+                                   (.24, tone(1319, .32, .34, "metal", decay=.44))])
+    fx["power_dash"] = place([(0, sweep(180, 1200, .34, .6, "square", release=.27)),
+                              (.18, noise(.2, .22, .17))])
+    fx["power_prism"] = place([(0, sweep(260, 920, .4, .3, "sine", release=.33)),
+                               (.08, chord((523, 659, 784, 988), .56, .48, .06, .37)),
+                               (.3, tone(1568, .24, .23, "metal", decay=.34))])
+    fx["power_solar"] = place([(0, sweep(62, 34, .72, .64, "sine", release=.63)),
+                               (.025, noise(.72, .29, .66)),
+                               (.11, chord((220, 330, 440, 554, 659, 880), 1.12, .74, .18, .68)),
+                               (.48, tone(1760, .42, .22, "metal", decay=.55))])
+    fx["wave_start"] = place([(0, tone(110, .45, .52, "soft", decay=.64)),
+                               (.08, chord((220, 277, 330), .64, .36, .2, .34)),
+                               (.4, tone(660, .32, .3, "metal", decay=.48))])
+    fx["enemy_spawn"] = place([(0, noise(.31, .45, .27)),
+                               (.01, sweep(390, 62, .37, .58, "soft", release=.31)),
+                               (.12, tone(82, .3, .28, "soft", decay=.34))])
+    fx["enemy_windup"] = place([(0, noise(.42, .19, .38)),
+                                (.015, sweep(150, 930, .39, .44, "sine", release=.34)),
+                                (.32, tone(1180, .13, .18, "square", decay=.18))])
+    fx["shockwave"] = place([(0, sweep(88, 32, .48, .86, "sine", release=.41)),
+                             (.008, noise(.34, .32, .28, False)),
+                             (.1, tone(46, .56, .31, "soft", decay=.58))])
+    fx["bomb_fuse"] = place([(0, noise(.24, .16, .21, False)),
+                             (.01, tone(1560, .055, .2, "metal", decay=.08)),
+                             (.31, noise(.25, .18, .23, False)),
+                             (.34, tone(1780, .07, .22, "metal", decay=.1)),
+                             (.65, sweep(190, 460, .26, .38, "sine", release=.22))])
+    fx["narrator_attack"] = place([(0, sweep(470, 105, .62, .54, "square", release=.51)),
+                                   (.05, tone(155, .72, .36, "metal", decay=.8)),
+                                   (.16, noise(.35, .16, .3))])
+    fx["hero_ko"] = place([(0, noise(.25, .43, .21, False)),
+                           (.012, sweep(150, 42, .55, .82, "soft", release=.48)),
+                           (.08, chord((110, 147, 175), .68, .25, .01, .61))])
     return fx
 
 

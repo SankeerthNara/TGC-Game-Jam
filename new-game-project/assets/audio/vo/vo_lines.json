@@ -1,0 +1,17 @@
+{
+	"book/0/0": "vo_book_1.mp3",
+	"book/1/0": "vo_book_2.mp3",
+	"book/2/0": "vo_book_3.mp3",
+	"book/3/0": "vo_book_4.mp3",
+	"book/3/1": "vo_book_5.mp3",
+	"reveal/0/0": "vo_reveal_1.mp3",
+	"reveal/0/1": "vo_reveal_2.mp3",
+	"reveal/1/0": "vo_reveal_3.mp3",
+	"reveal/1/1": "vo_reveal_4.mp3",
+	"reveal/2/0": "vo_reveal_6.mp3",
+	"reveal/2/1": "vo_reveal_7.mp3",
+	"ending_editions/0/0": "vo_end_1.mp3",
+	"ending_editions/0/1": "vo_end_2.mp3",
+	"ending_editions/1/0": "vo_end_3.mp3",
+	"ending_editions/2/0": "vo_end_4.mp3"
+}

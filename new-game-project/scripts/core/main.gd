@@ -29,6 +29,9 @@ var score := ScoreKeeper.new()
 var level_ease: Array[int] = [0, 0, 0, 0]
 var _task_layer: CanvasLayer
 var paused := false ## the whole game is frozen (P / Esc); the UI keeps running
+## "Glitched Out" (240p -> 720p -> 2k). false = the classic game (roll back here).
+const EDITIONS := true
+var director: EditionsDirector = null
 const PAUSABLE_STATES := ["world", "task", "parkour", "playing", "boss"]
 const BOMB_SECONDS := 17 * 60.0 ## the masked villain's bomb: find the 4 keys and open the bomb room in time
 const TICKING := ["world", "task", "playing", "parkour", "boss"] ## the bomb clock pauses in cutscenes, menus and score screens
@@ -70,6 +73,11 @@ func _ready() -> void:
 	var music := MusicDirector.new()
 	music.main = self
 	add_child(music)
+	if EDITIONS:
+		director = EditionsDirector.new()
+		add_child(director)
+		director.setup(self)
+	add_child(VoPlayer.new()) # voice-over for the cutscenes and the comms (silent until clips exist)
 	var sfx := SfxPlayer.new() # Codex's sound effects (listens to EventBus)
 	sfx.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(sfx)
@@ -127,6 +135,13 @@ func _to_menu() -> void:
 		get_tree().paused = false
 	GameState.restart_game()
 	busy = false
+	if director != null:
+		# the Editions: nothing of the abandoned run may keep running behind the menu
+		director.reset()
+		for c in _task_layer.get_children():
+			c.queue_free()
+		_overlay = null
+		active_task = ""
 	_set_state("menu")
 	if ResourceLoader.exists(MENU_SCENE):
 		var layer := CanvasLayer.new()
@@ -151,6 +166,24 @@ func _start_game() -> void:
 	for i in level_ease.size():
 		level_ease[i] = 0
 	_clear_overlay()
+	if EDITIONS:
+		bomb_left = -1.0 # no bomb clock in the editions
+		world.bomb_left = -1.0
+		# the cheap edition is a quick prologue: 3 and 4 tasks, kinder sabotage
+		level_ease[0] = 1
+		level_ease[1] = 2
+		world.station_dark = Color(0.1, 0.095, 0.18) # the 240p rooms: dark, but readable outside the torch
+		world.station_torch = 2.6
+		# first: tell testers to play until the THE END card (there are false endings)
+		_set_state("cutscene")
+		var notice := NoticeCard.new()
+		notice.mode = "start"
+		_overlay = notice
+		_task_layer.add_child(notice)
+		notice.done.connect(func() -> void:
+			_overlay = null
+			director.start())
+		return
 	_set_state("cutscene")
 	EventBus.caption_changed.emit("NARRATOR: Once upon a time...")
 	_play_cutscene("opening", func() -> void: _load_level(0))
@@ -171,7 +204,7 @@ func _load_level(i: int) -> void:
 	world.load_data(data)
 	EventBus.level_started.emit(i, world.level_title)
 	_enter_world()
-	EventBus.caption_changed.emit(world.intro)
+	EventBus.caption_changed.emit(director.level_intro(i) if EDITIONS else world.intro)
 
 
 func _process(delta: float) -> void:
@@ -183,7 +216,7 @@ func _process(delta: float) -> void:
 	world.level_time = level_time
 	world.total_time = total_time
 	world.score_total = score.live(level_idx, world.tasks_done.size())
-	if state in TICKING and bomb_left > 0.0:
+	if not EDITIONS and state in TICKING and bomb_left > 0.0:
 		bomb_left = maxf(0.0, bomb_left - delta)
 		if bomb_left <= 0.0:
 			_bomb_exploded()
@@ -403,10 +436,19 @@ func _on_player_died() -> void:
 	_set_state("dead")
 	var overlay := DeathOverlay.new()
 	overlay.message = "Back to the checkpoint: the start of Level %d." % (level_idx + 1)
+	var kept: Dictionary = world.tasks_done.duplicate()
+	if EDITIONS:
+		overlay.message = "Back to the start of Level %d. Your finished tasks stay finished." % (level_idx + 1)
+		overlay.bomb = false
 	overlay.restart.connect(func() -> void:
 		overlay.queue_free()
 		_retrying = true
-		_load_level(level_idx))
+		_load_level(level_idx)
+		if EDITIONS:
+			# failing should not cost the player their progress
+			for id in kept:
+				world.tasks_done[id] = true
+			world.queue_redraw())
 	_task_layer.add_child(overlay)
 	EventBus.caption_changed.emit("NARRATOR: Out of hearts! Respawning at your checkpoint. Level %d starts again." % (level_idx + 1))
 
@@ -414,18 +456,19 @@ func _on_player_died() -> void:
 func _level_complete() -> void:
 	level_splits.append(level_time)
 	EventBus.level_completed.emit(level_idx, level_time)
-	var last := level_idx >= LevelGenerator.level_count() - 1
+	var last := level_idx >= (1 if EDITIONS else LevelGenerator.level_count() - 1)
 	var big_flags: Array = []
 	for sab in world.sabotage_defs.values():
 		big_flags.append(sab.get("big", false))
-	keys_found = mini(keys_found + 1, LevelGenerator.level_count())
-	EventBus.sound_requested.emit("key_get")
+	if not EDITIONS:
+		keys_found = mini(keys_found + 1, LevelGenerator.level_count())
+		EventBus.sound_requested.emit("key_get")
 	world.keys_found = keys_found
 	var result := score.finish_level(level_idx, world.tasks.size(), level_time, world.level_par, world.hp, world.max_health, big_flags)
 	# the next level is kinder if this one took longer than par (the run should stay about the same length)
 	if not last:
 		var over := level_time / float(maxi(world.level_par, 1))
-		level_ease[level_idx + 1] = 2 if over > 1.5 else (1 if over > 1.0 else 0)
+		level_ease[level_idx + 1] = maxi(level_ease[level_idx + 1], 2 if over > 1.5 else (1 if over > 1.0 else 0))
 	_set_state("levelend")
 	var ov := LevelOverlay.new()
 	ov.title = "Level %d: %s" % [level_idx + 1, LevelGenerator.level_title(level_idx)]
@@ -433,9 +476,9 @@ func _level_complete() -> void:
 	ov.total_time = total_time
 	ov.splits = level_splits.duplicate()
 	ov.par = world.level_par
-	ov.to_bomb_room = last
+	ov.to_bomb_room = last and not EDITIONS
 	ov.keys_found = keys_found
-	ov.key_total = LevelGenerator.level_count()
+	ov.key_total = 0 if EDITIONS else LevelGenerator.level_count()
 	ov.bomb_left = bomb_left
 	ov.lines = result["lines"]
 	ov.score = result["score"]
@@ -451,11 +494,15 @@ func _level_complete() -> void:
 	_task_layer.add_child(ov)
 	ov.continue_pressed.connect(func() -> void:
 		_clear_overlay()
-		if last:
+		if last and EDITIONS:
+			director.after_240_levels()
+		elif last:
 			_open_bomb_room()
 		else:
 			_load_level(level_idx + 1))
-	if last:
+	if EDITIONS:
+		EventBus.caption_changed.emit("NARRATOR: Brilliant work, hero! Rank %s. On to the next one." % result["rank"])
+	elif last:
 		EventBus.caption_changed.emit("NARRATOR: All four keys! The bomb room... wait. Don't open that door.")
 	else:
 		EventBus.caption_changed.emit("NARRATOR: Level complete! Key %d of %d to the bomb room. Rank %s." % [keys_found, LevelGenerator.level_count(), result["rank"]])
@@ -524,6 +571,9 @@ func _restart_level() -> void:
 	if not paused and not state in PAUSABLE_STATES:
 		return
 	_set_paused(false)
+	if director != null and state == "boss" and director.restart_fight():
+		EventBus.level_restarted.emit()
+		return # a fight restarts itself (the 240p rooms reload below)
 	for c in _task_layer.get_children():
 		c.queue_free()
 	_overlay = null

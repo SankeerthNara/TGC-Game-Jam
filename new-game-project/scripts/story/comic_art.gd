@@ -47,6 +47,19 @@ static func ellipse(ci: CanvasItem, c: Vector2, rx: float, ry: float, fill: Colo
 	poly(ci, pts, fill, w)
 
 
+## A portrait texture clipped to a disc (medallions): uv_c / uv_r pick the part of the picture shown.
+static func portrait_disc(ci: CanvasItem, tex: Texture2D, c: Vector2, r: float, uv_c := Vector2(0.5, 0.42), uv_r := 0.4, tint := Color.WHITE) -> void:
+	var pts := PackedVector2Array()
+	var uvs := PackedVector2Array()
+	var cols := PackedColorArray()
+	for k in 32:
+		var d := Vector2.from_angle(k * TAU / 32.0)
+		pts.append(c + d * r)
+		uvs.append(uv_c + d * uv_r)
+		cols.append(tint)
+	ci.draw_polygon(pts, cols, uvs, tex)
+
+
 static func shout(ci: CanvasItem, text: String, c: Vector2, size: int, col: Color, outline := 10, rot := 0.0, scale := 1.0) -> void:
 	var sz := FONT_SHOUT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size)
 	ci.draw_set_transform(c, rot, Vector2(scale, scale))
@@ -66,21 +79,52 @@ static func fill_bg(ci: CanvasItem, sz: Vector2, top: Color, bottom: Color) -> v
 
 
 ## Comic halftone dots that grow toward `dir` (a corner or side, in 0..1 coordinates).
+static var _dot_tex: ImageTexture = null
+
+
+## One tile of the halftone pattern (staggered rows of soft white dots), made once.
+static func _dots() -> Texture2D:
+	if _dot_tex == null:
+		var w := 32
+		var h := 56
+		var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+		img.fill(Color(1, 1, 1, 0))
+		var centers := [Vector2(0, 0), Vector2(32, 0), Vector2(0, 56), Vector2(32, 56), Vector2(16, 28)]
+		for y in h:
+			for x in w:
+				var p := Vector2(x + 0.5, y + 0.5)
+				var d := 1e9
+				for c: Vector2 in centers:
+					d = minf(d, p.distance_to(c))
+				var a := clampf(9.5 - d + 0.5, 0.0, 1.0)
+				if a > 0.0:
+					img.set_pixel(x, y, Color(1, 1, 1, a))
+		_dot_tex = ImageTexture.create_from_image(img)
+	return _dot_tex
+
+
+## Comic halftone dots that fade in toward `toward` (a corner or side, in 0..1 coordinates).
+## Drawn as a few textured quads with a tiled dot pattern (a handful of draw calls, not thousands).
 static func halftone(ci: CanvasItem, sz: Vector2, col: Color, step := 16.0, rmax := 5.0, toward := Vector2(1, 1)) -> void:
+	ci.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	var tex := _dots()
 	var far := sz.length()
 	var target := toward * sz
-	var y := 0.0
-	var row := 0
-	while y < sz.y + step:
-		var x := (step * 0.5) if row % 2 == 1 else 0.0
-		while x < sz.x + step:
-			var k := 1.0 - Vector2(x, y).distance_to(target) / far
-			var r := rmax * clampf(k * 1.4 - 0.2, 0.0, 1.0)
-			if r > 0.6:
-				ci.draw_circle(Vector2(x, y), r, col)
-			x += step
-		y += step * 0.87
-		row += 1
+	var strength := clampf(rmax / (step * 0.31), 0.4, 1.4) # bigger dots for the same spacing read darker
+	var n := 4
+	for gy in n:
+		for gx in n:
+			var p0 := Vector2(gx, gy) * sz / n
+			var p1 := Vector2(gx + 1, gy + 1) * sz / n
+			var pts := PackedVector2Array([p0, Vector2(p1.x, p0.y), p1, Vector2(p0.x, p1.y)])
+			var cols := PackedColorArray()
+			var uvs := PackedVector2Array()
+			for p in pts:
+				var k := 1.0 - p.distance_to(target) / far
+				var a := clampf(k * 1.4 - 0.2, 0.0, 1.0)
+				cols.append(Color(col.r, col.g, col.b, clampf(col.a * a * strength, 0.0, 1.0)))
+				uvs.append(Vector2(p.x / step, p.y / (step * 1.75)))
+			ci.draw_polygon(pts, cols, uvs, tex)
 
 
 static func burst(ci: CanvasItem, sz: Vector2, c: Vector2, col_a: Color, col_b: Color, rays := 18, rot := 0.0) -> void:

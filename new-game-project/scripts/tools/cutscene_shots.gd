@@ -1,7 +1,7 @@
 extends Node
 ## Renders frames of the comic story cutscenes to PNGs for a visual check (not part of the game).
 
-const SHOTS := [["ending_sun", 0, 4.0], ["ending_sun", 1, 5.0], ["ending_lava", 0, 4.0], ["ending_lava", 1, 5.0]]
+const SHOTS := [["book", 3, 9.0]]
 
 
 func _ready() -> void:
@@ -15,6 +15,7 @@ func _ready() -> void:
 		await get_tree().process_frame
 		cs.set_process(false)
 		cs.show_at(shot[1], shot[2])
+		cs._flash = 0.0 # a page's opening flash may have fired in the one processed frame
 		await get_tree().process_frame
 		await get_tree().process_frame
 		get_viewport().get_texture().get_image().save_png("user://cc_%s_%d.png" % [shot[0], shot[1]])
