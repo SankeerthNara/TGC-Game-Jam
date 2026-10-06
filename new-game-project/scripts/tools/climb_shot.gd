@@ -39,7 +39,7 @@ func _ready() -> void:
 			ov.skip()
 		if ov is BossFight:
 			ArenaBot.drive(ov, press, tap)
-			if f > 60 * 30 and f % 300 == 0 and n < 8:
+			if f > 60 * 14 and f % 120 == 0 and n < 8:
 				get_viewport().get_texture().get_image().save_png("user://climb_%d.png" % n)
 				n += 1
 	get_tree().quit()

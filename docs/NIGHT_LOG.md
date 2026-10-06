@@ -667,3 +667,10 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
   opera 52 s, Scribe 64 s, Narrator 36 s); parkour, controls, anim tests 0 fails.
 - T6: opera waves now 4 / 4 / 5 enemies with tighter delays (a crowd like the reference); bot 45-51 s; playtime 12.8 min.
 - T7 (reference pass): heavier hits on the hero (0.22 s hit-stop, white ring, ink splash), kill bursts with a white ring, comic words only for brutes/bosses, small shake on landed hits. Flow 0 fails; all bots win (Ink Baron 33 s, opera 51 s, Scribe 60 s, Narrator 37 s, street 49 s, Twins 34 s). Zipped as build/GlitchedOut_v4.zip.
+
+### 19. Library: no forced wall climb (Sankeerth)
+- The bookshelf chimney (two walls from the floor to y -360, ~960 px of wall jumping) is gone. A
+  zig-zag of seven lit ledges, 120 px apart (a jump reaches 150 px), leads up to the first landing.
+  The wall-jump tip and "Z on a wall: wall jump" on the intro card are removed (wall jumps still work
+  wherever there is a wall). Bot route updated. Flow 0 fails. climb_bot_test: win in 66 s, but the
+  bot stalls on two steps (its jump logic; 2 assists there): a player climbs each step in one jump.
