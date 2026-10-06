@@ -70,3 +70,19 @@ At 0 health, before the ending cutscene, play a short defeat beat: a white flash
 ### H5. Final check and zip: Status: DONE once (v6, 13.7 min); repeat after any new change
 Run the flow test, the arena bots, the brawler bots and the playtime test (10-15 min). Export, zip
 the next version, add a NIGHT_LOG entry with the results.
+
+## More ideas (not started; only if there is time before the 12 pm feature freeze)
+
+### H6. Hornet's repositioning hops (Narrator): Status: TODO
+Hornet often hops to a new spot between attacks. In `arena_enemy.gd` `_narrator()`, in "idle", when
+the cooldown ends and the hero is mid-range, sometimes (25%) pick a short hop toward or away from the
+hero (`_go("jump")`, `vel = Vector2(±420, -700)`, `target = Vector2(0, 0)`). On landing, go to
+"recover". Keep `target.x` 1 / 2 for the dive / whirl as now.
+
+### H7. 720p readability like the 2K fights: Status: TODO
+The 720p brawler (`scripts/editions/brawler_game.gd`, `brawl_enemy.gd`) didn't get the rim light or
+the softer backgrounds. In `brawl_enemy.gd` `draw()`, call `Sprites.draw_rim(...)` before the
+`Sprites.draw(...)` of the painted/pixel sprite (cream rim, width 2). Check with
+`scripts/tools/twins_shot.tscn` (720p frames).
+
+Latest zip: `D:\Infinium\TGC-Game-Jam\build\GlitchedOut_v6.zip` (everything up to H5).
