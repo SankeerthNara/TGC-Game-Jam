@@ -73,4 +73,10 @@ func _ready() -> void:
 			get_viewport().get_texture().get_image().save_png("user://duel_%d.png" % n)
 			n += 1
 		last = st
+		if b._phase == "won" and not scribe:
+			for k in 4:
+				for i in 25:
+					await get_tree().process_frame
+				get_viewport().get_texture().get_image().save_png("user://won_%d.png" % k)
+			break
 	get_tree().quit()

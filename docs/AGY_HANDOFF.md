@@ -39,7 +39,7 @@ overlay, and the library's staircase (no forced wall climb). See `docs/VISUAL_PO
 
 ## Tasks
 
-### H1. Boss title like Hollow Knight: Status: DONE (Narrator + Scribe; Twins title still TODO)
+### H1. Boss title like Hollow Knight: Status: DONE (the Twins already had a title card)
 When a boss fight starts, show a non-blocking title over the play area (the fight runs underneath):
 a small line above, a big name below, fading in for 0.5 s, holding 2 s, fading out over 1 s.
 - Ink Scribe: "Archivist of the Masked One" / "THE INK SCRIBE"
@@ -57,7 +57,7 @@ the air: he drops to the floor and lies stunned for 1.6 s (free hits), then tele
 `take_hit` or in `boss_fight.gd` `_hit_enemy` for kind "scribe"). Not during fake_death, laugh or
 crash. Draw with the `boss_scribe_fall_2` frame.
 
-### H3. Hornet's defeat (Narrator): Status: see NIGHT_LOG
+### H3. Hornet's defeat (Narrator): Status: DONE
 At 0 health, before the ending cutscene, play a short defeat beat: a white flash, slow motion for
 0.6 s, then he kneels (`narrator_stagger_2` frame, tilted) for 1.2 s. See `_finale` in
 `editions_director.gd` and where BossFight emits `finished`.
@@ -67,6 +67,6 @@ At 0 health, before the ending cutscene, play a short defeat beat: a white flash
 `start_2k()` (`editions_director.gd`). Make the bot jump while moving toward the next ledge, so
 `climb_bot_test.tscn` runs with 0-1 assists. This doesn't affect players.
 
-### H5. Final check and zip: Status: TODO
+### H5. Final check and zip: Status: DONE once (v6, 13.7 min); repeat after any new change
 Run the flow test, the arena bots, the brawler bots and the playtime test (10-15 min). Export, zip
 the next version, add a NIGHT_LOG entry with the results.

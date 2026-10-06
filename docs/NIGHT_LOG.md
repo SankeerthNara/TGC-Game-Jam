@@ -682,3 +682,4 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
 - H2: the Ink Scribe gets stunned like the Soul Master: 12% of his health in a run of hits knocks
   him to the floor for 1.6 s (free hits), then he teleports away. He lies on the floor line (stun and
   fake death). Flow 0 fails; bots: Scribe 73 s, Narrator 36 s.
+- H3: the Narrator's defeat like the reference: slow motion, he sinks to one knee (narrator_stagger_2, rim-lit) in the last light for ~1.4 s before the page turns white. The 720p Twins already open with a reference-style title. Flow 0 fails; playtime 13.7 min (library bot 75 s with 6 assists: bot stalls on the staircase, see AGY_HANDOFF H4). Zipped as build/GlitchedOut_v6.zip.

@@ -723,7 +723,7 @@ func _process(delta: float) -> void:
 			if _pt > 3.6:
 				_begin_round(_round + 1)
 		"won", "lost":
-			if _pt > 2.4:
+			if _pt > (3.4 if not _defeat.is_empty() else 2.4):
 				set_process(false)
 				finished.emit("win" if _phase == "won" else "lose")
 	queue_redraw()
@@ -1205,7 +1205,14 @@ func _hit_enemy(e: ArenaEnemy, dmg: float, pogo: bool, pierce := false) -> void:
 		_kill_fx(e)
 
 
+var _defeat := {} ## the beaten Narrator kneeling while the light floods in (pos, dir)
+
+
 func _kill_fx(e: ArenaEnemy) -> void:
+	if e.kind == "narrator":
+		# like the reference: everything stops, slow motion, the duelist sinks to one knee
+		_defeat = {"pos": Vector2(e.pos.x, e.ground_y), "dir": e.dir}
+		_slowmo = 0.8
 	_freeze = 0.1 if e.kind != "brute" else 0.18
 	_white = 0.35 if e.kind != "brute" else 0.7
 	shake(6.0 if e.kind != "brute" else 14.0)
@@ -1753,7 +1760,16 @@ func _draw() -> void:
 		"ko":
 			_draw_ko()
 		"won":
-			draw_rect(Rect2(Vector2.ZERO, size), Color(1, 0.96, 0.75, clampf(_pt * 0.6, 0.0, 1.0)))
+			var wa := clampf(_pt * 0.6, 0.0, 1.0)
+			if not _defeat.is_empty():
+				# he kneels in the last light for a moment before the page turns white
+				var dp: Vector2 = (_defeat["pos"] as Vector2) - Vector2(_cam, _cam_y)
+				var dh: float = ArenaEnemy.SPRITE_H["narrator"] * 0.9
+				Sprites.draw_rim(self, "narrator_stagger_2", dp, dh, float(_defeat["dir"]), Color(1, 0.95, 0.8, 0.6))
+				Sprites.draw(self, "narrator_stagger_2", dp, dh, float(_defeat["dir"]), Color(1, 1, 1), 1.0, -0.15 * float(_defeat["dir"]))
+				draw_set_transform(Vector2.ZERO)
+				wa = clampf((_pt - 1.4) * 0.7, 0.0, 1.0)
+			draw_rect(Rect2(Vector2.ZERO, size), Color(1, 0.96, 0.75, wa))
 			ComicArt.shout(self, win_text, Vector2(640, 330), 96, GOLD, 14, -0.04)
 		"lost":
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0.3, 0.02, 0.05, clampf(_pt * 0.5, 0.0, 0.85)))
