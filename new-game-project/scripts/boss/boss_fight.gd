@@ -580,7 +580,7 @@ func _update_lights() -> void:
 	if _light == null:
 		return
 	var off := Vector2(_cam, _cam_y)
-	var ls: Array = [[hero_center() - off, 330.0, 1.0]]
+	var ls: Array = [[hero_center() - off, 330.0, 1.0], [Vector2(640, 330), 560.0, 0.75]] # + the stage's backlight
 	for lp in lamps:
 		ls.append([lp - off, 250.0, 0.85 + 0.08 * sin(_t * 7.0 + lp.x)])
 	for i in _chand_idx.size():
@@ -600,11 +600,31 @@ func _update_lights() -> void:
 				ls.append([c, 150.0, 0.6])
 				n += 1
 	glows.clear()
-	var dark := 0.5 # the backgrounds are pre-darkened (soft versions)
+	var dark := 0.32 # the backgrounds are pre-darkened (soft versions); keep the mood, lose the murk
 	if _phase in ["round_intro", "won", "lost", "ko", "the_end"]:
-		dark = 0.5 * clampf((_pt - 3.0) / 0.6, 0.0, 1.0) if _phase == "round_intro" else 0.15
+		dark = 0.32 * clampf((_pt - 3.0) / 0.6, 0.0, 1.0) if _phase == "round_intro" else 0.15
 	dark *= 1.0 - clampf(_white, 0.0, 1.0)
 	_light.set_lights(ls, dark)
+
+
+## A warm light behind the middle of the stage (like the reference fights): a soft bloom, a few slow
+## light shafts and dust motes drifting in it. Screen space, behind the fighters.
+func _draw_backlight(shake_off: Vector2) -> void:
+	draw_set_transform(shake_off)
+	var c := Vector2(640, 330)
+	var pulse := 0.9 + 0.1 * sin(_t * 0.8)
+	draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(c - Vector2(620, 420), Vector2(1240, 840)), false, Color(1, 0.78, 0.45, 0.32 * pulse))
+	draw_texture_rect(ArenaArt.TEX_GLOW, Rect2(c - Vector2(260, 200), Vector2(520, 400)), false, Color(1, 0.88, 0.62, 0.35 * pulse))
+	for i in 5:
+		var x := 640.0 + (i - 2) * 150.0 + sin(_t * 0.25 + i * 1.7) * 30.0
+		var w := 46.0 + (i % 2) * 24.0
+		var a := 0.06 + 0.03 * sin(_t * 0.5 + i)
+		draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.3 + 120.0, -20), Vector2(x + w * 0.3 + 120.0, -20), Vector2(x + w, 720), Vector2(x - w, 720)]), Color(1, 0.88, 0.6, a))
+	for i in 28:
+		var mx := 640.0 + (fposmod(i * 0.618034, 1.0) - 0.5) * 900.0 + sin(_t * 0.4 + i) * 24.0
+		var my := 720.0 - fposmod(i * 0.414214 * 720.0 + _t * (10.0 + (i % 4) * 5.0), 760.0)
+		var near := 1.0 - clampf(absf(mx - 640.0) / 480.0, 0.0, 1.0)
+		draw_circle(Vector2(mx, my), 1.6 + (i % 3) * 0.9, Color(1, 0.9, 0.65, 0.55 * near))
 
 
 func _draw_lamps(off: Vector2) -> void:
@@ -1628,6 +1648,7 @@ func _draw() -> void:
 				_bg_layer("arena_mid", 0.0, shake_off)
 	if not art:
 		ArenaArt.stage_back(self, size, _t, glow)
+	_draw_backlight(shake_off)
 	draw_set_transform(off)
 	if stage == "opera" and _narrator == null:
 		draw_set_transform(shake_off)
@@ -1732,7 +1753,7 @@ func _draw() -> void:
 		var obj := ("REACH THE DOOR AT THE TOP" if _exit_open else "CLIMB THE LIBRARY") if level_top < 0.0 else "REACH THE END OF THE LIBRARY"
 		var ow := FONT_SHOUT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
 		draw_string(FONT_SHOUT, Vector2(640 - ow * 0.5, 120), obj, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, PAPER)
-		if _pt < 10.0 and _hints_on():
+		if _pt < 4.0 and _hints_on():
 			draw_string(FONT_BODY, Vector2(70, 700), "WASD move   Z jump (on a wall: wall jump)   J attack   S+J in the air: pogo   K dash   S+K in the air: dive   L parry (hold: blade)   F heal", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, PAPER)
 	elif _phase == "wave" and _narrator == null and boss_sub == "":
 		# the objective while there is no boss bar: how many are left on stage

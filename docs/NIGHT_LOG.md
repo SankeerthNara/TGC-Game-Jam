@@ -697,3 +697,4 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
 - Known issues: the test bot needs assists on the library staircase (bot logic only; see
   AGY_HANDOFF H4). The 720p fights lack the 2K rim light (H7). The quill spear and the Ink Scribe
   portrait are not used.
+- LAST VISUAL PASS: the 2K darkness 0.5 -> 0.32 (about 36% lighter); a warm backlight behind the stage centre (two-layer bloom, five slow light shafts, dust motes) with its own light in the overlay; the climb's bottom key-hint line shows for 4 s (was 10). Flow 0 fails; all four arena bots win. Zip v8.
