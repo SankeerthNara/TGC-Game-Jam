@@ -281,3 +281,13 @@
    - 14 frames downscaled to 64x64 (`px_hero_wallslide_1..3`, `px_hero_walljump_1..3`, `px_hero_airdash_1..3`, `px_hero_dive_1..3`, `px_hero_pogo_1..2`) with hard 1-bit alpha and <=24 colors.
    - 12 Preview GIFs @ 14 FPS: `hero_wallslide_2k.gif`, `hero_wallslide_720.gif`, `hero_walljump_2k.gif`, `hero_walljump_720.gif`, `hero_airdash_2k.gif`, `hero_airdash_720.gif`, `hero_dive_2k.gif`, `hero_dive_720.gif`, `hero_pogo_2k.gif`, `hero_pogo_720.gif`, `hero_parkour_combo_2k.gif`, `hero_parkour_combo_720.gif`.
    - Composites on `arena_far.jpg` (`preview_parkour_2k.png`) and `neon_mid.png` (`preview_parkour_720.png`).
+
+
+## Claude Code, 2026-10-06 (final pass on `claude/editions`)
+- Tool: Claude Code (Anthropic, Claude Opus 5.5), directed by Sankeerth Nara.
+- Work: the Ink Scribe and Narrator boss fights, rebuilt after two reference fights (mechanics only, no
+  assets copied); the Static Twins upgrade; the darkness and light overlay; richer cutscene panels
+  composed from the existing Antigravity art; reference-style boss titles and defeat beats;
+  readability fixes (soft backgrounds made by `tools/soften_backgrounds.py` from the Antigravity
+  paintings, rim light, bigger fighters, lit ledges, bigger hits); the library staircase; tests and
+  web builds. Details: `docs/NIGHT_LOG.md` sections 14-21, `docs/VISUAL_POLISH_PLAN.md`.

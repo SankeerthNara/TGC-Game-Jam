@@ -683,3 +683,17 @@ New visual beats from the art we already have (no new spoken text; all 15 VO cli
   him to the floor for 1.6 s (free hits), then he teleports away. He lies on the floor line (stun and
   fake death). Flow 0 fails; bots: Scribe 73 s, Narrator 36 s.
 - H3: the Narrator's defeat like the reference: slow motion, he sinks to one knee (narrator_stagger_2, rim-lit) in the last light for ~1.4 s before the page turns white. The 720p Twins already open with a reference-style title. Flow 0 fails; playtime 13.7 min (library bot 75 s with 6 assists: bot stalls on the staircase, see AGY_HANDOFF H4). Zipped as build/GlitchedOut_v6.zip.
+
+### 21. FINAL (feature freeze 12 pm IST, 2026-10-06)
+- Playtime (bots, VO in game time, 240p levels at par): 13.7 min before -> 12.9 min after trimming
+  the Ink Scribe's health 55 -> 46 (his fight 80 s -> 58 s with the bot). Cutscenes: book 31.9 s,
+  reveal 36.2 s, ending 23.0 s.
+- Tests on the final code: flow 0 fails, controls 0, VO 0, parkour 0, menu/restart 0; chaos and
+  edge runs reach the end (11.9 / 13.3 min); all fight bots win (Ink Baron, opera, Ink Scribe,
+  Narrator, street, Twins). Every 2K fight and the Ink Baron use checkpoints (a death restarts only
+  the current wave).
+- Docs: README (itch.io placeholder line, run steps, controls, team, AI use), CREDITS (code and soft
+  backgrounds rows), AI_USAGE (Claude final pass). Web build re-exported; zip v7.
+- Known issues: the test bot needs assists on the library staircase (bot logic only; see
+  AGY_HANDOFF H4). The 720p fights lack the 2K rim light (H7). The quill spear and the Ink Scribe
+  portrait are not used.

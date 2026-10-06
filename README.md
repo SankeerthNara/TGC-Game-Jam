@@ -10,7 +10,10 @@ art and ends in a **2K** deluxe edition... and sometimes the story needs *you*, 
 
 ## Play on itch.io
 
-[itch.io page — link to be added]
+itch.io: <link to be added>
+
+Play in the browser (Chrome, Edge or Firefox). Keep playing until you see the **THE END** card: the
+story has false endings on the way. A full run takes about 12-15 minutes.
 
 ## Setup and run
 
@@ -18,7 +21,10 @@ art and ends in a **2K** deluxe edition... and sometimes the story needs *you*, 
 2. Open Godot and import `new-game-project/project.godot`.
 3. Click **Run Project** (or press **F5** in the editor).
 
-The web build is exported with the preset "Web" (Project > Export) to `build/web/`.
+The web build is exported with the preset "Web" (Project > Export) to `build/web/`. To play a
+local web build, serve that folder with any local web server (for example `python -m http.server`
+inside `build/web/`, then open http://localhost:8000). The playtest zip has a `PLAY.bat` that does
+this for you.
 
 ## Controls
 
@@ -45,7 +51,9 @@ The web build is exported with the preset "Web" (Project > Export) to `build/web
   armoured: hit it from above, from behind, or with the Light Blade.
 
 **Everywhere**
-- **P** pauses. **Z** skips / continues story pages, **Esc** skips a whole cutscene.
+- **P** pauses (the pause menu lists every control, and has music, SFX and voice volume).
+  **Z** / **Space** / **Enter** continue story pages, **Esc** skips a whole cutscene or leaves a task.
+  **M** opens the map in the 240p levels.
 - When a window from the "real world" appears, use the **mouse**.
 
 ## Team
@@ -55,8 +63,9 @@ Sankeerth Nara — solo developer, team "Game it" (IndieConnect: [@sankeerthnara
 ## AI use
 
 AI tools were used and are disclosed in [docs/AI_USAGE.md](docs/AI_USAGE.md): Claude Code (game code,
-cutscenes, music scripts), Antigravity (2K and 720p background art and character sprites, UI), and
-ChatGPT/Codex (sound effects, synthwave, tests). The story and design are the developer's own.
+cutscenes, boss fights, music scripts, tests), Antigravity (2K and 720p background art, character
+sprites and animation frames, UI), ChatGPT/Codex (sound effects, synthwave, tests) and ElevenLabs
+(the cutscene voice-overs). The story and design are the developer's own.
 
 ## License
 
