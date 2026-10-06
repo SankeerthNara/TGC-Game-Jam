@@ -74,6 +74,31 @@ func reveal_villain(i: int) -> void:
 	list[i]["revealed"] = true
 
 
+## Teleports the villain far away from the hero and returns him to active patrol.
+func teleport_far(i: int) -> void:
+	var v: Dictionary = list[i]
+	v["revealed"] = true
+	v["state"] = "patrol"
+	v["mode"] = "patrol"
+	v["light"] = 0.0
+	v["thaw"] = 0.0
+	v["path"] = []
+	v["repath"] = 0.0
+	var hero_tile := world.tile
+	var candidates: Array[Vector2i] = []
+	for r: Dictionary in world.rooms:
+		var center := Vector2i(int(r["x"]) + int(r["w"]) / 2, int(r["y"]) + int(r["h"]) / 2)
+		var tile := world.find_free_tile(center)
+		candidates.append(tile)
+	candidates.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return a.distance_to(hero_tile) > b.distance_to(hero_tile))
+	var pick_tile: Vector2i = candidates[0] if not candidates.is_empty() else hero_tile
+	if candidates.size() >= 3:
+		pick_tile = candidates[randi() % mini(3, candidates.size())]
+	v["pos"] = world.center_of(pick_tile)
+
+
+
 func kill(i: int) -> void:
 	list[i]["alive"] = false
 	if list[i]["role"] == "villain":

@@ -6,10 +6,27 @@ var _passed := 0
 var _failed := 0
 var _failures: Array[String] = []
 
+const EXPECTED_SFX := [
+	"task_success", "task_mistake", "vampire_spotted", "reveal_friend", "reveal_villain",
+	"kill", "key_get", "explosion", "friend_assigned", "friend_done", "page_turn",
+	"comic_pop", "key_click", "chase_jump", "chase_bounce", "chase_fall",
+	"chase_checkpoint", "chase_hit", "chase_vault", "chase_slide", "chase_win",
+	"chase_lose", "web_attach", "web_shoot", "web_hit", "task_open",
+	"sabotage_alarm", "sabotage_fixed", "heart_lost", "death", "item_collected",
+	"trade_made", "door_unlocked", "punch", "punch_heavy", "kick", "counter_flash",
+	"counter_hit", "enemy_grunt", "glitch", "static", "comms_beep", "comms_dead",
+	"resolution_change", "cursor_click", "typewriter", "credits_whoosh", "light_swell",
+	"slash", "hit", "hero_hurt", "hero_jump", "dash", "heal", "power_deduction",
+	"power_dash", "power_prism", "power_solar", "wave_start", "enemy_spawn",
+	"enemy_windup", "shockwave", "bomb_fuse", "narrator_attack", "hero_ko",
+	"comms_voice", "comms_voice_evil", "comms_voice_twins",
+]
+
 
 func _ready() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
+	await _check_synthwave()
 	await _check_sfx()
 	for task_type in TaskRegistry.types():
 		for difficulty in 4:
@@ -24,18 +41,22 @@ func _check_sfx() -> void:
 	var player := SfxPlayer.new()
 	add_child(player)
 	await get_tree().process_frame
-	var sound_count := 0
+	var actual_names: Dictionary = {}
 	for file in DirAccess.get_files_at("res://assets/audio"):
 		if not file.begins_with("sfx_") or not file.ends_with(".wav"):
 			continue
-		var sound_name := file.trim_prefix("sfx_").trim_suffix(".wav")
+		actual_names[file.trim_prefix("sfx_").trim_suffix(".wav")] = true
+	for sound_name in EXPECTED_SFX:
+		if not actual_names.has(sound_name):
+			_fail("missing generated SFX file: %s" % sound_name)
 		if player._stream_for(sound_name) == null:
 			_fail("SFX %s could not load" % sound_name)
+		elif not player.VOLUME_DB.has(sound_name):
+			_fail("SFX %s has no per-sound mix level" % sound_name)
 		else:
 			player.play(sound_name)
-			sound_count += 1
-	if sound_count < 25:
-		_fail("only %d sound effects loaded" % sound_count)
+	if actual_names.size() != EXPECTED_SFX.size():
+		_fail("expected %d effect files; found %d" % [EXPECTED_SFX.size(), actual_names.size()])
 	if player._stream_for("smoke_missing_sound") != null:
 		_fail("a missing SFX unexpectedly loaded")
 	player.play("smoke_missing_sound")
@@ -53,7 +74,29 @@ func _check_sfx() -> void:
 		if not is_equal_approx(pooled_player.volume_db, -80.0):
 			_fail("muted SFX pool contains an audible player")
 	player.set_muted(false)
-	print("SFX SMOKE: %d effects loaded, missing-file handling and EventBus hooks PASS" % sound_count)
+	print("SFX SMOKE: %d documented effects loaded, mixed, and muted; missing-file handling and EventBus hooks PASS" % EXPECTED_SFX.size())
+
+
+func _check_synthwave() -> void:
+	var layer_names := ["pad", "bass", "drums", "lead"]
+	var expected_length := -1.0
+	for layer_name in layer_names:
+		var path := "res://assets/audio/music_synth_%s.wav" % layer_name
+		var stream := load(path) as AudioStreamWAV
+		if stream == null:
+			_fail("could not load synthwave layer %s" % layer_name)
+			continue
+		if stream.mix_rate != 22050 or stream.stereo:
+			_fail("synthwave layer %s is not 22050 Hz mono" % layer_name)
+		if expected_length < 0.0:
+			expected_length = stream.get_length()
+		elif absf(stream.get_length() - expected_length) > 1.0 / 22050.0:
+			_fail("synthwave layer %s is not sample-synced" % layer_name)
+		var import_path := path + ".import"
+		var import_file := FileAccess.open(import_path, FileAccess.READ)
+		if import_file == null or not import_file.get_as_text().contains("edit/loop_mode=2"):
+			_fail("synthwave layer %s is not set to loop" % layer_name)
+	print("SYNTHWAVE SMOKE: four 22050 Hz mono layers share a loop length and loop import setting")
 
 
 func _check_task(layer: CanvasLayer, task_type: String, level: int) -> void:

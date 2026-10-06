@@ -1,59 +1,92 @@
 class_name MainMenu
 extends Control
-## Animated comic cover main menu for Mirror Page:
-## Big logo, looming masked villain, 4 hero busts, ticking 17:00 bomb, comic buttons.
+## Animated comic cover main menu for GLITCHED OUT:
+## Features high-impact comic cover presentation, looming masked villain,
+## glowing Light Blade hero, dynamic chromatic glitch title, comic book trade dress,
+## cycling speech balloons, and rich comic buttons.
 
 const FONT_TITLE := preload("res://assets/fonts/Bangers-Regular.ttf")
 const FONT_BODY := preload("res://assets/fonts/ComicNeue-Bold.ttf")
 const SFX_CLICK := preload("res://assets/audio/click.wav")
 
 const INK := Color("18151d")
-const PAPER := Color("fff3d1")
+const PAPER := Color("fff9e6")
 const GOLD := Color("ffd23f")
 const RED := Color("e63946")
+const CYAN := Color("2bb3c0")
+const PURPLE := Color("8338ec")
 
 var _help_modal: Control
 var _credits_modal: Control
 var _sfx_player: AudioStreamPlayer
 var _time := 0.0
 
+var _cover_tex: Texture2D
+var _villain_tex: Texture2D
+var _hero_tex: Texture2D
+var _glow_tex: Texture2D
+
 const HERO_NAMES := ["PULP", "NOIR", "NINJA", "SPACE"]
+const HERO_COLORS := [Color("ffd23f"), Color("8d99ae"), Color("f77f00"), Color("ff70a6")]
+
+const VILLAIN_LINES := [
+	"Every story has a narrator... but who controls the ink?",
+	"Three editions to survive. Beat my lieutenants if you can!",
+	"Can you make it all the way from 240p to 2K, hero?",
+	"The picture is already glitching. The ink drinks your world!",
+]
 
 
 func _ready() -> void:
 	set_deferred("size", Vector2(1280, 720))
 	custom_minimum_size = Vector2(1280, 720)
-	
+
 	_sfx_player = AudioStreamPlayer.new()
 	_sfx_player.stream = SFX_CLICK
 	_sfx_player.bus = "Master"
 	add_child(_sfx_player)
 
-	# Buttons Container on the right
+	# Load painted assets
+	for cp in ["res://assets/art/cover_page.png", "res://assets/editions/book/book_cover.png"]:
+		if ResourceLoader.exists(cp):
+			_cover_tex = load(cp)
+			break
+	if ResourceLoader.exists("res://assets/editions/sprites/masked_villain.png"):
+		_villain_tex = load("res://assets/editions/sprites/masked_villain.png")
+	if ResourceLoader.exists("res://assets/editions/sprites/hero_blade_1.png"):
+		_hero_tex = load("res://assets/editions/sprites/hero_blade_1.png")
+	elif ResourceLoader.exists("res://assets/editions/portraits/hero.png"):
+		_hero_tex = load("res://assets/editions/portraits/hero.png")
+	if ResourceLoader.exists("res://assets/art/radial_glow.png"):
+		_glow_tex = load("res://assets/art/radial_glow.png")
+
+	# Buttons Container on the right side
 	var btn_box := VBoxContainer.new()
-	btn_box.position = Vector2(860, 420)
-	btn_box.custom_minimum_size = Vector2(340, 240)
+	btn_box.position = Vector2(740, 425)
+	btn_box.custom_minimum_size = Vector2(440, 240)
 	btn_box.add_theme_constant_override("separation", 14)
 	add_child(btn_box)
 
-	# Buttons
-	var btn_start := _create_button("START READING ▶", GOLD)
-	btn_start.custom_minimum_size = Vector2(340, 54)
-	btn_start.add_theme_font_size_override("font_size", 26)
+	# Main Start Button
+	var btn_start := _create_button("START READING ▶", GOLD, 30)
+	btn_start.custom_minimum_size = Vector2(440, 60)
 	btn_start.pressed.connect(_on_start_pressed)
 	btn_box.add_child(btn_start)
 
-	var btn_help := _create_button("HOW TO PLAY", Color("2bb3c0"))
-	btn_help.custom_minimum_size = Vector2(340, 46)
-	btn_help.add_theme_font_size_override("font_size", 20)
-	btn_help.pressed.connect(func() -> void: _help_modal.visible = true)
-	btn_box.add_child(btn_help)
+	# Secondary Action Buttons
+	var h_actions := HBoxContainer.new()
+	h_actions.add_theme_constant_override("separation", 14)
+	btn_box.add_child(h_actions)
 
-	var btn_credits := _create_button("CREDITS", Color("f4e8c1"))
-	btn_credits.custom_minimum_size = Vector2(340, 46)
-	btn_credits.add_theme_font_size_override("font_size", 20)
+	var btn_help := _create_button("READER'S GUIDE", CYAN, 22)
+	btn_help.custom_minimum_size = Vector2(213, 48)
+	btn_help.pressed.connect(func() -> void: _help_modal.visible = true)
+	h_actions.add_child(btn_help)
+
+	var btn_credits := _create_button("CREDITS", Color("f4e8c1"), 22)
+	btn_credits.custom_minimum_size = Vector2(213, 48)
 	btn_credits.pressed.connect(func() -> void: _credits_modal.visible = true)
-	btn_box.add_child(btn_credits)
+	h_actions.add_child(btn_credits)
 
 	# Modals
 	_build_help_modal()
@@ -76,115 +109,177 @@ func _draw() -> void:
 	# 1. Base Vintage Comic Paper
 	draw_rect(Rect2(Vector2.ZERO, sz), Color("fbf3db"))
 
-	# Comic Halftone Background
-	ComicArt.halftone(self, sz, Color(0, 0, 0, 0.08), 24.0, 3.5, Vector2(1, 1))
+	# Comic Halftone Background Texture
+	ComicArt.halftone(self, sz, Color(0, 0, 0, 0.07), 24.0, 3.5, Vector2(1, 1))
 
 	# Comic Outer Frame Border
 	draw_rect(Rect2(0, 0, sz.x, sz.y), INK, false, 8.0)
+	draw_rect(Rect2(6, 6, sz.x - 12, sz.y - 12), INK, false, 2.0)
 
 	# 2. Comic Top Masthead / Issue Banner
-	draw_rect(Rect2(8, 8, sz.x - 16, 32), INK)
-	draw_string(FONT_TITLE, Vector2(24, 30), "ISSUE #1 • SPECIAL EDITION", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD)
-	draw_string(FONT_TITLE, Vector2(sz.x * 0.5 - 120, 30), "TGC GAME JAM 100-HOUR SHOWCASE", HORIZONTAL_ALIGNMENT_CENTER, -1, 16, PAPER)
-	draw_string(FONT_TITLE, Vector2(sz.x - 140, 30), "PRICE: 25¢", HORIZONTAL_ALIGNMENT_RIGHT, 120, 16, GOLD)
+	draw_rect(Rect2(8, 8, sz.x - 16, 34), INK)
+	draw_string(FONT_TITLE, Vector2(24, 32), "★ INFINIUM COMICS GROUP • ISSUE #1 • SPECIAL COLLECTOR'S EDITION", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, GOLD)
+	draw_string(FONT_TITLE, Vector2(sz.x * 0.5 - 110, 32), "TGC GAME JAM 2026 FEATURE SHOWCASE", HORIZONTAL_ALIGNMENT_CENTER, -1, 16, PAPER)
+	draw_string(FONT_TITLE, Vector2(sz.x - 140, 32), "PRICE: 25¢", HORIZONTAL_ALIGNMENT_RIGHT, 120, 16, GOLD)
 
-	# Comics Code Authority Stamp (Top Left)
-	var stamp_rect := Rect2(Vector2(32, 54), Vector2(56, 68))
+	# 3. Left Side: The Physical Comic Book Showcase
+	var cover_rect := Rect2(Vector2(55, 65), Vector2(420, 560))
+	# Dynamic hover float
+	var float_y := sin(_time * 1.5) * 4.0
+	cover_rect.position.y += float_y
+
+	# Deep 3D Drop Shadow behind the book
+	draw_rect(Rect2(cover_rect.position + Vector2(14, 14), cover_rect.size), Color(0, 0, 0, 0.45))
+	draw_rect(Rect2(cover_rect.position + Vector2(7, 7), cover_rect.size), Color(0.1, 0.05, 0.15, 0.3))
+
+	if _cover_tex != null:
+		# Draw the high-res comic cover image
+		draw_texture_rect(_cover_tex, cover_rect, false)
+		# Comic book outer frame
+		draw_rect(cover_rect, INK, false, 5.0)
+		# Spine shadow on left edge
+		draw_rect(Rect2(cover_rect.position, Vector2(12, cover_rect.size.y)), Color(0, 0, 0, 0.35))
+		draw_line(Vector2(cover_rect.position.x + 12, cover_rect.position.y), Vector2(cover_rect.position.x + 12, cover_rect.position.y + cover_rect.size.y), Color(1, 1, 1, 0.25), 1.5)
+	else:
+		# Fallback stylized comic cover frame if texture loading
+		draw_rect(cover_rect, Color("20102b"))
+		draw_rect(cover_rect, INK, false, 5.0)
+
+	# Collector Ribbon across bottom of the cover
+	var rib_w := cover_rect.size.x
+	var rib_h := 36.0
+	var rib_pos := Vector2(cover_rect.position.x, cover_rect.position.y + cover_rect.size.y - rib_h)
+	draw_rect(Rect2(rib_pos, Vector2(rib_w, rib_h)), INK)
+	draw_line(rib_pos, rib_pos + Vector2(rib_w, 0), GOLD, 2.5)
+	draw_string(FONT_TITLE, rib_pos + Vector2(0, 24), "✦ 3 EDITIONS: 240P ➔ 720P ➔ 2K ✦", HORIZONTAL_ALIGNMENT_CENTER, int(rib_w), 16, GOLD)
+
+	# 4. Comics Code Authority Stamp (Top Left Corner of Cover)
+	var stamp_rect := Rect2(cover_rect.position + Vector2(12, 12), Vector2(58, 68))
 	draw_rect(stamp_rect, PAPER)
 	draw_rect(stamp_rect, INK, false, 2.5)
-	draw_string(FONT_TITLE, Vector2(36, 72), "APPROVED", HORIZONTAL_ALIGNMENT_CENTER, 48, 11, INK)
-	draw_string(FONT_BODY, Vector2(36, 92), "BY THE", HORIZONTAL_ALIGNMENT_CENTER, 48, 10, INK)
-	draw_string(FONT_TITLE, Vector2(36, 112), "COMICS CODE", HORIZONTAL_ALIGNMENT_CENTER, 48, 10, RED)
+	draw_string(FONT_TITLE, stamp_rect.position + Vector2(5, 20), "APPROVED", HORIZONTAL_ALIGNMENT_CENTER, 48, 11, INK)
+	draw_string(FONT_BODY, stamp_rect.position + Vector2(5, 36), "BY THE", HORIZONTAL_ALIGNMENT_CENTER, 48, 9, INK)
+	draw_string(FONT_TITLE, stamp_rect.position + Vector2(5, 52), "COMICS CODE", HORIZONTAL_ALIGNMENT_CENTER, 48, 9, RED)
+	draw_string(FONT_TITLE, stamp_rect.position + Vector2(5, 64), "★", HORIZONTAL_ALIGNMENT_CENTER, 48, 10, GOLD)
 
-	# 3. Looming Masked Villain (Center-Top background)
-	var villain_y := 275.0 + sin(_time * 1.8) * 6.0
-	var villain_pos := Vector2(680, villain_y)
-	
-	# Ominous aura burst behind villain
-	ComicArt.disc(self, villain_pos, 160.0, Color(0.18, 0.04, 0.22, 0.35), 0.0)
-	# Draw Masked Villain: mask_off = 0.0 (masked!), mood = "grin"
-	ComicArt.narrator(self, villain_pos, 1.75, 0.0, "grin", _time)
+	# 5. Center-Right: Towering "GLITCHED OUT" Title Logo
+	var logo_center := Vector2(950, 140)
+	_draw_glitched_title(logo_center)
 
-	# Villain speech / whisper bubble
-	var speech_c := villain_pos + Vector2(170, -70)
-	var speech_rect := Rect2(speech_c - Vector2(100, 24), Vector2(200, 48))
-	draw_rect(Rect2(speech_rect.position + Vector2(3, 3), speech_rect.size), Color(0, 0, 0, 0.35))
-	draw_rect(speech_rect, PAPER)
-	draw_rect(speech_rect, INK, false, 2.5)
-	draw_colored_polygon(PackedVector2Array([speech_c + Vector2(-60, 24), speech_c + Vector2(-75, 38), speech_c + Vector2(-45, 24)]), PAPER)
-	draw_polyline(PackedVector2Array([speech_c + Vector2(-60, 24), speech_c + Vector2(-75, 38), speech_c + Vector2(-45, 24)]), INK, 2.5)
-	draw_string(FONT_TITLE, speech_c + Vector2(-90, 7), "THE CLOCK IS TICKING...", HORIZONTAL_ALIGNMENT_CENTER, 180, 16, RED)
-
-	# 4. Big MIRROR PAGE Logo
-	var logo_pos := Vector2(460, 130)
-	ComicArt.shout(self, "MIRROR PAGE", logo_pos, 82, GOLD, 14, -0.02, 1.0)
-
-	# Subtitle ribbon
+	# Subtitle Ribbon
+	var sub_w := 640.0
+	var sub_h := 34.0
 	var sub_pts := PackedVector2Array([
-		Vector2(140, 172),
-		Vector2(780, 172),
-		Vector2(770, 206),
-		Vector2(130, 206)
+		Vector2(logo_center.x - sub_w * 0.5 - 15, logo_center.y + 40),
+		Vector2(logo_center.x + sub_w * 0.5 + 15, logo_center.y + 40),
+		Vector2(logo_center.x + sub_w * 0.5 - 5, logo_center.y + 40 + sub_h),
+		Vector2(logo_center.x - sub_w * 0.5 - 25, logo_center.y + 40 + sub_h)
 	])
 	draw_colored_polygon(sub_pts, RED)
 	draw_polyline(PackedVector2Array([sub_pts[0], sub_pts[1], sub_pts[2], sub_pts[3], sub_pts[0]]), INK, 3.0)
-	draw_string(FONT_TITLE, Vector2(150, 196), "✦ A DARK COMIC RACE AGAINST THE BOMB! ✦", HORIZONTAL_ALIGNMENT_CENTER, 610, 20, PAPER)
+	draw_string(FONT_TITLE, Vector2(logo_center.x - sub_w * 0.5, logo_center.y + 64), "✦ A REALITY-WARPING COMIC BOOK ADVENTURE ✦", HORIZONTAL_ALIGNMENT_CENTER, int(sub_w), 20, PAPER)
 
-	# 5. Ticking Bomb (Upper-Right) showing 17:00
-	var bomb_pos := Vector2(1040, 240)
-	var bomb_urgent := (int(_time * 3.0) % 2 == 0)
-	ComicArt.bomb(self, bomb_pos, 54.0, 1020.0, _time, bomb_urgent)
-	
-	# Comic burst tag over bomb
-	var bomb_badge_pos := bomb_pos + Vector2(0, -78)
-	var b_pts := PackedVector2Array()
-	for k in 12:
-		var a := k / 12.0 * TAU
-		var r: float = 46.0 if k % 2 == 0 else 32.0
-		b_pts.append(bomb_badge_pos + Vector2(cos(a) * r * 1.5, sin(a) * r))
-	b_pts.append(b_pts[0])
-	draw_colored_polygon(b_pts, GOLD)
-	draw_polyline(b_pts, INK, 2.5)
-	draw_string(FONT_TITLE, bomb_badge_pos + Vector2(-60, 6), "17:00 ZERO HOUR!", HORIZONTAL_ALIGNMENT_CENTER, 120, 14, INK)
+	# 6. Feature Badges (Pills)
+	var badge_y := logo_center.y + 88
+	# Badge 1: 3 Editions in One
+	var b1_rect := Rect2(Vector2(650, badge_y), Vector2(285, 30))
+	draw_rect(Rect2(b1_rect.position + Vector2(2, 2), b1_rect.size), Color(0, 0, 0, 0.3))
+	draw_rect(b1_rect, GOLD)
+	draw_rect(b1_rect, INK, false, 2.5)
+	draw_string(FONT_TITLE, b1_rect.position + Vector2(0, 21), "⚡ THREE GRAPHIC EDITIONS IN ONE", HORIZONTAL_ALIGNMENT_CENTER, int(b1_rect.size.x), 15, INK)
 
-	# 6. Four Hero Busts (Bottom-Left Spread)
-	var h_panel := Rect2(Vector2(40, 465), Vector2(740, 215))
-	draw_rect(Rect2(h_panel.position + Vector2(4, 4), h_panel.size), Color(0, 0, 0, 0.25))
-	draw_rect(h_panel, Color(1, 0.98, 0.93, 0.95))
-	draw_rect(h_panel, INK, false, 4.0)
+	# Badge 2: Real Voice Acting
+	var b2_rect := Rect2(Vector2(955, badge_y), Vector2(245, 30))
+	draw_rect(Rect2(b2_rect.position + Vector2(2, 2), b2_rect.size), Color(0, 0, 0, 0.3))
+	draw_rect(b2_rect, CYAN)
+	draw_rect(b2_rect, INK, false, 2.5)
+	draw_string(FONT_TITLE, b2_rect.position + Vector2(0, 21), "🎙 FULL SPOKEN VOICE ACTING", HORIZONTAL_ALIGNMENT_CENTER, int(b2_rect.size.x), 15, INK)
 
-	# Hero panel banner tag
-	var h_tag := Rect2(h_panel.position + Vector2(16, -15), Vector2(240, 28))
-	draw_rect(h_tag, RED)
-	draw_rect(h_tag, INK, false, 2.0)
-	draw_string(FONT_TITLE, h_tag.position + Vector2(12, 19), "✦ 4 SUPERHEROES MUST UNITE! ✦", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, PAPER)
+	# 7. Masked Villain Speech Balloon
+	var speech_c := Vector2(950, 310)
+	var speech_w := 540.0
+	var speech_h := 66.0
+	var speech_rect := Rect2(Vector2(speech_c.x - speech_w * 0.5, speech_c.y - speech_h * 0.5), Vector2(speech_w, speech_h))
 
-	var h_start_x := 130.0
-	var h_spacing := 170.0
-	for i in 4:
-		var hc := Vector2(h_start_x + i * h_spacing, 565)
+	# Speech shadow & body
+	draw_rect(Rect2(speech_rect.position + Vector2(4, 4), speech_rect.size), Color(0, 0, 0, 0.3))
+	draw_rect(speech_rect, PAPER)
+	draw_rect(speech_rect, INK, false, 3.0)
 
-		# Portrait circle framing
-		var circle_r := 52.0
-		ComicArt.disc(self, hc, circle_r + 4.0, INK, 0.0)
-		ComicArt.disc(self, hc, circle_r, Color("ffe680"), 0.0)
-		ComicArt.disc(self, hc, circle_r, Color(0, 0, 0, 0), 3.5)
+	# Pointer tail
+	var tail_pts := PackedVector2Array([
+		Vector2(speech_rect.position.x + 80, speech_rect.position.y),
+		Vector2(speech_rect.position.x + 40, speech_rect.position.y - 20),
+		Vector2(speech_rect.position.x + 105, speech_rect.position.y)
+	])
+	draw_colored_polygon(tail_pts, PAPER)
+	draw_polyline(tail_pts, INK, 3.0)
 
-		# Hero bust
-		ComicArt.hero_bust(self, i, hc, 0.72, "determined", _time)
+	# Current villain dialogue line
+	var line_idx := int(_time / 4.5) % VILLAIN_LINES.size()
+	var cur_line: String = VILLAIN_LINES[line_idx]
+	# Speaker tag
+	draw_rect(Rect2(Vector2(speech_rect.position.x + 14, speech_rect.position.y - 12), Vector2(110, 22)), INK)
+	draw_string(FONT_TITLE, Vector2(speech_rect.position.x + 20, speech_rect.position.y + 4), "THE NARRATOR:", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, GOLD)
+	# Quote text
+	draw_string(FONT_BODY, Vector2(speech_rect.position.x + 20, speech_rect.position.y + 38), '"%s"' % cur_line, HORIZONTAL_ALIGNMENT_LEFT, int(speech_w - 40), 17, INK)
 
-		# Name label pill
-		var pill_rect := Rect2(Vector2(hc.x - 48, hc.y + 54), Vector2(96, 22))
-		draw_rect(pill_rect, INK)
-		draw_string(FONT_TITLE, Vector2(hc.x - 46, hc.y + 70), HERO_NAMES[i], HORIZONTAL_ALIGNMENT_CENTER, 92, 14, GOLD)
+	# 8. Bottom Cheatsheet & Barcode Bar
+	var bar_y := 675.0
+	draw_line(Vector2(40, bar_y - 12), Vector2(sz.x - 40, bar_y - 12), Color(0, 0, 0, 0.15), 1.5)
+	draw_string(FONT_BODY, Vector2(65, bar_y + 16), "CONTROLS: [WASD] Move   [SPACE / Z] Jump   [J] Attack   [K] Dash   [L] Parry / Light Blade   [ESC] Pause   [Hold Z] Skip", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.2, 0.2, 0.25))
+
+	# Vintage Barcode (Bottom Right Corner)
+	var bc_x := sz.x - 210.0
+	var bc_y := bar_y - 8.0
+	draw_rect(Rect2(Vector2(bc_x, bc_y), Vector2(170, 42)), PAPER)
+	draw_rect(Rect2(Vector2(bc_x, bc_y), Vector2(170, 42)), INK, false, 2.0)
+	var cur_bc_x := bc_x + 8.0
+	for bw in [2, 3, 1, 4, 2, 1, 3, 5, 2, 4, 1, 3, 2, 5, 2, 3, 1, 4, 2]:
+		draw_rect(Rect2(Vector2(cur_bc_x, bc_y + 4), Vector2(bw, 24)), INK)
+		cur_bc_x += bw + 3.5
+		if cur_bc_x >= bc_x + 160:
+			break
+	draw_string(FONT_BODY, Vector2(bc_x + 16, bc_y + 38), "0  71486 01926  4", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, INK)
 
 
-func _create_button(text: String, bg_color: Color) -> Button:
+func _draw_glitched_title(c: Vector2) -> void:
+	var text := "GLITCHED OUT"
+	var fs := 102
+	var text_w := FONT_TITLE.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var p := c - Vector2(text_w * 0.5, -fs * 0.35)
+
+	# Chromatic Glitch Spike every ~2.8s
+	var glitch_phase := fmod(_time, 2.8)
+	var glitching := glitch_phase < 0.18
+	var glitch_offset := Vector2(randf_range(-6, 6), randf_range(-2, 2)) if glitching else Vector2.ZERO
+
+	# 1. 3D Ink Extrusion Shadow
+	for d in range(16, 0, -2):
+		draw_string(FONT_TITLE, p + Vector2(d, d), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
+
+	# 2. Chromatic aberration offset
+	if glitching:
+		draw_string(FONT_TITLE, p + Vector2(-6, 1) + glitch_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, RED)
+		draw_string(FONT_TITLE, p + Vector2(6, -1) - glitch_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, CYAN)
+	else:
+		draw_string(FONT_TITLE, p + Vector2(-2, 1), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.9, 0.2, 0.2, 0.5))
+		draw_string(FONT_TITLE, p + Vector2(2, -1), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.2, 0.8, 0.9, 0.5))
+
+	# 3. Main Vibrant Golden Face
+	draw_string(FONT_TITLE, p, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, GOLD)
+
+	# 4. Inner Shimmer Highlight
+	draw_string(FONT_TITLE, p + Vector2(0, -2), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs - 2, Color("fff6cc"))
+
+
+func _create_button(text: String, bg_color: Color, font_size: int = 24) -> Button:
 	var btn := Button.new()
 	btn.text = text
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.add_theme_font_override("font", FONT_TITLE)
-	
+	btn.add_theme_font_size_override("font_size", font_size)
+
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg_color
 	sb.border_width_bottom = 4
@@ -192,15 +287,18 @@ func _create_button(text: String, bg_color: Color) -> Button:
 	sb.border_width_right = 4
 	sb.border_width_top = 4
 	sb.border_color = INK
-	sb.shadow_size = 5
-	sb.shadow_offset = Vector2(4, 4)
-	sb.content_margin_left = 20
-	sb.content_margin_right = 20
+	sb.shadow_size = 6
+	sb.shadow_offset = Vector2(5, 5)
+	sb.content_margin_left = 22
+	sb.content_margin_right = 22
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
 	btn.add_theme_stylebox_override("normal", sb)
 
 	var sb_hover := sb.duplicate() as StyleBoxFlat
 	sb_hover.bg_color = bg_color.lightened(0.2)
-	sb_hover.shadow_offset = Vector2(6, 6)
+	sb_hover.shadow_offset = Vector2(7, 7)
+	sb_hover.border_color = INK
 	btn.add_theme_stylebox_override("hover", sb_hover)
 
 	btn.add_theme_color_override("font_color", INK)
@@ -217,12 +315,12 @@ func _build_help_modal() -> void:
 
 	var dim := ColorRect.new()
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.color = Color(0, 0, 0, 0.7)
+	dim.color = Color(0, 0, 0, 0.75)
 	_help_modal.add_child(dim)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(620, 480)
-	panel.position = Vector2((1280 - 620) * 0.5, (720 - 480) * 0.5)
+	panel.custom_minimum_size = Vector2(740, 520)
+	panel.position = Vector2((1280 - 740) * 0.5, (720 - 520) * 0.5)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color("fff9e6")
 	sb.border_width_bottom = 5
@@ -230,47 +328,47 @@ func _build_help_modal() -> void:
 	sb.border_width_right = 5
 	sb.border_width_top = 5
 	sb.border_color = INK
-	sb.shadow_size = 8
-	sb.shadow_offset = Vector2(6, 6)
-	sb.content_margin_left = 30
-	sb.content_margin_right = 30
-	sb.content_margin_top = 25
-	sb.content_margin_bottom = 25
+	sb.shadow_size = 10
+	sb.shadow_offset = Vector2(8, 8)
+	sb.content_margin_left = 32
+	sb.content_margin_right = 32
+	sb.content_margin_top = 24
+	sb.content_margin_bottom = 24
 	panel.add_theme_stylebox_override("panel", sb)
 	_help_modal.add_child(panel)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 14)
+	vbox.add_theme_constant_override("separation", 12)
 	panel.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "HOW TO READ & PLAY"
+	title.text = "READER'S GUIDE • HOW TO PLAY"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
 	title.add_theme_font_size_override("font_size", 34)
 	title.add_theme_color_override("font_color", INK)
 	vbox.add_child(title)
 
-	var rules := [
-		"1. THE BOMB: 17 minutes on the clock for the whole run. Finish a level to win a key; 4 keys open the bomb room.",
-		"2. MOVE with arrows / WASD. It is dark: only your torch lights the way. [M] opens the map.",
-		"3. TASKS: walk to a console and press [Z]. Finish every task to fill the progress bar. [ESC] leaves a task.",
-		"4. SABOTAGE: the villain breaks things. Run to the fix console before the timer ends or lose hearts.",
-		"5. VAMPIRES: hold your torch on one, then REVEAL or KILL. One is your friend, one is the villain. Pure chance!",
-		"6. Out of hearts? Back to the start of the level, but the bomb keeps its time.",
+	var guide_sections := [
+		"1. THREE EDITIONS: Experience the same story across 240p retro station, 720p neon street brawler, and 2K gothic opera climax!",
+		"2. 240P TORCH & TASKS: Move with WASD/Arrows. Your torch lights the dark. Press [Z] at consoles to solve puzzles. [M] toggles the map.",
+		"3. VAMPIRES & REVEAL: Catch vampires in your light. Friendly allies help with tasks [F]; the Villain will strike you for 1 heart and teleport far away!",
+		"4. COMBAT CONTROLS: [WASD] Move • [SPACE/Z] Jump • [J] Attack • [K] Dash/Roll • [F] Heal (uses ink) • [ESC] Pause.",
+		"5. PARRY & LIGHT BLADE: Tap [L] when an enemy flashes GOLD or eyes turn RED to parry! Hold & release [L] for a devastating Light Blade blast!",
+		"6. CUTSCENES: Advance dialogue with [Z] or [SPACE]. To skip any cutscene, simply Hold [Z]!",
 	]
 
-	for r in rules:
+	for g in guide_sections:
 		var lbl := Label.new()
-		lbl.text = r
+		lbl.text = g
 		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lbl.add_theme_font_override("font", FONT_BODY)
 		lbl.add_theme_font_size_override("font_size", 16)
 		lbl.add_theme_color_override("font_color", INK)
 		vbox.add_child(lbl)
 
-	var btn_close := _create_button("GOT IT!", GOLD)
-	btn_close.custom_minimum_size = Vector2(160, 42)
+	var btn_close := _create_button("RETURN TO COVER ▶", GOLD, 22)
+	btn_close.custom_minimum_size = Vector2(220, 44)
 	btn_close.pressed.connect(func() -> void: _help_modal.visible = false)
 	vbox.add_child(btn_close)
 
@@ -283,12 +381,12 @@ func _build_credits_modal() -> void:
 
 	var dim := ColorRect.new()
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.color = Color(0, 0, 0, 0.7)
+	dim.color = Color(0, 0, 0, 0.75)
 	_credits_modal.add_child(dim)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(560, 400)
-	panel.position = Vector2((1280 - 560) * 0.5, (720 - 400) * 0.5)
+	panel.custom_minimum_size = Vector2(620, 440)
+	panel.position = Vector2((1280 - 620) * 0.5, (720 - 440) * 0.5)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color("fff9e6")
 	sb.border_width_bottom = 5
@@ -296,12 +394,12 @@ func _build_credits_modal() -> void:
 	sb.border_width_right = 5
 	sb.border_width_top = 5
 	sb.border_color = INK
-	sb.shadow_size = 8
-	sb.shadow_offset = Vector2(6, 6)
-	sb.content_margin_left = 30
-	sb.content_margin_right = 30
-	sb.content_margin_top = 25
-	sb.content_margin_bottom = 25
+	sb.shadow_size = 10
+	sb.shadow_offset = Vector2(8, 8)
+	sb.content_margin_left = 32
+	sb.content_margin_right = 32
+	sb.content_margin_top = 24
+	sb.content_margin_bottom = 24
 	panel.add_theme_stylebox_override("panel", sb)
 	_credits_modal.add_child(panel)
 
@@ -310,7 +408,7 @@ func _build_credits_modal() -> void:
 	panel.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "CREDITS"
+	title.text = "THE COMIC BULLPEN • CREDITS"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
 	title.add_theme_font_size_override("font_size", 34)
@@ -318,7 +416,7 @@ func _build_credits_modal() -> void:
 	vbox.add_child(title)
 
 	var text := Label.new()
-	text.text = "MIRROR PAGE\nCreated for TGC Game Jam (100 Hours)\n\nDesigner & Team Lead: Sankeerth Nara\nEngine: Godot 4.7 (Compatibility Renderer)\nFonts: Bangers (SIL OFL), Comic Neue (SIL OFL)\nAudio: Procedural CC0 synthesized sounds\n\nFull attribution logged in CREDITS.md."
+	text.text = "GLITCHED OUT\nCreated for TGC Game Jam 2026 (100 Hours)\n\nGame Design & Development: Sankeerth Nara\nGame Engine: Godot 4.7 (GL Compatibility)\nVoice Acting: Full Spoken Narrator & Lieutenants\nTypography: Bangers (SIL OFL) & Comic Neue (SIL OFL)\nAudio & Sound: Procedural & Synthesized Soundtrack\n\nComplete asset and attribution log available in CREDITS.md."
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_theme_font_override("font", FONT_BODY)
@@ -326,17 +424,27 @@ func _build_credits_modal() -> void:
 	text.add_theme_color_override("font_color", INK)
 	vbox.add_child(text)
 
-	var btn_close := _create_button("BACK", GOLD)
-	btn_close.custom_minimum_size = Vector2(160, 42)
+	var btn_close := _create_button("BACK TO COVER", GOLD, 22)
+	btn_close.custom_minimum_size = Vector2(180, 42)
 	btn_close.pressed.connect(func() -> void: _credits_modal.visible = false)
 	vbox.add_child(btn_close)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode in [KEY_Z, KEY_SPACE, KEY_ENTER]:
-			_on_start_pressed()
-			get_viewport().set_input_as_handled()
+		if event.keycode == KEY_ESCAPE:
+			if _help_modal.visible:
+				_help_modal.visible = false
+				get_viewport().set_input_as_handled()
+				return
+			if _credits_modal.visible:
+				_credits_modal.visible = false
+				get_viewport().set_input_as_handled()
+				return
+		if not _help_modal.visible and not _credits_modal.visible:
+			if event.keycode in [KEY_Z, KEY_SPACE, KEY_ENTER]:
+				_on_start_pressed()
+				get_viewport().set_input_as_handled()
 
 
 func _on_start_pressed() -> void:
